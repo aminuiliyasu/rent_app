@@ -1,10 +1,12 @@
 package com.rentify.model;
 
+import com.rentify.model.enums.MessageKind;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Table(name = "messages", indexes = {
@@ -33,7 +35,12 @@ public class Message extends BaseEntity {
     
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
-    
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "message_kind", nullable = false, length = 32)
+    @ColumnDefault("'STANDARD'")
+    private MessageKind messageKind = MessageKind.STANDARD;
+
     @Column(name = "attachment_url", length = 500)
     private String attachmentUrl;
     

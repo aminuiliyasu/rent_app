@@ -64,7 +64,7 @@ export default function LoginPage() {
                 <SparklesIcon className="h-6 w-6 text-white" />
               </div>
             </div>
-            <span className="text-2xl font-bold gradient-text">Rentify</span>
+            <span className="text-2xl font-bold gradient-text">Rhentify</span>
           </Link>
           <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
             Welcome back!
@@ -196,7 +196,7 @@ export default function LoginPage() {
           </div>
 
           <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/register" className="font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline">
               Sign up for free
             </Link>

@@ -12,7 +12,7 @@ export default function SafetyPage() {
     {
       icon: LockClosedIcon,
       title: 'Secure Payments',
-      description: 'All transactions are processed securely through encrypted payment gateways.',
+      description: 'Handle transactions safely by discussing details directly with verified users in chat.',
     },
     {
       icon: UserGroupIcon,

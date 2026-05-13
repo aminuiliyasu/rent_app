@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import type { ComponentType, SVGProps } from 'react'
 import Link from 'next/link'
 import api from '@/lib/api'
+import { mergeCategoriesWithSeed, categoryHasPersistentId } from '@/lib/seedCategories'
 import { Category } from '@/lib/types'
 import {
   CubeIcon,
@@ -11,6 +12,7 @@ import {
   TruckIcon,
   WrenchScrewdriverIcon,
   HomeModernIcon,
+  HomeIcon,
   TrophyIcon,
   BuildingOffice2Icon,
   BeakerIcon,
@@ -19,8 +21,11 @@ import {
   MusicalNoteIcon,
   PhotoIcon,
   BookOpenIcon,
-  ShoppingBagIcon,
+  SwatchIcon,
   FireIcon,
+  HeartIcon,
+  GiftTopIcon,
+  EllipsisHorizontalCircleIcon,
 } from '@heroicons/react/24/solid'
 
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
@@ -30,10 +35,16 @@ const SLUG_ICONS: Record<string, IconComponent> = {
   vehicles: TruckIcon,
   'tools-equipment': WrenchScrewdriverIcon,
   furniture: HomeModernIcon,
+  housing: HomeIcon,
   'sports-recreation': TrophyIcon,
   'professional-services': BuildingOffice2Icon,
+  'infant-items': GiftTopIcon,
   'medical-equipment': BeakerIcon,
   'event-supplies': CalendarDaysIcon,
+  'pet-lover': HeartIcon,
+  'fashion-costumes': SwatchIcon,
+  'fashion-customs': SwatchIcon,
+  other: EllipsisHorizontalCircleIcon,
 }
 
 function categoryIcon(slug: string, name: string): IconComponent {
@@ -50,6 +61,9 @@ function categoryIcon(slug: string, name: string): IconComponent {
   if (n.includes('tool') || n.includes('equipment') || n.includes('machine')) {
     return WrenchScrewdriverIcon
   }
+  if (n.includes('housing') && !n.includes('furniture')) {
+    return HomeIcon
+  }
   if (n.includes('furniture') || n.includes('chair') || n.includes('table') || n.includes('sofa')) {
     return HomeModernIcon
   }
@@ -65,6 +79,9 @@ function categoryIcon(slug: string, name: string): IconComponent {
   if (n.includes('event') || n.includes('party') || n.includes('celebration')) {
     return CalendarDaysIcon
   }
+  if (n.includes('infant')) {
+    return GiftTopIcon
+  }
   if (n.includes('baby') || n.includes('kid') || n.includes('child')) {
     return UserIcon
   }
@@ -77,41 +94,33 @@ function categoryIcon(slug: string, name: string): IconComponent {
   if (n.includes('book') || n.includes('library')) {
     return BookOpenIcon
   }
-  if (n.includes('clothing') || n.includes('fashion') || n.includes('apparel')) {
-    return ShoppingBagIcon
+  if (n.includes('clothing') || n.includes('fashion') || n.includes('apparel') || n.includes('costume')) {
+    return SwatchIcon
   }
   if (n.includes('kitchen') || n.includes('cooking') || n.includes('appliance')) {
     return FireIcon
   }
+  if (n.includes('pet') || n.includes('animal')) {
+    return HeartIcon
+  }
   return CubeIcon
 }
 
-const defaultCategories: Category[] = [
-  { id: 1, name: 'Electronics', slug: 'electronics' },
-  { id: 2, name: 'Vehicles', slug: 'vehicles' },
-  { id: 3, name: 'Tools & Equipment', slug: 'tools-equipment' },
-  { id: 4, name: 'Furniture', slug: 'furniture' },
-  { id: 5, name: 'Sports & Recreation', slug: 'sports-recreation' },
-  { id: 6, name: 'Professional Services', slug: 'professional-services' },
-  { id: 7, name: 'Medical Equipment', slug: 'medical-equipment' },
-  { id: 8, name: 'Event Supplies', slug: 'event-supplies' },
-]
-
 export default function CategoryGrid() {
-  const [categories, setCategories] = useState<Category[]>([])
+  const [categories, setCategories] = useState<Category[]>(() => mergeCategoriesWithSeed([]))
 
   useEffect(() => {
     api
       .get('/categories')
       .then((response) => {
-        setCategories(response.data || [])
+        setCategories(mergeCategoriesWithSeed(response.data || []))
       })
       .catch(() => {
-        setCategories(defaultCategories)
+        setCategories(mergeCategoriesWithSeed([]))
       })
   }, [])
 
-  const displayCategories = categories.length > 0 ? categories : defaultCategories
+  const displayCategories = categories
 
   return (
     <section className="section-container bg-gradient-to-b from-white via-blue-50/30 to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
@@ -130,7 +139,15 @@ export default function CategoryGrid() {
           {displayCategories.map((category, idx) => {
             const Icon = categoryIcon(category.slug || '', category.name || '')
             return (
-              <Link key={category.id} href={`/search?category=${category.id}`} className="group relative">
+              <Link
+                key={category.slug || category.id}
+                href={
+                  categoryHasPersistentId(category)
+                    ? `/search?category=${category.id}`
+                    : `/search?categorySlug=${encodeURIComponent(category.slug)}`
+                }
+                className="group relative"
+              >
                 <div
                   className="card text-center hover:scale-105 transition-all duration-300 animate-slide-up"
                   style={{ animationDelay: `${idx * 0.05}s` }}

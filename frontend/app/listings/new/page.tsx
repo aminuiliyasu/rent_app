@@ -7,8 +7,12 @@ import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
 import api from '@/lib/api'
 import { uploadMultipleImages } from '@/lib/upload'
+import { parsePriceWithCurrency } from '@/lib/parsePriceInput'
+import { LISTING_CURRENCY_OPTIONS } from '@/lib/listingCurrency'
 import toast from 'react-hot-toast'
 import { ListingType } from '@/lib/types'
+import { mergeCategoriesWithSeed, categoryHasPersistentId } from '@/lib/seedCategories'
+import { toAppListingImageUrl } from '@/lib/listingImageUrl'
 import {
   XMarkIcon,
   PhotoIcon,
@@ -43,7 +47,8 @@ export default function CreateListingPage() {
     priceWeek: '',
     priceMonth: '',
     priceHour: '',
-    deposit: '',
+    cashDeposit: '',
+    itemDeposit: '',
     address: '',
     city: '',
     state: '',
@@ -54,6 +59,8 @@ export default function CreateListingPage() {
     workerBio: '',
     workerProfession: '',
     serviceArea: '',
+    availableDays: '',
+    pricingCurrency: 'USD',
   })
 
   useEffect(() => {
@@ -67,9 +74,10 @@ export default function CreateListingPage() {
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories')
-      setCategories(response.data || [])
+      setCategories(mergeCategoriesWithSeed(response.data || []))
     } catch (error) {
       console.error('Error fetching categories:', error)
+      setCategories(mergeCategoriesWithSeed([]))
     }
   }
 
@@ -97,9 +105,13 @@ export default function CreateListingPage() {
       setSelectedImages(prev => [...prev, ...urls])
       setImageFiles(prev => [...prev, ...validFiles])
       toast.success(`${validFiles.length} image(s) uploaded successfully!`)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading images:', error)
-      toast.error(error.response?.data?.error || 'Failed to upload images')
+      const msg =
+        error instanceof Error
+          ? error.message
+          : (error as { response?: { data?: { error?: string } } })?.response?.data?.error
+      toast.error(msg || 'Failed to upload images')
     } finally {
       setUploadingImages(false)
       if (fileInputRef.current) {
@@ -113,20 +125,109 @@ export default function CreateListingPage() {
     setImageFiles(prev => prev.filter((_, i) => i !== index))
   }
 
+  /** Same-origin `/uploads/...` so previews work on port 3000 via Next rewrites */
+  const previewSrc = (url: string) => toAppListingImageUrl(url) || url
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
+      const rawCashDeposit = formData.cashDeposit.trim()
+      const parsedCashDeposit = rawCashDeposit ? Number(rawCashDeposit) : null
+      const hasNumericCashDeposit = parsedCashDeposit !== null && Number.isFinite(parsedCashDeposit)
+      const cashDepositNote = rawCashDeposit && !hasNumericCashDeposit ? rawCashDeposit : null
+      const itemDepositNote = formData.itemDeposit.trim() || null
+      const depositNotes = [
+        cashDepositNote ? `Cash deposit note: ${cashDepositNote}` : null,
+        itemDepositNote ? `Item deposit: ${itemDepositNote}` : null,
+      ].filter(Boolean)
+      const descriptionWithDepositNote = depositNotes.length
+        ? `${formData.description || ''}${formData.description ? '\n\n' : ''}${depositNotes.join('\n')}`
+        : formData.description
+
+      const selectedCur = formData.pricingCurrency.trim().toUpperCase() || 'USD'
+
+      const embeddedCurrencyClashes = (label: string, raw: string) => {
+        const t = raw.trim()
+        const m = t.match(/^([A-Za-z]{3})\s+/)
+        if (m && m[1].toUpperCase() !== selectedCur) {
+          toast.error(
+            `${label}: remove "${m[1].toUpperCase()}" from the field — enter amounts in ${selectedCur} only, or change the listing currency above.`
+          )
+          return false
+        }
+        return true
+      }
+
+      const parsedHour = parsePriceWithCurrency(formData.priceHour)
+      const parsedDay = parsePriceWithCurrency(formData.priceDay)
+      const parsedWeek = parsePriceWithCurrency(formData.priceWeek)
+      const parsedMonth = parsePriceWithCurrency(formData.priceMonth)
+
+      const requireParsed = (label: string, raw: string, parsed: { amount: number | null }) => {
+        if (!raw.trim()) return true
+        if (parsed.amount === null) {
+          toast.error(`${label}: enter a number (e.g. 25 or 19.99) in ${selectedCur}`)
+          return false
+        }
+        return true
+      }
+
+      if (
+        !embeddedCurrencyClashes('Hourly rate', formData.priceHour) ||
+        !embeddedCurrencyClashes('Daily rate', formData.priceDay) ||
+        !embeddedCurrencyClashes('Weekly rate', formData.priceWeek) ||
+        !embeddedCurrencyClashes('Monthly rate', formData.priceMonth) ||
+        !requireParsed('Hourly rate', formData.priceHour, parsedHour) ||
+        !requireParsed('Daily rate', formData.priceDay, parsedDay) ||
+        !requireParsed('Weekly rate', formData.priceWeek, parsedWeek) ||
+        !requireParsed('Monthly rate', formData.priceMonth, parsedMonth)
+      ) {
+        setLoading(false)
+        return
+      }
+
+      let resolvedCategoryId: number
+      const catVal = formData.categoryId
+      if (!catVal) {
+        toast.error('Please select a category')
+        setLoading(false)
+        return
+      }
+      if (catVal.startsWith('slug:')) {
+        const slug = catVal.slice(5)
+        try {
+          const res = await api.get(`/categories/by-slug/${encodeURIComponent(slug)}`)
+          resolvedCategoryId = res.data.id
+        } catch {
+          toast.error(
+            'This category is not available in the database yet. Restart the Spring Boot server so categories can be seeded, then try again.'
+          )
+          setLoading(false)
+          return
+        }
+      } else {
+        resolvedCategoryId = Number(catVal)
+        if (!Number.isFinite(resolvedCategoryId) || resolvedCategoryId <= 0) {
+          toast.error('Invalid category')
+          setLoading(false)
+          return
+        }
+      }
+
       const payload = {
         ...formData,
-        categoryId: Number(formData.categoryId),
-        priceDay: formData.priceDay ? Number(formData.priceDay) : null,
-        priceWeek: formData.priceWeek ? Number(formData.priceWeek) : null,
-        priceMonth: formData.priceMonth ? Number(formData.priceMonth) : null,
-        priceHour: formData.priceHour ? Number(formData.priceHour) : null,
-        deposit: formData.deposit ? Number(formData.deposit) : null,
+        description: descriptionWithDepositNote,
+        categoryId: resolvedCategoryId,
+        priceHour: parsedHour.amount,
+        priceDay: parsedDay.amount,
+        priceWeek: parsedWeek.amount,
+        priceMonth: parsedMonth.amount,
+        deposit: hasNumericCashDeposit ? parsedCashDeposit : null,
+        pricingCurrency: selectedCur,
         deliveryRadius: formData.deliveryRadius ? Number(formData.deliveryRadius) : null,
+        availableDays: formData.availableDays || null,
         imageUrls: selectedImages,
       }
 
@@ -240,10 +341,33 @@ export default function CreateListingPage() {
                 >
                   <option value="">Select a category</option>
                   {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
+                    <option
+                      key={category.slug || category.id}
+                      value={
+                        categoryHasPersistentId(category)
+                          ? String(category.id)
+                          : `slug:${category.slug}`
+                      }
+                    >
                       {category.name}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                  Available Days
+                </label>
+                <select
+                  value={formData.availableDays}
+                  onChange={(e) => setFormData({ ...formData, availableDays: e.target.value })}
+                  className="input-field font-semibold"
+                >
+                  <option value="">Select availability</option>
+                  <option value="EVERYDAY">Every day</option>
+                  <option value="WEEKDAYS">Weekdays (Mon-Fri)</option>
+                  <option value="WEEKENDS">Weekends (Sat-Sun)</option>
                 </select>
               </div>
             </div>
@@ -257,14 +381,30 @@ export default function CreateListingPage() {
             </h2>
             
             <div className="space-y-6">
-              {/* Image Preview Grid */}
+              {/* Primary preview — same image shown first when browsing */}
               {selectedImages.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="relative overflow-hidden rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-gray-900/10 aspect-[21/9] md:aspect-[2/1] max-h-[min(52vh,28rem)]">
+                  <img
+                    src={previewSrc(selectedImages[0])}
+                    alt="Primary listing photo preview"
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 pt-16">
+                    <p className="text-sm font-bold text-white drop-shadow-md">
+                      Primary photo — this is what people see first when browsing
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Thumbnails (all images; remove adjusts indices including primary) */}
+              {selectedImages.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {selectedImages.map((url, index) => (
-                    <div key={index} className="relative group">
+                    <div key={`${url}-${index}`} className="relative group">
                       <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700">
                         <img
-                          src={url}
+                          src={previewSrc(url)}
                           alt={`Upload ${index + 1}`}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />
@@ -334,77 +474,119 @@ export default function CreateListingPage() {
               <CurrencyDollarIcon className="h-7 w-7 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden />
               Pricing
             </h2>
+
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                Listing currency
+              </label>
+              <select
+                value={formData.pricingCurrency}
+                onChange={(e) => setFormData({ ...formData, pricingCurrency: e.target.value })}
+                className="input-field font-semibold max-w-md"
+              >
+                {LISTING_CURRENCY_OPTIONS.map((o) => (
+                  <option key={o.code} value={o.code}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                All rates and the cash deposit (if numeric) are stored and shown in this currency.
+              </p>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Enter amounts as numbers (decimals allowed). Leave a field blank if you don&apos;t use that period.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Daily Rate ($)
+                  Hourly rate
                 </label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={formData.priceHour}
+                  onChange={(e) => setFormData({ ...formData, priceHour: e.target.value })}
+                  className="input-field"
+                  placeholder="e.g. 25"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                  Daily rate
+                </label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
                   value={formData.priceDay}
                   onChange={(e) => setFormData({ ...formData, priceDay: e.target.value })}
                   className="input-field"
-                  placeholder="0.00"
+                  placeholder="e.g. 150"
                 />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Weekly Rate ($)
+                  Weekly rate
                 </label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
                   value={formData.priceWeek}
                   onChange={(e) => setFormData({ ...formData, priceWeek: e.target.value })}
                   className="input-field"
-                  placeholder="0.00"
+                  placeholder="e.g. 900"
                 />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Monthly Rate ($)
+                  Monthly rate
                 </label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
                   value={formData.priceMonth}
                   onChange={(e) => setFormData({ ...formData, priceMonth: e.target.value })}
                   className="input-field"
-                  placeholder="0.00"
+                  placeholder="e.g. 3200"
                 />
               </div>
             </div>
 
-            {formData.type === ListingType.WORKER && (
-              <div className="mt-6">
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Hourly Rate ($)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.priceHour}
-                  onChange={(e) => setFormData({ ...formData, priceHour: e.target.value })}
-                  className="input-field"
-                  placeholder="0.00"
-                />
-              </div>
-            )}
-
             <div className="mt-6">
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                Security Deposit ($)
+                Security Deposit
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.deposit}
-                onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
-                className="input-field"
-                placeholder="0.00"
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+                    Cash Deposit
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.cashDeposit}
+                    onChange={(e) => setFormData({ ...formData, cashDeposit: e.target.value })}
+                    className="input-field"
+                    placeholder="e.g., 100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+                    Item Deposit
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.itemDeposit}
+                    onChange={(e) => setFormData({ ...formData, itemDeposit: e.target.value })}
+                    className="input-field"
+                    placeholder="e.g., National ID card"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -416,6 +598,18 @@ export default function CreateListingPage() {
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                  District
+                </label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="input-field"
+                  placeholder="District"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                   City
@@ -430,14 +624,14 @@ export default function CreateListingPage() {
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  State
+                  Country
                 </label>
                 <input
                   type="text"
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                   className="input-field"
-                  placeholder="State"
+                  placeholder="Country"
                 />
               </div>
             </div>

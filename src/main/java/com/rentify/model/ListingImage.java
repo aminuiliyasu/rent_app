@@ -5,13 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "listing_images", indexes = {
     @Index(name = "idx_listing_images_listing_id", columnList = "listing_id")
 })
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"listing"})
+@ToString(exclude = {"listing"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class ListingImage extends BaseEntity {

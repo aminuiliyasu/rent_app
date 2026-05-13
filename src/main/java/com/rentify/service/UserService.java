@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -102,14 +101,6 @@ public class UserService {
             .filter(l -> l.getStatus() == ListingStatus.ACTIVE)
             .count();
         
-        // Total earnings (from completed bookings as owner)
-        BigDecimal totalEarnings = bookingRepository.findByListingOwnerId(userId,
-            org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE))
-            .stream()
-            .filter(b -> b.getStatus() == BookingStatus.COMPLETED)
-            .map(b -> b.getTotalAmount().subtract(b.getPlatformFee()))
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
         // Unread messages
         Long unreadMessages = messageRepository.countUnreadMessages(userId);
         
@@ -118,7 +109,6 @@ public class UserService {
             totalBookings,
             totalListings,
             activeListings,
-            totalEarnings,
             unreadMessages
         );
     }

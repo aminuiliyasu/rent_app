@@ -29,7 +29,11 @@ public class Booking extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "listing_id", nullable = false)
     private Listing listing;
-    
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rent_wish_post_id")
+    private RentWishPost rentWishPost;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "renter_id", nullable = false)
     private User renter;

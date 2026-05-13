@@ -7,7 +7,7 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Rentify - Rent Anything. Hire Anyone. Anywhere.',
+  title: 'Rhentify - Anything you need. Hire anyone. All around you',
   description: 'Two-sided marketplace for renting items and hiring workers',
 }
 

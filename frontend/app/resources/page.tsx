@@ -17,7 +17,7 @@ export default function ResourcesPage() {
     {
       icon: DocumentTextIcon,
       title: 'Best Practices',
-      description: 'Tips and tricks to maximize your success on Rentify.',
+      description: 'Tips and tricks to maximize your success on Rhentify.',
     },
   ]
 
@@ -30,7 +30,7 @@ export default function ResourcesPage() {
             Resources
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400">
-            Everything you need to succeed on Rentify
+            Everything you need to succeed on Rhentify
           </p>
         </div>
 

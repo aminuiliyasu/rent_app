@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,7 +18,8 @@ import java.util.Set;
     @Index(name = "idx_phone", columnList = "phone")
 })
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"listings", "bookings", "sentMessages", "receivedMessages"})
+@ToString(exclude = {"listings", "bookings", "sentMessages", "receivedMessages"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class User extends BaseEntity {

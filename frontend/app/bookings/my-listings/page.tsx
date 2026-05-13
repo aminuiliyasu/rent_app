@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -9,6 +9,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
 import { CalendarIcon, CheckCircleIcon, XCircleIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid'
 import Link from 'next/link'
+import { formatMoneyAmount, getListingCurrencyCode } from '@/lib/listingCurrency'
+import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
+import { formatBookingDateRange } from '@/lib/bookingUi'
 
 interface Booking {
   id: number
@@ -21,25 +24,19 @@ interface Booking {
   totalAmount: number
   deposit: number
   platformFee: number
+  currency?: string
   renter: { id: number; name: string; email: string }
-  listing?: { title: string }
+  listing?: { title: string; pricingCurrency?: string }
 }
 
 export default function MyListingBookingsPage() {
   const router = useRouter()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading: authLoading } = useAuth()
+  const { presentation } = useCurrencyPresentation()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login')
-      return
-    }
-    fetchBookings()
-  }, [])
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       const response = await api.get('/bookings/my-listings?size=100')
       setBookings(response.data.content || [])
@@ -49,7 +46,16 @@ export default function MyListingBookingsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!isAuthenticated) {
+      router.push('/login')
+      return
+    }
+    void fetchBookings()
+  }, [authLoading, isAuthenticated, router, fetchBookings])
 
   const handleConfirm = async (bookingId: number) => {
     try {
@@ -109,12 +115,17 @@ export default function MyListingBookingsPage() {
               No bookings yet
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              When users book your listings, they'll appear here
+              When users book your listings, they&apos;ll appear here
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {bookings.map((booking) => (
+            {bookings.map((booking) => {
+              const cur = getListingCurrencyCode({
+                pricingCurrency: booking.currency ?? booking.listing?.pricingCurrency,
+              })
+              const fmt = (n: number) => formatMoneyAmount(n, cur, presentation)
+              return (
               <div key={booking.id} className="card-glass">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -131,7 +142,7 @@ export default function MyListingBookingsPage() {
                       <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <CalendarIcon className="h-5 w-5 text-blue-500" />
                         <span>
-                          {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
+                          {formatBookingDateRange(booking.startDate, booking.endDate)}
                         </span>
                       </div>
                       <div>
@@ -143,7 +154,7 @@ export default function MyListingBookingsPage() {
                       <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Total Amount</p>
                         <p className="font-bold text-gray-900 dark:text-white">
-                          ${(booking.totalAmount + booking.deposit + booking.platformFee).toFixed(2)}
+                          {fmt(booking.totalAmount + booking.deposit)}
                         </p>
                       </div>
                     </div>
@@ -178,7 +189,8 @@ export default function MyListingBookingsPage() {
                   </div>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

@@ -34,4 +34,10 @@ public class BookingResponse {
     private String cancellationReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    /** Present when this booking was opened from a live rent request (feed). */
+    private Long rentWishPostId;
+
+    /** Populated on GET /bookings/{id} for renter and owner only. */
+    private BookingReviewSummaryResponse reviewSummary;
 }

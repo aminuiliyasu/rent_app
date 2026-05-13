@@ -15,14 +15,14 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">1. Acceptance of Terms</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                By accessing and using Rentify, you accept and agree to be bound by the terms and provision of this agreement.
+                By accessing and using Rhentify, you accept and agree to be bound by the terms and provision of this agreement.
               </p>
             </section>
             
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">2. Use License</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                Permission is granted to temporarily use Rentify for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.
+                Permission is granted to temporarily use Rhentify for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.
               </p>
             </section>
             
@@ -36,14 +36,14 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">4. Prohibited Uses</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                You may not use Rentify in any way that causes, or may cause, damage to the website or impairment of the availability or accessibility of the website.
+                You may not use Rhentify in any way that causes, or may cause, damage to the website or impairment of the availability or accessibility of the website.
               </p>
             </section>
             
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">5. Limitation of Liability</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                In no event shall Rentify or its suppliers be liable for any damages arising out of the use or inability to use the materials on Rentify's website.
+                In no event shall Rhentify or its suppliers be liable for any damages arising out of the use or inability to use the materials on Rhentify&apos;s website.
               </p>
             </section>
           </div>

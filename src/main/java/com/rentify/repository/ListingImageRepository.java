@@ -8,6 +8,8 @@ import java.util.List;
 
 @Repository
 public interface ListingImageRepository extends JpaRepository<ListingImage, Long> {
-    List<ListingImage> findByListingIdOrderBySortOrderAsc(Long listingId);
-    void deleteByListingId(Long listingId);
+    /** Property path is listing.id (FK listing_id). */
+    List<ListingImage> findByListing_IdOrderBySortOrderAsc(Long listingId);
+
+    void deleteByListing_Id(Long listingId);
 }

@@ -86,15 +86,28 @@ public class FileUploadService {
         Path filePath = uploadPath.resolve(filename);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         
-        // Return URL
-        return baseUrl + "/uploads/" + subdirectory + "/" + filename;
+        // Path-only URL — works with Next.js on another port (same-site /uploads rewrite) and avoids mixed-origin issues
+        return "/uploads/" + subdirectory + "/" + filename;
     }
     
     public void deleteFile(String fileUrl) {
         try {
-            // Extract path from URL
-            String path = fileUrl.replace(baseUrl + "/uploads/", "");
-            Path filePath = Paths.get(uploadDir, path);
+            String relative = fileUrl;
+            if (relative.startsWith("http://") || relative.startsWith("https://")) {
+                try {
+                    relative = java.net.URI.create(relative).getPath();
+                } catch (Exception e) {
+                    return;
+                }
+            }
+            if (relative.startsWith(baseUrl + "/uploads/")) {
+                relative = relative.substring((baseUrl + "/uploads/").length());
+            } else if (relative.startsWith("/uploads/")) {
+                relative = relative.substring("/uploads/".length());
+            } else {
+                return;
+            }
+            Path filePath = Paths.get(uploadDir, relative.split("/"));
             
             if (Files.exists(filePath)) {
                 Files.delete(filePath);

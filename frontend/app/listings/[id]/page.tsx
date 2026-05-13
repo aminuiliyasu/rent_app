@@ -5,8 +5,7 @@ import { useParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import api from '@/lib/api'
-import { Listing } from '@/lib/types'
-import Image from 'next/image'
+import { Listing, Review } from '@/lib/types'
 import {
   StarIcon,
   MapPinIcon,
@@ -19,34 +18,62 @@ import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import {
+  formatMoneyAmount,
+  formatListingCardPrice,
+  getListingCurrencyCode,
+  stripLegacyPricingAppendix,
+} from '@/lib/listingCurrency'
+import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
+import { formatListingLocationLine } from '@/lib/listingLocation'
+import { galleryImageUrls } from '@/lib/listingImageUrl'
 
 export default function ListingDetailPage() {
   const params = useParams()
   const { isAuthenticated } = useAuth()
+  const { presentation } = useCurrencyPresentation()
   const router = useRouter()
   const [listing, setListing] = useState<Listing | null>(null)
+  const [listingReviews, setListingReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedDates, setSelectedDates] = useState({ start: '', end: '' })
   const [selectedImage, setSelectedImage] = useState(0)
 
   useEffect(() => {
-    fetchListing()
-  }, [params.id])
+    const id = typeof params.id === 'string' ? params.id : params.id?.[0]
+    if (!id) return
 
-  const fetchListing = async () => {
-    try {
-      const response = await api.get(`/listings/${params.id}`)
-      setListing(response.data)
-      if (response.data.imageUrls && response.data.imageUrls.length > 0) {
-        setSelectedImage(0)
+    let cancelled = false
+    setLoading(true)
+
+    ;(async () => {
+      try {
+        const [listingRes, reviewsRes] = await Promise.all([
+          api.get(`/listings/${id}`),
+          api.get(`/listings/${id}/reviews?size=50`).catch(() => ({ data: { content: [] } })),
+        ])
+        if (cancelled) return
+        setListing(listingRes.data)
+        setListingReviews(reviewsRes.data?.content || [])
+        const d = listingRes.data
+        if (
+          (d.imageUrls && d.imageUrls.length > 0) ||
+          d.primaryImageUrl
+        ) {
+          setSelectedImage(0)
+        }
+      } catch (error) {
+        console.error('Error fetching listing:', error)
+        if (!cancelled) toast.error('Failed to load listing')
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-    } catch (error) {
-      console.error('Error fetching listing:', error)
-      toast.error('Failed to load listing')
-    } finally {
-      setLoading(false)
+    })()
+
+    return () => {
+      cancelled = true
     }
-  }
+  }, [params.id])
 
   const handleBook = () => {
     if (!isAuthenticated) {
@@ -83,18 +110,20 @@ export default function ListingDetailPage() {
             <SparklesIcon className="h-10 w-10 text-gray-400" />
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Listing not found</h3>
-          <p className="text-gray-600 dark:text-gray-400">The listing you're looking for doesn't exist</p>
+          <p className="text-gray-600 dark:text-gray-400">The listing you&apos;re looking for doesn&apos;t exist</p>
         </div>
         <Footer />
       </div>
     )
   }
 
-  const images = listing.imageUrls && listing.imageUrls.length > 0 
-    ? listing.imageUrls 
-    : listing.primaryImageUrl 
-      ? [listing.primaryImageUrl] 
-      : []
+  const images = galleryImageUrls(listing)
+
+  const currencyCode = getListingCurrencyCode(listing)
+  const fmt = (amount?: number | null) => formatMoneyAmount(amount, currencyCode, presentation)
+  const cardPrice = formatListingCardPrice(listing, presentation)
+  const descriptionDisplay = stripLegacyPricingAppendix(listing.description)
+  const locationLine = formatListingLocationLine(listing)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
@@ -107,12 +136,11 @@ export default function ListingDetailPage() {
             <div className="card-glass overflow-hidden">
               <div className="relative h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
                 {images.length > 0 ? (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={images[selectedImage]}
-                    alt={listing.title}
-                    fill
-                    className="object-cover"
-                    priority
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20">
@@ -132,9 +160,10 @@ export default function ListingDetailPage() {
               {/* Thumbnail Gallery */}
               {images.length > 1 && (
                 <div className="grid grid-cols-4 gap-3 mt-4">
-                  {images.slice(0, 4).map((url, idx) => (
+                  {images.map((url, idx) => (
                     <button
-                      key={idx}
+                      key={url + idx}
+                      type="button"
                       onClick={() => setSelectedImage(idx)}
                       className={`relative h-24 rounded-xl overflow-hidden border-2 transition-all ${
                         selectedImage === idx
@@ -142,7 +171,12 @@ export default function ListingDetailPage() {
                           : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                     >
-                      <Image src={url} alt={`${listing.title} ${idx + 1}`} fill className="object-cover" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={url}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
                     </button>
                   ))}
                 </div>
@@ -158,7 +192,7 @@ export default function ListingDetailPage() {
                   </h1>
                   
                   {/* Rating & Location */}
-                  <div className="flex items-center gap-6 mb-6">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mb-6">
                     {listing.averageRating && (
                       <div className="flex items-center gap-2">
                         <div className="flex items-center">
@@ -177,21 +211,21 @@ export default function ListingDetailPage() {
                       </div>
                     )}
                     
-                    {(listing.city || listing.address) && (
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                        <MapPinIcon className="h-5 w-5 text-blue-500" />
-                        <span className="font-medium">{listing.address || `${listing.city}, ${listing.state}`}</span>
+                    {locationLine && (
+                      <div className="flex min-w-0 max-w-full items-start gap-2 text-gray-600 dark:text-gray-400">
+                        <MapPinIcon className="h-5 w-5 shrink-0 text-blue-500" aria-hidden />
+                        <span className="font-medium leading-snug">{locationLine}</span>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
               
-              {listing.description && (
+              {descriptionDisplay && (
                 <div className="prose max-w-none mb-8">
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Description</h3>
                   <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed text-lg">
-                    {listing.description}
+                    {descriptionDisplay}
                   </p>
                 </div>
               )}
@@ -216,43 +250,89 @@ export default function ListingDetailPage() {
                 </div>
               )}
 
-              {/* Features */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-                {listing.priceDay && (
-                  <div className="text-center p-4 rounded-xl bg-gray-50 dark:bg-gray-800">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Daily Rate</p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">${listing.priceDay.toFixed(2)}</p>
+              {/* Rates */}
+              <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  <span className="font-semibold text-gray-800 dark:text-gray-200">Pricing</span>
+                  <span className="text-gray-500 dark:text-gray-500"> · all amounts in </span>
+                  <span className="font-bold tabular-nums text-blue-600 dark:text-blue-400">{currencyCode}</span>
+                </p>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {listing.priceHour != null && listing.priceHour > 0 && (
+                  <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 min-w-0 border border-gray-100 dark:border-gray-700/80">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Hourly</p>
+                    <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white break-words leading-snug">{fmt(listing.priceHour)}</p>
                   </div>
                 )}
-                {listing.priceWeek && (
-                  <div className="text-center p-4 rounded-xl bg-gray-50 dark:bg-gray-800">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Weekly Rate</p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">${listing.priceWeek.toFixed(2)}</p>
+                {listing.priceDay != null && listing.priceDay > 0 && (
+                  <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 min-w-0 border border-gray-100 dark:border-gray-700/80">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Daily</p>
+                    <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white break-words leading-snug">{fmt(listing.priceDay)}</p>
                   </div>
                 )}
-                {listing.priceMonth && (
-                  <div className="text-center p-4 rounded-xl bg-gray-50 dark:bg-gray-800">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Monthly Rate</p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">${listing.priceMonth.toFixed(2)}</p>
+                {listing.priceWeek != null && listing.priceWeek > 0 && (
+                  <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 min-w-0 border border-gray-100 dark:border-gray-700/80">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Weekly</p>
+                    <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white break-words leading-snug">{fmt(listing.priceWeek)}</p>
                   </div>
                 )}
-                {listing.deposit && (
-                  <div className="text-center p-4 rounded-xl bg-gray-50 dark:bg-gray-800">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Deposit</p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">${listing.deposit.toFixed(2)}</p>
+                {listing.priceMonth != null && listing.priceMonth > 0 && (
+                  <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 min-w-0 border border-gray-100 dark:border-gray-700/80">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Monthly</p>
+                    <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white break-words leading-snug">{fmt(listing.priceMonth)}</p>
                   </div>
                 )}
+                {listing.deposit != null && listing.deposit > 0 && (
+                  <div className="text-center p-3 sm:p-4 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 min-w-0 border border-amber-200/80 dark:border-amber-800/60">
+                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Deposit</p>
+                    <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white break-words leading-snug">{fmt(listing.deposit)}</p>
+                  </div>
+                )}
+                </div>
               </div>
             </div>
 
             {/* Reviews Section */}
             <div className="card-glass">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Reviews</h2>
-              <div className="text-center py-12">
-                <StarIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400 font-medium">No reviews yet</p>
-                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Be the first to review this listing!</p>
-              </div>
+              {listingReviews.length === 0 ? (
+                <div className="text-center py-12">
+                  <StarIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400 font-medium">No reviews yet</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                    Completed rentals unlock mutual reviews between renter and owner.
+                  </p>
+                </div>
+              ) : (
+                <ul className="space-y-6">
+                  {listingReviews.map((rev) => (
+                    <li
+                      key={rev.id}
+                      className="p-5 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-900/40"
+                    >
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div>
+                          <p className="font-bold text-gray-900 dark:text-white">{rev.reviewer?.name || 'Renter'}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(rev.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <StarIcon
+                              key={n}
+                              className={`h-5 w-5 ${n <= rev.rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      {rev.comment && (
+                        <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{rev.comment}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
 
@@ -260,20 +340,34 @@ export default function ListingDetailPage() {
           <div className="lg:col-span-1">
             <div className="card-glass sticky top-24 animate-slide-up">
               <div className="mb-8">
-                <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    ${listing.priceDay?.toFixed(2)}
-                  </span>
-                  <span className="text-xl text-gray-600 dark:text-gray-400 font-medium">/day</span>
-                </div>
-                {listing.priceWeek && (
-                  <div className="text-gray-600 dark:text-gray-400 mb-1">
-                    <span className="font-semibold">${listing.priceWeek.toFixed(2)}</span>/week
+                {cardPrice ? (
+                  <div className="flex flex-wrap items-baseline gap-2 mb-4">
+                    <span className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
+                      {cardPrice.formatted}
+                    </span>
+                    <span className="text-xl text-gray-600 dark:text-gray-400 font-medium">{cardPrice.suffix}</span>
+                  </div>
+                ) : (
+                  <p className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-4">Contact for pricing</p>
+                )}
+                {listing.priceHour != null && listing.priceHour > 0 && cardPrice?.suffix !== '/hr' && (
+                  <div className="text-gray-600 dark:text-gray-400 mb-1 text-sm">
+                    <span className="font-semibold">{fmt(listing.priceHour)}</span>/hr
                   </div>
                 )}
-                {listing.priceMonth && (
-                  <div className="text-gray-600 dark:text-gray-400">
-                    <span className="font-semibold">${listing.priceMonth.toFixed(2)}</span>/month
+                {listing.priceDay != null && listing.priceDay > 0 && cardPrice?.suffix !== '/day' && (
+                  <div className="text-gray-600 dark:text-gray-400 mb-1 text-sm">
+                    <span className="font-semibold">{fmt(listing.priceDay)}</span>/day
+                  </div>
+                )}
+                {listing.priceWeek != null && listing.priceWeek > 0 && cardPrice?.suffix !== '/wk' && (
+                  <div className="text-gray-600 dark:text-gray-400 mb-1 text-sm">
+                    <span className="font-semibold">{fmt(listing.priceWeek)}</span>/week
+                  </div>
+                )}
+                {listing.priceMonth != null && listing.priceMonth > 0 && cardPrice?.suffix !== '/mo' && (
+                  <div className="text-gray-600 dark:text-gray-400 text-sm">
+                    <span className="font-semibold">{fmt(listing.priceMonth)}</span>/month
                   </div>
                 )}
               </div>
@@ -308,10 +402,10 @@ export default function ListingDetailPage() {
               </div>
 
               {/* Deposit Info */}
-              {listing.deposit && (
+              {listing.deposit != null && listing.deposit > 0 && (
                 <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-700">
                   <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Security Deposit</p>
-                  <p className="text-2xl font-extrabold text-gray-900 dark:text-white">${listing.deposit.toFixed(2)}</p>
+                  <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{fmt(listing.deposit)}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Fully refundable after return</p>
                 </div>
               )}
@@ -327,7 +421,7 @@ export default function ListingDetailPage() {
               <div className="text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-2">
                   <CheckBadgeIcon className="h-4 w-4 text-green-500" />
-                  You won't be charged yet
+                  Select dates, review pricing, and securely pay through chats
                 </p>
               </div>
             </div>

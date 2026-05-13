@@ -1,4 +1,5 @@
 // WebRTC Manager for handling peer-to-peer connections
+import type { Client } from '@stomp/stompjs'
 
 export class WebRTCManager {
   private pc: RTCPeerConnection | null = null
@@ -38,6 +39,11 @@ export class WebRTCManager {
 
     // Get local media
     try {
+      const pc = this.pc
+      if (!pc) {
+        throw new Error('Peer connection is not initialized')
+      }
+
       const constraints: MediaStreamConstraints = {
         audio: true,
         video: callType === 'VIDEO'
@@ -46,13 +52,11 @@ export class WebRTCManager {
       
       // Add local tracks to peer connection
       this.localStream.getTracks().forEach(track => {
-        if (this.pc) {
-          this.pc.addTrack(track, this.localStream!)
-        }
+        pc.addTrack(track, this.localStream!)
       })
 
       // Handle remote stream
-      this.pc.ontrack = (event) => {
+      pc.ontrack = (event) => {
         this.remoteStream = event.streams[0]
         if (this.onRemoteStream) {
           this.onRemoteStream(this.remoteStream)
@@ -60,7 +64,7 @@ export class WebRTCManager {
       }
 
       // Handle ICE candidates
-      this.pc.onicecandidate = (event) => {
+      pc.onicecandidate = (event) => {
         if (event.candidate && this.stompClient && this.stompClient.connected) {
           this.stompClient.publish({
             destination: '/app/call/ice-candidate',
@@ -74,10 +78,10 @@ export class WebRTCManager {
       }
 
       // Handle connection state changes
-      this.pc.onconnectionstatechange = () => {
-        if (this.pc?.connectionState === 'disconnected' || 
-            this.pc?.connectionState === 'failed' ||
-            this.pc?.connectionState === 'closed') {
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === 'disconnected' || 
+            pc.connectionState === 'failed' ||
+            pc.connectionState === 'closed') {
           this.cleanup()
         }
       }
@@ -103,7 +107,7 @@ export class WebRTCManager {
       const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8080/ws'
       
       const socket = new SockJS(wsUrl)
-      this.stompClient = new Client({
+      const stompClient = new Client({
         webSocketFactory: () => socket,
         reconnectDelay: 5000,
         heartbeatIncoming: 4000,
@@ -112,7 +116,7 @@ export class WebRTCManager {
           console.log('WebSocket connected for WebRTC')
           
           // Subscribe to WebRTC messages
-          this.stompClient?.subscribe(`/user/${this.receiverId}/queue/webrtc`, (message: any) => {
+          stompClient.subscribe(`/user/${this.receiverId}/queue/webrtc`, (message: any) => {
             this.handleWebRTCMessage(JSON.parse(message.body))
           })
           
@@ -123,9 +127,10 @@ export class WebRTCManager {
           reject(new Error('WebSocket connection failed'))
         }
       })
+      this.stompClient = stompClient
 
       // Add authorization header
-      this.stompClient.beforeConnect = () => {
+      stompClient.beforeConnect = () => {
         if (token) {
           socket.onopen = () => {
             socket.send(JSON.stringify({ token }))
@@ -133,7 +138,7 @@ export class WebRTCManager {
         }
       }
 
-      this.stompClient.activate()
+      stompClient.activate()
     })
   }
 
@@ -150,7 +155,6 @@ export class WebRTCManager {
           destination: '/app/call/answer',
           body: JSON.stringify({
             callId: this.callId,
-            receiverId: this.receiverId,
             type: 'answer',
             sdp: answer.sdp,
             receiverId: message.senderId

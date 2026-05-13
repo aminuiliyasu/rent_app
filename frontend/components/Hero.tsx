@@ -1,85 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   MagnifyingGlassIcon,
   SparklesIcon,
-  CubeIcon,
-  UserGroupIcon,
-  StarIcon,
 } from '@heroicons/react/24/solid'
-import api from '@/lib/api'
-
-interface PublicStats {
-  totalListings: number
-  activeListings: number
-  totalWorkers: number
-  totalUsers: number
-}
-
-function formatNumber(num: number): string {
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K+'
-  }
-  return num.toString()
-}
-
-function AnimatedCounter({ value, duration = 2000 }: { value: number; duration?: number }) {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    let startTime: number | null = null
-    const startValue = 0
-    const endValue = value
-
-    const animate = (currentTime: number) => {
-      if (startTime === null) startTime = currentTime
-      const progress = Math.min((currentTime - startTime) / duration, 1)
-      
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4)
-      const currentCount = Math.floor(startValue + (endValue - startValue) * easeOutQuart)
-      
-      setCount(currentCount)
-      
-      if (progress < 1) {
-        requestAnimationFrame(animate)
-      } else {
-        setCount(endValue)
-      }
-    }
-
-    requestAnimationFrame(animate)
-  }, [value, duration])
-
-  return <span>{formatNumber(count)}</span>
-}
 
 export default function Hero() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const [stats, setStats] = useState<PublicStats>({
-    totalListings: 0,
-    activeListings: 0,
-    totalWorkers: 0,
-    totalUsers: 0,
-  })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchStats()
-  }, [])
-
-  const fetchStats = async () => {
-    try {
-      const response = await api.get('/stats/public')
-      setStats(response.data)
-    } catch (error) {
-      console.error('Error fetching stats:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -111,29 +41,29 @@ export default function Hero() {
           <div className="inline-flex items-center px-6 py-3 rounded-full bg-white/25 backdrop-blur-xl border-2 border-white/40 mb-10 animate-slide-down shadow-2xl">
             <SparklesIcon className="h-5 w-5 text-white mr-2" />
             <span className="text-base font-bold text-white">
-              {loading ? 'Loading...' : `Trusted by ${formatNumber(stats.totalUsers)} users`}
+              Your local rental & hire marketplace
             </span>
           </div>
 
           {/* Main Heading */}
           <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-white mb-10 leading-tight animate-slide-up drop-shadow-2xl">
-            Rent Anything.<br />
+            Anything you need.<br />
             <span className="bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-400 bg-clip-text text-transparent drop-shadow-2xl" style={{ textShadow: '0 0 30px rgba(255, 235, 59, 0.5)' }}>
-              Hire Anyone.
+              Hire anyone.
             </span>
             <br />
-            <span className="text-white drop-shadow-2xl">Anywhere.</span>
+            <span className="text-white drop-shadow-2xl">All around you</span>
           </h1>
           
           <p className="text-2xl md:text-3xl lg:text-4xl text-white mb-16 max-w-5xl mx-auto font-medium leading-relaxed animate-slide-up drop-shadow-lg" style={{ animationDelay: '0.1s' }}>
-            Discover thousands of items and skilled professionals available for rent in your area.
+            Discover a wide range of items and skilled proffesional available for rent in your area
             <span className="block mt-4 text-xl md:text-2xl text-white/95 font-normal">
               Your marketplace for everything you need, when you need it.
             </span>
           </p>
 
           {/* Enhanced Search Bar */}
-          <form onSubmit={handleSearch} className="max-w-5xl mx-auto animate-slide-up mb-20" style={{ animationDelay: '0.2s' }}>
+          <form onSubmit={handleSearch} className="max-w-5xl mx-auto animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <div className="relative">
               {/* Glow Effect */}
               <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity"></div>
@@ -163,35 +93,9 @@ export default function Hero() {
             </div>
           </form>
 
-          {/* Enhanced Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto animate-slide-up" style={{ animationDelay: '0.3s' }}>
-            {[
-              { number: stats.activeListings, label: 'Active Listings', Icon: CubeIcon },
-              { number: stats.totalWorkers, label: 'Verified Workers', Icon: UserGroupIcon },
-              { number: stats.totalUsers, label: 'Happy Customers', Icon: StarIcon },
-            ].map((stat, idx) => (
-              <div key={idx} className="group">
-                <div className="relative">
-                  {/* Glow Effect */}
-                  <div className="absolute -inset-1 bg-white/30 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  
-                  <div className="relative bg-white/20 backdrop-blur-2xl rounded-3xl p-8 border-2 border-white/30 hover:bg-white/30 transition-all duration-300 hover:scale-110 shadow-2xl">
-                    <div className="flex justify-center mb-4" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}>
-                      <stat.Icon className="h-16 w-16 text-white" aria-hidden />
-                    </div>
-                    <div className="text-6xl font-black text-white mb-3 text-center group-hover:scale-110 transition-transform drop-shadow-2xl">
-                      {loading ? (
-                        <span className="inline-block w-24 h-16 bg-white/30 rounded-lg animate-pulse"></span>
-                      ) : (
-                        <AnimatedCounter value={stat.number} />
-                      )}
-                    </div>
-                    <div className="text-white text-base font-bold uppercase tracking-widest text-center">{stat.label}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <p className="mt-8 mb-4 text-lg sm:text-xl md:text-2xl font-bold text-white text-center max-w-3xl mx-auto px-4 leading-snug drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+            Currently, all transactions are 100% free
+          </p>
         </div>
       </div>
 

@@ -70,9 +70,9 @@
 
   /* Hero Section - Removed as we're using inline styles for more control */
 
-  /* Listing Card */
+  /* Listing Card — relative contains the absolute hover overlay; block avoids inline link layout quirks */
   .listing-card {
-    @apply bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 hover:scale-[1.02] hover:-translate-y-1;
+    @apply relative block bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 hover:scale-[1.02] hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50 dark:focus-visible:ring-offset-gray-950;
   }
 
   /* Badge */

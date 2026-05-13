@@ -2,6 +2,7 @@ package com.rentify.controller;
 
 import com.rentify.dto.request.CreateListingRequest;
 import com.rentify.dto.response.ListingResponse;
+import com.rentify.dto.response.ReviewResponse;
 import com.rentify.model.enums.ListingType;
 import com.rentify.service.ListingService;
 import jakarta.validation.Valid;
@@ -26,7 +27,9 @@ public class ListingController {
     @GetMapping
     public ResponseEntity<Page<ListingResponse>> searchListings(
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String location,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String categorySlug,
             @RequestParam(required = false) ListingType type,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
@@ -43,7 +46,7 @@ public class ListingController {
         Pageable pageable = PageRequest.of(page, size, sort);
         
         Page<ListingResponse> listings = listingService.searchListings(
-            search, categoryId, type, minPrice, maxPrice, lat, lng, radius, pageable
+            search, location, categoryId, categorySlug, type, minPrice, maxPrice, lat, lng, radius, pageable
         );
         
         return ResponseEntity.ok(listings);
@@ -53,6 +56,16 @@ public class ListingController {
     public ResponseEntity<ListingResponse> getListing(@PathVariable Long id) {
         ListingResponse listing = listingService.getListingById(id);
         return ResponseEntity.ok(listing);
+    }
+
+    @GetMapping("/{id}/reviews")
+    public ResponseEntity<Page<ReviewResponse>> getListingReviews(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ReviewResponse> reviews = listingService.getPublishedReviewsForListing(id, pageable);
+        return ResponseEntity.ok(reviews);
     }
     
     @PostMapping

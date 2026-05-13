@@ -87,7 +87,7 @@ export default function RegisterPage() {
                 <SparklesIcon className="h-6 w-6 text-white" />
               </div>
             </div>
-            <span className="text-2xl font-bold gradient-text">Rentify</span>
+            <span className="text-2xl font-bold gradient-text">Rhentify</span>
           </Link>
           <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
             Create your account

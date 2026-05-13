@@ -5,6 +5,7 @@ import com.rentify.dto.response.MessageResponse;
 import com.rentify.model.Booking;
 import com.rentify.model.Message;
 import com.rentify.model.User;
+import com.rentify.model.enums.MessageKind;
 import com.rentify.repository.BookingRepository;
 import com.rentify.repository.MessageRepository;
 import com.rentify.repository.UserRepository;
@@ -58,12 +59,25 @@ public class MessageService {
         message.setReceiver(receiver);
         message.setContent(request.getContent());
         message.setAttachmentUrl(request.getAttachmentUrl());
-        
+        message.setMessageKind(MessageKind.STANDARD);
+
         message = messageRepository.save(message);
         
         return mapToResponse(message);
     }
-    
+
+    @Transactional
+    public MessageResponse createLiveRequestOpeningMessage(Booking booking) {
+        Message message = new Message();
+        message.setBooking(booking);
+        message.setSender(booking.getRenter());
+        message.setReceiver(booking.getListing().getOwner());
+        message.setContent("request posted");
+        message.setMessageKind(MessageKind.LIVE_REQUEST_REPLY);
+        message = messageRepository.save(message);
+        return mapToResponse(message);
+    }
+
     @Transactional(readOnly = true)
     public List<MessageResponse> getBookingMessages(Long bookingId) {
         Long userId = CurrentUser.getCurrentUserId();
@@ -143,7 +157,9 @@ public class MessageService {
         response.setAttachmentUrl(message.getAttachmentUrl());
         response.setReadAt(message.getReadAt());
         response.setCreatedAt(message.getCreatedAt());
-        
+        response.setMessageKind(
+                message.getMessageKind() != null ? message.getMessageKind().name() : MessageKind.STANDARD.name());
+
         // Map sender
         com.rentify.dto.response.UserResponse sender = new com.rentify.dto.response.UserResponse(
             message.getSender().getId(),

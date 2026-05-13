@@ -28,6 +28,9 @@ public class CreateListingRequest {
     private BigDecimal priceMonth;
     private BigDecimal priceHour; // For workers
     private BigDecimal deposit;
+
+    /** ISO 4217 (USD, EUR, HUF, …). Defaults on server if omitted. */
+    private String pricingCurrency;
     
     private Double lat;
     private Double lng;
@@ -46,6 +49,7 @@ public class CreateListingRequest {
     private String workerBio;
     private String workerProfession;
     private String serviceArea;
+    private String availableDays;
     
     // Images
     private java.util.List<String> imageUrls;

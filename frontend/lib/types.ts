@@ -51,6 +51,8 @@ export interface Listing {
   priceMonth?: number
   priceHour?: number
   deposit?: number
+  /** ISO 4217 — how to display rates (e.g. USD, EUR, HUF) */
+  pricingCurrency?: string
   status: ListingStatus
   lat?: number
   lng?: number
@@ -64,6 +66,7 @@ export interface Listing {
   workerBio?: string
   workerProfession?: string
   serviceArea?: string
+  availableDays?: string
   isFeatured?: boolean
   ownerId: number
   ownerName?: string
@@ -71,6 +74,51 @@ export interface Listing {
   primaryImageUrl?: string
   averageRating?: number
   reviewCount?: number
+}
+
+export type DeliveryPreference = 'PICKUP' | 'DELIVERY' | 'EITHER'
+
+export interface RentWishPost {
+  id: number
+  title: string
+  description?: string
+  location?: string
+  district?: string
+  city?: string
+  country?: string
+  authorId: number
+  authorName: string
+  createdAt: string
+  expiresAt: string
+  budgetText?: string | null
+  deliveryPreference?: DeliveryPreference | null
+}
+
+export interface Review {
+  id: number
+  bookingId: number
+  reviewer: User
+  reviewee: User
+  rating: number
+  comment?: string
+  isPublished: boolean
+  createdAt: string
+}
+
+/** GET /users/:id/trust — trust banner + latest mutual-review snippets */
+export interface UserTrust {
+  averageRatingReceived: number | null
+  reviewsReceivedCount: number
+  latestReceived: Review | null
+  latestGiven: Review | null
+}
+
+export interface BookingReviewSummary {
+  canSubmitReview: boolean
+  awaitingPartnerReview: boolean
+  bothReviewsVisible: boolean
+  myReview: Review | null
+  partnerReview: Review | null
 }
 
 export interface Booking {
@@ -88,13 +136,13 @@ export interface Booking {
   deposit: number
   platformFee: number
   currency: string
-  paymentId?: string
   confirmedAt?: string
   completedAt?: string
   cancelledAt?: string
   cancellationReason?: string
   createdAt?: string
   updatedAt?: string
+  reviewSummary?: BookingReviewSummary
 }
 
 export interface Category {
@@ -116,6 +164,8 @@ export interface MessageResponse {
   attachmentUrl?: string
   readAt?: string
   createdAt: string
+  /** STANDARD (default) | LIVE_REQUEST_REPLY (system prompt seeded for a feed-driven thread). */
+  messageKind?: string
 }
 
 export enum CallType {

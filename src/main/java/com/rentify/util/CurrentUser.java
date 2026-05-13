@@ -15,7 +15,7 @@ public class CurrentUser {
         if (principal instanceof UserPrincipal) {
             return (UserPrincipal) principal;
         }
-        throw new RuntimeException("User not authenticated or invalid principal type");
+        throw new RuntimeException("User not authenticated");
     }
     
     public static Long getCurrentUserId() {

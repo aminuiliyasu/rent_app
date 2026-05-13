@@ -22,7 +22,7 @@ export default function HowItWorks() {
     {
       number: '2',
       title: 'Book & Pay',
-      description: 'Select dates, review pricing, and securely pay through our platform',
+      description: 'Select your dates, review pricing, and securely complete your payment within the chat',
       Icon: CreditCardIcon,
       gradient: 'from-green-500 to-green-600',
       bgGradient: 'from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20',

@@ -1,6 +1,6 @@
-# Rentify Frontend
+# Rhentify Frontend
 
-Modern, responsive frontend for the Rentify marketplace platform built with Next.js 14, React, and Tailwind CSS.
+Modern, responsive frontend for the Rhentify marketplace platform built with Next.js 14, React, and Tailwind CSS.
 
 ## Features
 
@@ -111,4 +111,4 @@ frontend/
 
 ## License
 
-Confidential - Rentify Platform v1.0
+Confidential - Rhentify Platform v1.0

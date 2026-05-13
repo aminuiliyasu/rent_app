@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -22,7 +23,8 @@ import java.util.Set;
     @Index(name = "idx_listings_location", columnList = "lat,lng")
 })
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"owner", "category", "images", "availabilities", "bookings"})
+@ToString(exclude = {"owner", "category", "images", "availabilities", "bookings"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Listing extends BaseEntity {
@@ -60,6 +62,10 @@ public class Listing extends BaseEntity {
     
     @Column(name = "deposit", precision = 10, scale = 2)
     private BigDecimal deposit;
+
+    /** ISO 4217 code for displaying rates (e.g. USD, EUR, HUF). */
+    @Column(name = "pricing_currency", length = 3)
+    private String pricingCurrency = "USD";
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -104,6 +110,9 @@ public class Listing extends BaseEntity {
     
     @Column(name = "service_area", length = 200)
     private String serviceArea;
+
+    @Column(name = "available_days", length = 50)
+    private String availableDays;
     
     // Features
     @Column(name = "is_featured", nullable = false)

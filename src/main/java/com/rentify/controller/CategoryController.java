@@ -2,11 +2,12 @@ package com.rentify.controller;
 
 import com.rentify.model.Category;
 import com.rentify.repository.CategoryRepository;
+import com.rentify.service.CategorySeedService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
 import java.util.List;
 
 @RestController
@@ -16,18 +17,25 @@ public class CategoryController {
     
     @Autowired
     private CategoryRepository categoryRepository;
-    
+
+    @Autowired
+    private CategorySeedService categorySeedService;
+
     @GetMapping
-    @Transactional(readOnly = true)
     public ResponseEntity<List<Category>> getAllCategories() {
+        categorySeedService.ensureDefaultCategories();
         List<Category> categories = categoryRepository.findAll();
-        // Initialize children to avoid lazy loading issues
-        categories.forEach(cat -> {
-            if (cat.getChildren() != null) {
-                cat.getChildren().size(); // Force initialization
-            }
-        });
+        categories.sort(Comparator.comparing(Category::getName, String.CASE_INSENSITIVE_ORDER));
         return ResponseEntity.ok(categories);
+    }
+
+    @GetMapping("/by-slug/{slug}")
+    public ResponseEntity<Category> getCategoryBySlug(@PathVariable String slug) {
+        categorySeedService.ensureDefaultCategories();
+        String key = slug != null ? slug.trim() : "";
+        return categoryRepository.findBySlug(key)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/{id}")

@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
+import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
 import api from '@/lib/api'
 import { uploadImage } from '@/lib/upload'
 import toast from 'react-hot-toast'
-import { PhotoIcon } from '@heroicons/react/24/outline'
+import { BanknotesIcon, PhotoIcon } from '@heroicons/react/24/outline'
+import TrustReviewsSection from '@/components/TrustReviewsSection'
 
 export default function ProfilePage() {
   const { isAuthenticated, user, loading: authLoading } = useAuth()
+  const { presentation, setPresentation } = useCurrencyPresentation()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
@@ -252,6 +255,49 @@ export default function ProfilePage() {
             </div>
           </form>
         </div>
+
+        <div className="card mt-8">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/15 ring-1 ring-blue-500/20 dark:from-blue-400/10 dark:to-indigo-400/10 dark:ring-blue-400/25">
+              <BanknotesIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">How prices look</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
+                Applies across browse, listings, and bookings. Amounts stay in each listing&apos;s currency—this only changes labels (e.g.{' '}
+                <span className="font-mono text-xs">HUF 5,000</span> vs <span className="font-mono text-xs">Ft5,000</span>).
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setPresentation('iso')}
+              className={`rounded-xl border px-4 py-3 text-left transition-all ${
+                presentation === 'iso'
+                  ? 'border-blue-500 bg-blue-50/90 ring-2 ring-blue-500/30 dark:border-blue-400 dark:bg-blue-950/40 dark:ring-blue-400/25'
+                  : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-600 dark:bg-gray-800/50 dark:hover:border-gray-500'
+              }`}
+            >
+              <span className="block font-semibold text-gray-900 dark:text-white">ISO codes</span>
+              <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">HUF, USD, EUR — clearest</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPresentation('symbol')}
+              className={`rounded-xl border px-4 py-3 text-left transition-all ${
+                presentation === 'symbol'
+                  ? 'border-blue-500 bg-blue-50/90 ring-2 ring-blue-500/30 dark:border-blue-400 dark:bg-blue-950/40 dark:ring-blue-400/25'
+                  : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-600 dark:bg-gray-800/50 dark:hover:border-gray-500'
+              }`}
+            >
+              <span className="block font-semibold text-gray-900 dark:text-white">Local symbols</span>
+              <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">Ft, $, € — compact</span>
+            </button>
+          </div>
+        </div>
+
+        {user?.id != null && <TrustReviewsSection userId={user.id} variant="self" />}
       </div>
       <Footer />
     </div>

@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: rentify-backend
   
@@ -6,13 +8,13 @@ spring:
   # Default: H2 (for local development)
   # Production: MySQL (set DB_URL, DB_USERNAME, DB_PASSWORD environment variables)
   datasource:
-    url: ${DB_URL:jdbc:h2:file:./data/rentify_db;AUTO_SERVER=TRUE}
-    username: ${DB_USERNAME:sa}
-    password: ${DB_PASSWORD:}
-    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_DRIVER}
     hikari:
-      maximum-pool-size: ${DB_POOL_MAX:20}
-      minimum-idle: ${DB_POOL_MIN:10}
+      maximum-pool-size: ${DB_POOL_MAX}
+      minimum-idle: ${DB_POOL_MIN}
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
@@ -27,13 +29,13 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: ${DB_DDL_AUTO:update}  # Use 'validate' in production with MySQL
-    show-sql: ${DB_SHOW_SQL:false}
+      ddl-auto: ${DB_DDL_AUTO}  # Use 'validate' in production with MySQL
+    show-sql: ${DB_SHOW_SQL}
     properties:
       hibernate:
         # Auto-detect dialect based on datasource URL
-        dialect: ${DB_DIALECT:org.hibernate.dialect.H2Dialect}
-        format_sql: ${DB_FORMAT_SQL:true}
+        dialect: ${DB_DIALECT}
+        format_sql: ${DB_FORMAT_SQL}
         jdbc:
           batch_size: 50
           order_inserts: true
@@ -47,10 +49,10 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
   
   mail:
-    host: ${MAIL_HOST:smtp.sendgrid.net}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -64,35 +66,17 @@ spring:
       max-file-size: 5MB
       max-request-size: 10MB
   
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID:}
-            client-secret: ${GOOGLE_CLIENT_SECRET:}
-            scope:
-              - email
-              - profile
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-        provider:
-          google:
-            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
-            token-uri: https://www.googleapis.com/oauth2/v4/token
-            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
-            user-name-attribute: sub
-
 server:
-  port: ${PORT:8080}
+  port: ${PORT}
   error:
     include-message: always
     include-binding-errors: always
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:your-256-bit-secret-key-change-this-in-production-minimum-32-characters}
-  expiration: 900000 # 15 minutes in milliseconds
-  refresh-expiration: 604800000 # 7 days in milliseconds
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION} # 15 minutes in milliseconds
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION} # 7 days in milliseconds
 
 # Application Configuration
 app:
@@ -104,56 +88,56 @@ app:
   
   # Payment Providers
   stripe:
-    api-key: ${STRIPE_API_KEY:}
-    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    api-key: ${STRIPE_API_KEY}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET}
   
   paystack:
-    secret-key: ${PAYSTACK_SECRET_KEY:}
-    public-key: ${PAYSTACK_PUBLIC_KEY:}
-    webhook-secret: ${PAYSTACK_WEBHOOK_SECRET:}
+    secret-key: ${PAYSTACK_SECRET_KEY}
+    public-key: ${PAYSTACK_PUBLIC_KEY}
+    webhook-secret: ${PAYSTACK_WEBHOOK_SECRET}
   
   # AWS S3 Configuration
   aws:
     s3:
-      bucket-name: ${AWS_S3_BUCKET:rentify-uploads}
-      region: ${AWS_REGION:us-east-1}
-      access-key: ${AWS_ACCESS_KEY:}
-      secret-key: ${AWS_SECRET_KEY:}
+      bucket-name: ${AWS_S3_BUCKET}
+      region: ${AWS_REGION}
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
   
   # Google Maps API
   google:
     maps:
-      api-key: ${GOOGLE_MAPS_API_KEY:}
+      api-key: ${GOOGLE_MAPS_API_KEY}
   
   # Twilio Configuration
   twilio:
-    account-sid: ${TWILIO_ACCOUNT_SID:}
-    auth-token: ${TWILIO_AUTH_TOKEN:}
-    phone-number: ${TWILIO_PHONE_NUMBER:}
+    account-sid: ${TWILIO_ACCOUNT_SID}
+    auth-token: ${TWILIO_AUTH_TOKEN}
+    phone-number: ${TWILIO_PHONE_NUMBER}
   
   # OAuth2 Configuration
   oauth2:
     google:
-      client-id: ${GOOGLE_CLIENT_ID:}
-      client-secret: ${GOOGLE_CLIENT_SECRET:}
+      client-id: ${GOOGLE_CLIENT_ID}
+      client-secret: ${GOOGLE_CLIENT_SECRET}
     facebook:
-      client-id: ${FACEBOOK_CLIENT_ID:}
-      client-secret: ${FACEBOOK_CLIENT_SECRET:}
+      client-id: ${FACEBOOK_CLIENT_ID}
+      client-secret: ${FACEBOOK_CLIENT_SECRET}
   
   # KYC Provider
   kyc:
     smile-identity:
-      api-key: ${SMILE_IDENTITY_API_KEY:}
-      partner-id: ${SMILE_IDENTITY_PARTNER_ID:}
+      api-key: ${SMILE_IDENTITY_API_KEY}
+      partner-id: ${SMILE_IDENTITY_PARTNER_ID}
   
   # Frontend URL for CORS
   frontend:
-    url: ${FRONTEND_URL:http://localhost:3000}
+    url: ${FRONTEND_URL}
   
   # File Upload Configuration
-  base-url: ${APP_BASE_URL:http://localhost:8080}
+  base-url: ${APP_BASE_URL}
   upload:
-    dir: ${UPLOAD_DIR:uploads}
+    dir: ${UPLOAD_DIR}
 
 # Logging
 logging:

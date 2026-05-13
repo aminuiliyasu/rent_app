@@ -15,16 +15,19 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -47,6 +50,9 @@ public class SecurityConfig {
     
     @Autowired
     private CustomOAuth2UserService customOAuth2UserService;
+
+    @Autowired(required = false)
+    private ClientRegistrationRepository clientRegistrationRepository;
     
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -76,6 +82,7 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             )
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/oauth2/**").permitAll()
                 .requestMatchers("/login/oauth2/**").permitAll()
@@ -83,6 +90,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/listings/**").permitAll()
                 .requestMatchers("/api/v1/categories/**").permitAll()
                 .requestMatchers("/api/v1/stats/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/rent-requests/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/feed/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/users/*/reviews").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/users/*/reviews/given").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/users/*/trust").permitAll()
                 .requestMatchers("/api/v1/payments/webhook/**").permitAll()
                 .requestMatchers("/api/v1/upload/**").authenticated()
                 .requestMatchers("/api/v1/calls/**").authenticated()
@@ -91,30 +103,39 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
-            .oauth2Login(oauth2 -> oauth2
+            .authenticationProvider(authenticationProvider())
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        if (clientRegistrationRepository != null) {
+            http.oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
                 )
                 .successHandler(oAuth2AuthenticationSuccessHandler)
                 .failureHandler(oAuth2AuthenticationFailureHandler)
-            )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            );
+        }
         
         return http.build();
     }
     
-    @Value("${app.frontend.url:http://localhost:3000}")
+    @Value("${app.frontend.url}")
     private String frontendUrl;
     
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-            "http://localhost:3000", 
-            "http://localhost:3001",
-            frontendUrl
-        ));
+        // Any localhost / 127.0.0.1 port (Next.js often uses 3000–3005 when ports are busy)
+        List<String> patterns = new ArrayList<>(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*"));
+        String fe = frontendUrl != null ? frontendUrl.trim().replaceAll("/$", "") : "";
+        if (!fe.isEmpty()
+                && !fe.startsWith("http://localhost:")
+                && !fe.startsWith("http://127.0.0.1:")) {
+            patterns.add(fe);
+        }
+        configuration.setAllowedOriginPatterns(patterns);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

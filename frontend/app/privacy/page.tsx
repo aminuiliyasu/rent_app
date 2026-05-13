@@ -15,7 +15,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">1. Information We Collect</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                We collect information that you provide directly to us, including your name, email address, phone number, and payment information when you create an account or make a transaction.
+                We collect information that you provide directly to us, including your name, email address, and phone number when you create an account or communicate on the platform.
               </p>
             </section>
             

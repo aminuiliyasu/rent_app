@@ -1,12 +1,32 @@
 import axios from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1'
+/**
+ * Browser: relative `/api/v1` → Next.js rewrites → Spring (same origin, avoids CORS).
+ * Set NEXT_PUBLIC_API_URL only if the API must be called directly (e.g. unusual hosting).
+ */
+export function getApiBaseUrl(): string {
+  const env = process.env.NEXT_PUBLIC_API_URL
+  if (typeof window !== 'undefined') {
+    if (env && /^https?:\/\//i.test(env)) {
+      return env.replace(/\/$/, '')
+    }
+    return '/api/v1'
+  }
+  if (env && /^https?:\/\//i.test(env)) {
+    return env.replace(/\/$/, '')
+  }
+  return 'http://127.0.0.1:8080/api/v1'
+}
 
 export const api = axios.create({
-  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+})
+
+api.interceptors.request.use((config) => {
+  config.baseURL = getApiBaseUrl()
+  return config
 })
 
 // Add token to requests
@@ -32,7 +52,7 @@ api.interceptors.response.use(
       if (refreshToken) {
         try {
           // Attempt to refresh the token
-          const response = await axios.post(`${API_URL}/auth/refresh`, {
+          const response = await axios.post(`${getApiBaseUrl()}/auth/refresh`, {
             refreshToken: refreshToken
           })
           

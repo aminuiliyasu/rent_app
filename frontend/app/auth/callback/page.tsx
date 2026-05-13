@@ -33,8 +33,7 @@ export default function OAuthCallbackPage() {
 
         // Fetch user profile and update auth context
         api.get('/auth/me')
-          .then((response) => {
-            console.log('User profile fetched:', response.data)
+          .then(() => {
             toast.success('Login successful!')
             // Use window.location to ensure full page reload and auth context update
             setTimeout(() => {

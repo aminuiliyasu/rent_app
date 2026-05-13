@@ -25,6 +25,8 @@ public class ListingResponse {
     private BigDecimal priceMonth;
     private BigDecimal priceHour;
     private BigDecimal deposit;
+    /** ISO 4217 — how listing prices should be shown */
+    private String pricingCurrency;
     private ListingStatus status;
     private Double lat;
     private Double lng;
@@ -38,6 +40,7 @@ public class ListingResponse {
     private String workerBio;
     private String workerProfession;
     private String serviceArea;
+    private String availableDays;
     private Boolean isFeatured;
     private Long ownerId;
     private String ownerName;

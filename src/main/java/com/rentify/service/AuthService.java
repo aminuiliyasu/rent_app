@@ -15,6 +15,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -203,8 +204,20 @@ public class AuthService {
     
     @Transactional(readOnly = true)
     public UserResponse getCurrentUser() {
-        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new RuntimeException("User not authenticated");
+        }
+        Object principal = auth.getPrincipal();
+        if (!(principal instanceof UserPrincipal userPrincipal)) {
+            if (principal instanceof String s && ("anonymousUser".equalsIgnoreCase(s) || s.isBlank())) {
+                throw new RuntimeException("User not authenticated");
+            }
+            if (principal instanceof UserDetails) {
+                throw new RuntimeException("User not authenticated");
+            }
+            throw new RuntimeException("User not authenticated");
+        }
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return mapToUserResponse(user);

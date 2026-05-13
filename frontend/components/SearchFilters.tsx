@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { ListingType } from '@/lib/types'
+import { useState, useEffect } from 'react'
+import { ListingType, Category } from '@/lib/types'
+import api from '@/lib/api'
+import { mergeCategoriesWithSeed, categoryHasPersistentId } from '@/lib/seedCategories'
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 interface SearchFiltersProps {
@@ -11,21 +13,37 @@ interface SearchFiltersProps {
 
 export default function SearchFilters({ filters, setFilters }: SearchFiltersProps) {
   const [showFilters, setShowFilters] = useState(true)
+  const [categories, setCategories] = useState<Category[]>(() => mergeCategoriesWithSeed([]))
+
+  useEffect(() => {
+    api
+      .get('/categories')
+      .then((res) => {
+        setCategories(mergeCategoriesWithSeed(res.data || []))
+      })
+      .catch(() => setCategories(mergeCategoriesWithSeed([])))
+  }, [])
 
   const updateFilter = (key: string, value: any) => {
     setFilters({ ...filters, [key]: value })
   }
 
+  const hasGeoFilter = Boolean(filters.lat && filters.lng)
+
   const activeFiltersCount = [
     filters.search,
     filters.categoryId,
+    filters.categorySlug,
     filters.type,
-    filters.minPrice,
-    filters.maxPrice,
+    filters.minPrice != null && !Number.isNaN(filters.minPrice),
+    filters.maxPrice != null && !Number.isNaN(filters.maxPrice),
+    filters.location,
+    hasGeoFilter,
+    hasGeoFilter && filters.radius != null && !Number.isNaN(filters.radius),
   ].filter(Boolean).length
 
   return (
-    <div className="card-glass sticky top-24">
+    <div className="card-glass overflow-visible">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500">
@@ -39,6 +57,7 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
           </div>
         </div>
         <button
+          type="button"
           onClick={() => setShowFilters(!showFilters)}
           className="lg:hidden p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         >
@@ -47,9 +66,9 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
       </div>
 
       {showFilters && (
-        <div className="space-y-6 animate-slide-down">
+        <div className="space-y-6">
           {/* Search */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
               Search
             </label>
@@ -63,7 +82,7 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
           </div>
 
           {/* Type */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
               Type
             </label>
@@ -78,8 +97,45 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
             </select>
           </div>
 
+          {/* Category */}
+          <div className="relative">
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+              Category
+            </label>
+            <select
+              value={
+                filters.categoryId != null && filters.categoryId > 0
+                  ? `id:${filters.categoryId}`
+                  : filters.categorySlug
+                    ? `slug:${filters.categorySlug}`
+                    : ''
+              }
+              onChange={(e) => {
+                const v = e.target.value
+                if (!v) {
+                  setFilters({ ...filters, categoryId: null, categorySlug: null })
+                } else if (v.startsWith('slug:')) {
+                  setFilters({ ...filters, categoryId: null, categorySlug: v.slice(5) })
+                } else if (v.startsWith('id:')) {
+                  setFilters({ ...filters, categoryId: Number(v.slice(3)), categorySlug: null })
+                }
+              }}
+              className="input-field"
+            >
+              <option value="">All categories</option>
+              {categories.map((c) => (
+                <option
+                  key={c.slug || String(c.id)}
+                  value={categoryHasPersistentId(c) ? `id:${c.id}` : `slug:${c.slug}`}
+                >
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Price Range */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
               Price Range (per day)
             </label>
@@ -87,8 +143,10 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
               <div>
                 <input
                   type="number"
-                  placeholder="Min $"
-                  value={filters.minPrice || ''}
+                  min={0}
+                  step="0.01"
+                  placeholder="Min"
+                  value={filters.minPrice ?? ''}
                   onChange={(e) => updateFilter('minPrice', e.target.value ? Number(e.target.value) : null)}
                   className="input-field"
                 />
@@ -96,8 +154,10 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
               <div>
                 <input
                   type="number"
-                  placeholder="Max $"
-                  value={filters.maxPrice || ''}
+                  min={0}
+                  step="0.01"
+                  placeholder="Max"
+                  value={filters.maxPrice ?? ''}
                   onChange={(e) => updateFilter('maxPrice', e.target.value ? Number(e.target.value) : null)}
                   className="input-field"
                 />
@@ -105,20 +165,32 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
             </div>
           </div>
 
-          {/* Location */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+          {/* Location — own stacking context so borders / siblings never paint over the label */}
+          <div className="relative z-10 pt-2">
+            <label
+              htmlFor="filter-location"
+              className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 relative bg-transparent"
+            >
               Location (Optional)
             </label>
             <input
+              id="filter-location"
               type="text"
-              placeholder="Enter location"
+              placeholder="City, country, district…"
+              value={filters.location || ''}
+              onChange={(e) => updateFilter('location', e.target.value)}
               className="input-field mb-3"
             />
+            <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2 mb-1">
+              Matches <strong className="text-gray-600 dark:text-gray-300">city</strong>,{' '}
+              <strong className="text-gray-600 dark:text-gray-300">country</strong>, or{' '}
+              <strong className="text-gray-600 dark:text-gray-300">district</strong> (address) only — separate from Search above.
+            </p>
             <input
               type="number"
+              min={1}
               placeholder="Radius (km)"
-              value={filters.radius || ''}
+              value={filters.radius ?? ''}
               onChange={(e) => updateFilter('radius', e.target.value ? Number(e.target.value) : null)}
               className="input-field"
             />
@@ -126,16 +198,21 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
 
           {/* Reset */}
           <button
-            onClick={() => setFilters({
-              search: '',
-              categoryId: null,
-              type: null,
-              minPrice: null,
-              maxPrice: null,
-              lat: null,
-              lng: null,
-              radius: null,
-            })}
+            type="button"
+            onClick={() =>
+              setFilters({
+                search: '',
+                categoryId: null,
+                categorySlug: null,
+                type: null,
+                minPrice: null,
+                maxPrice: null,
+                location: '',
+                lat: null,
+                lng: null,
+                radius: null,
+              })
+            }
             className="w-full btn-secondary font-semibold"
           >
             Reset All Filters

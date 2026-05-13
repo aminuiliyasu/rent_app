@@ -37,15 +37,26 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                                       @Param("status") String status,
                                       Pageable pageable);
     
+    /**
+     * Keyword {@code search} matches title, description, worker name/profession.
+     * {@code location} matches only city, country, or district (address) — separate from search text.
+     */
     @Query("SELECT l FROM Listing l WHERE l.status = :status " +
            "AND (:categoryId IS NULL OR l.category.id = :categoryId) " +
            "AND (:type IS NULL OR l.type = :type) " +
            "AND (:minPrice IS NULL OR l.priceDay >= :minPrice) " +
            "AND (:maxPrice IS NULL OR l.priceDay <= :maxPrice) " +
            "AND (:search IS NULL OR :search = '' OR " +
-           "LOWER(l.title) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(l.description) LIKE LOWER(CONCAT('%', :search, '%')))")
+           "LOWER(l.title) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(l.description) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(l.workerName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(l.workerProfession) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "AND (:location IS NULL OR :location = '' OR " +
+           "LOWER(l.city) LIKE LOWER(CONCAT('%', :location, '%')) OR " +
+           "LOWER(l.country) LIKE LOWER(CONCAT('%', :location, '%')) OR " +
+           "LOWER(l.address) LIKE LOWER(CONCAT('%', :location, '%')))")
     Page<Listing> searchListings(@Param("search") String search,
+                                 @Param("location") String location,
                                  @Param("categoryId") Long categoryId,
                                  @Param("type") ListingType type,
                                  @Param("minPrice") BigDecimal minPrice,

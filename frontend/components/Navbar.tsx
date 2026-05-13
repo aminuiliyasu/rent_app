@@ -37,22 +37,22 @@ export default function Navbar() {
                 <SparklesIcon className="h-6 w-6 text-white" />
               </div>
             </div>
-            <span className="text-2xl font-bold gradient-text">Rentify</span>
+            <span className="text-2xl font-bold gradient-text">Rhentify</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-2">
             <Link 
-              href="/feed" 
-              className="px-5 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
-            >
-              Feed
-            </Link>
-            <Link 
               href="/search" 
               className="px-5 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
             >
               Browse
+            </Link>
+            <Link 
+              href="/feed" 
+              className="px-5 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
+            >
+              Rent requests
             </Link>
             {isAuthenticated && (
               <>
@@ -142,18 +142,18 @@ export default function Navbar() {
         {mobileMenuOpen && (
           <div className="md:hidden py-6 space-y-3 animate-slide-down">
             <Link 
-              href="/feed" 
-              className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Feed
-            </Link>
-            <Link 
               href="/search" 
               className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
               onClick={() => setMobileMenuOpen(false)}
             >
               Browse
+            </Link>
+            <Link 
+              href="/feed" 
+              className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Rent requests
             </Link>
             {isAuthenticated && (
               <>

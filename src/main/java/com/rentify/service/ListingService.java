@@ -2,6 +2,7 @@ package com.rentify.service;
 
 import com.rentify.dto.request.CreateListingRequest;
 import com.rentify.dto.response.ListingResponse;
+import com.rentify.dto.response.ReviewResponse;
 import com.rentify.model.Category;
 import com.rentify.model.Listing;
 import com.rentify.model.ListingImage;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,9 +43,13 @@ public class ListingService {
     
     @Autowired
     private ListingImageRepository listingImageRepository;
-    
+
+    @Autowired
+    private ReviewService reviewService;
+
     @Transactional(readOnly = true)
-    public Page<ListingResponse> searchListings(String search, Long categoryId, ListingType type,
+    public Page<ListingResponse> searchListings(String search, String location, Long categoryId, String categorySlug,
+                                                ListingType type,
                                                 BigDecimal minPrice, BigDecimal maxPrice,
                                                 Double lat, Double lng, Double radius,
                                                 Pageable pageable) {
@@ -54,12 +60,22 @@ public class ListingService {
                     .map(this::mapToResponse);
         }
         
-        // Use null for empty search strings to allow all listings
         String searchParam = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
+        String locationParam = (location != null && !location.trim().isEmpty()) ? location.trim() : null;
+
+        Long resolvedCategoryId = categoryId;
+        if (resolvedCategoryId == null && categorySlug != null && !categorySlug.isBlank()) {
+            Optional<Category> bySlug = categoryRepository.findBySlug(categorySlug.trim());
+            if (bySlug.isEmpty()) {
+                return Page.empty(pageable);
+            }
+            resolvedCategoryId = bySlug.get().getId();
+        }
         
         return listingRepository.searchListings(
                 searchParam,
-                categoryId,
+                locationParam,
+                resolvedCategoryId,
                 type,
                 minPrice,
                 maxPrice,
@@ -73,6 +89,11 @@ public class ListingService {
         Listing listing = listingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Listing not found"));
         return mapToResponse(listing);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ReviewResponse> getPublishedReviewsForListing(Long listingId, Pageable pageable) {
+        return reviewService.getPublishedReviewsForListing(listingId, pageable);
     }
     
     @Transactional
@@ -96,6 +117,7 @@ public class ListingService {
         listing.setPriceMonth(request.getPriceMonth());
         listing.setPriceHour(request.getPriceHour());
         listing.setDeposit(request.getDeposit());
+        listing.setPricingCurrency(normalizePricingCurrency(request.getPricingCurrency()));
         listing.setLat(request.getLat());
         listing.setLng(request.getLng());
         listing.setAddress(request.getAddress());
@@ -108,6 +130,7 @@ public class ListingService {
         listing.setWorkerBio(request.getWorkerBio());
         listing.setWorkerProfession(request.getWorkerProfession());
         listing.setServiceArea(request.getServiceArea());
+        listing.setAvailableDays(request.getAvailableDays());
         listing.setStatus(ListingStatus.ACTIVE); // Auto-activate listings so they're visible
         
         listing = listingRepository.save(listing);
@@ -167,13 +190,14 @@ public class ListingService {
         if (request.getWorkerBio() != null) listing.setWorkerBio(request.getWorkerBio());
         if (request.getWorkerProfession() != null) listing.setWorkerProfession(request.getWorkerProfession());
         if (request.getServiceArea() != null) listing.setServiceArea(request.getServiceArea());
+        if (request.getAvailableDays() != null) listing.setAvailableDays(request.getAvailableDays());
         
         listing = listingRepository.save(listing);
         
         // Update images if provided
         if (request.getImageUrls() != null) {
             // Delete existing images
-            listingImageRepository.deleteByListingId(listing.getId());
+            listingImageRepository.deleteByListing_Id(listing.getId());
             
             // Add new images
             int sortOrder = 0;
@@ -257,6 +281,10 @@ public class ListingService {
         response.setPriceMonth(listing.getPriceMonth());
         response.setPriceHour(listing.getPriceHour());
         response.setDeposit(listing.getDeposit());
+        response.setPricingCurrency(
+                listing.getPricingCurrency() != null && !listing.getPricingCurrency().isBlank()
+                        ? listing.getPricingCurrency()
+                        : "USD");
         response.setStatus(listing.getStatus());
         response.setLat(listing.getLat());
         response.setLng(listing.getLng());
@@ -270,18 +298,21 @@ public class ListingService {
         response.setWorkerBio(listing.getWorkerBio());
         response.setWorkerProfession(listing.getWorkerProfession());
         response.setServiceArea(listing.getServiceArea());
+        response.setAvailableDays(listing.getAvailableDays());
         response.setIsFeatured(listing.getIsFeatured());
         response.setOwnerId(listing.getOwner().getId());
         response.setOwnerName(listing.getOwner().getName());
         
-        // Map images
-        List<String> imageUrls = listing.getImages().stream()
+        // Map images (explicit query — reliable with open-in-view disabled and correct order)
+        List<ListingImage> orderedImages =
+                listingImageRepository.findByListing_IdOrderBySortOrderAsc(listing.getId());
+        List<String> imageUrls = orderedImages.stream()
                 .map(ListingImage::getUrl)
                 .collect(Collectors.toList());
         response.setImageUrls(imageUrls);
         
-        String primaryImageUrl = listing.getImages().stream()
-                .filter(ListingImage::getIsPrimary)
+        String primaryImageUrl = orderedImages.stream()
+                .filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
                 .findFirst()
                 .map(ListingImage::getUrl)
                 .orElse(imageUrls.isEmpty() ? null : imageUrls.get(0));
@@ -295,5 +326,16 @@ public class ListingService {
         response.setReviewCount(reviewCount);
         
         return response;
+    }
+
+    private static String normalizePricingCurrency(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "USD";
+        }
+        String c = raw.trim().toUpperCase();
+        if (c.length() != 3) {
+            return "USD";
+        }
+        return c;
     }
 }

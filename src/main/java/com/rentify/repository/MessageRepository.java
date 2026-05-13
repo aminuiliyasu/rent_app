@@ -1,6 +1,7 @@
 package com.rentify.repository;
 
 import com.rentify.model.Message;
+import com.rentify.model.enums.MessageKind;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,4 +27,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     
     @Query("SELECT COUNT(m) FROM Message m WHERE m.receiver.id = :userId AND m.readAt IS NULL")
     Long countUnreadMessages(@Param("userId") Long userId);
+
+    boolean existsByBooking_IdAndMessageKind(Long bookingId, MessageKind messageKind);
 }

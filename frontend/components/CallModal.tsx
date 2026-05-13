@@ -67,6 +67,8 @@ export default function CallModal({ call, currentUserId, onEnd, onAnswer, onReje
     return () => {
       manager.endCall()
     }
+    // handleEndCall is defined below; including it would recreate the manager every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [call, isActive, isCaller])
 
   // Play ringtone for incoming calls

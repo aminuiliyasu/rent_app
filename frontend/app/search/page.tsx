@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -10,34 +10,75 @@ import api from '@/lib/api'
 import { Listing } from '@/lib/types'
 import { MagnifyingGlassIcon, SparklesIcon } from '@heroicons/react/24/outline'
 
+interface SearchFilterState {
+  search: string
+  categoryId: number | null
+  categorySlug: string | null
+  type: string | null
+  minPrice: number | null
+  maxPrice: number | null
+  location: string
+  lat: number | null
+  lng: number | null
+  radius: number | null
+}
+
 export default function SearchPage() {
   const searchParams = useSearchParams()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState({
-    search: searchParams.get('q') || '',
-    categoryId: searchParams.get('category') ? Number(searchParams.get('category')) : null,
-    type: searchParams.get('type') || null,
-    minPrice: null,
-    maxPrice: null,
-    lat: null,
-    lng: null,
-    radius: null,
+  const [filters, setFilters] = useState<SearchFilterState>(() => {
+    const catRaw = searchParams.get('category')
+    const parsedCat = catRaw ? Number(catRaw) : NaN
+    const categoryId =
+      catRaw != null &&
+      catRaw !== '' &&
+      Number.isFinite(parsedCat) &&
+      !Number.isNaN(parsedCat) &&
+      parsedCat > 0
+        ? parsedCat
+        : null
+    const slugRaw = searchParams.get('categorySlug')
+    const categorySlug =
+      categoryId != null
+        ? null
+        : slugRaw && slugRaw.trim()
+          ? slugRaw.trim()
+          : null
+    return {
+      search: searchParams.get('q') || '',
+      categoryId,
+      categorySlug,
+      type: searchParams.get('type') || null,
+      minPrice: null,
+      maxPrice: null,
+      location: searchParams.get('location') || '',
+      lat: null,
+      lng: null,
+      radius: null,
+    }
   })
 
-  useEffect(() => {
-    fetchListings()
-  }, [filters])
-
-  const fetchListings = async () => {
+  const fetchListings = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
-      if (filters.search) params.append('search', filters.search)
-      if (filters.categoryId) params.append('categoryId', filters.categoryId.toString())
+      const keyword = (filters.search || '').trim()
+      const place = (filters.location || '').trim()
+      if (keyword) params.append('search', keyword)
+      if (place) params.append('location', place)
+      if (filters.categoryId != null && filters.categoryId > 0 && !Number.isNaN(filters.categoryId)) {
+        params.append('categoryId', filters.categoryId.toString())
+      } else if (filters.categorySlug) {
+        params.append('categorySlug', filters.categorySlug)
+      }
       if (filters.type) params.append('type', filters.type)
-      if (filters.minPrice) params.append('minPrice', filters.minPrice.toString())
-      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString())
+      if (filters.minPrice != null && !Number.isNaN(filters.minPrice)) {
+        params.append('minPrice', filters.minPrice.toString())
+      }
+      if (filters.maxPrice != null && !Number.isNaN(filters.maxPrice)) {
+        params.append('maxPrice', filters.maxPrice.toString())
+      }
       if (filters.lat && filters.lng) {
         params.append('lat', filters.lat.toString())
         params.append('lng', filters.lng.toString())
@@ -54,7 +95,17 @@ export default function SearchPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters])
+
+  useEffect(() => {
+    void fetchListings()
+  }, [fetchListings])
+
+  const headlineQuery = [filters.search, filters.location]
+    .map((s) => (s || '').trim())
+    .filter(Boolean)
+    .join(' ')
+    .trim()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
@@ -63,10 +114,10 @@ export default function SearchPage() {
         {/* Header */}
         <div className="mb-8 animate-slide-down">
           <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-3">
-            {filters.search ? (
+            {headlineQuery ? (
               <>
                 Search results for{' '}
-                <span className="gradient-text">"{filters.search}"</span>
+                <span className="gradient-text">&quot;{headlineQuery}&quot;</span>
               </>
             ) : (
               <>
@@ -117,7 +168,21 @@ export default function SearchPage() {
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No listings found</h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">Try adjusting your search filters</p>
                 <button
-                  onClick={() => setFilters({ ...filters, search: '', categoryId: null, type: null })}
+                  onClick={() =>
+                    setFilters({
+                      ...filters,
+                      search: '',
+                      categoryId: null,
+                      categorySlug: null,
+                      type: null,
+                      minPrice: null,
+                      maxPrice: null,
+                      location: '',
+                      lat: null,
+                      lng: null,
+                      radius: null,
+                    })
+                  }
                   className="btn-outline"
                 >
                   Clear Filters

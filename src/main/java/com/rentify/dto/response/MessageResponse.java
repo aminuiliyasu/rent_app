@@ -20,4 +20,6 @@ public class MessageResponse {
     private String attachmentUrl;
     private LocalDateTime readAt;
     private LocalDateTime createdAt;
+    /** STANDARD | LIVE_REQUEST_REPLY */
+    private String messageKind;
 }

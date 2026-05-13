@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,7 +14,8 @@ import java.util.Set;
 @Entity
 @Table(name = "categories")
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"parent", "children", "listings"})
+@ToString(exclude = {"parent", "children", "listings"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Category extends BaseEntity {
@@ -29,6 +31,7 @@ public class Category extends BaseEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
+    @JsonIgnore
     private Category parent;
     
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

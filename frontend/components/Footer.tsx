@@ -21,10 +21,10 @@ export default function Footer() {
                   <SparklesIcon className="h-6 w-6 text-white" />
                 </div>
               </div>
-              <span className="text-2xl font-black text-white">Rentify</span>
+              <span className="text-2xl font-black text-white">Rhentify</span>
             </Link>
             <p className="text-gray-300 text-sm leading-relaxed mb-4 font-medium">
-              Rent Anything. Hire Anyone. Anywhere.
+              Anything you need. Hire anyone. All around you
             </p>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
               Your trusted marketplace for rentals and services.
@@ -159,7 +159,7 @@ export default function Footer() {
         <div className="border-t border-white/20 pt-8 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm mb-4 md:mb-0 font-medium">
-              &copy; {new Date().getFullYear()} Rentify. All rights reserved.
+              &copy; {new Date().getFullYear()} Rhentify. All rights reserved.
             </p>
             <div className="flex items-center space-x-6 text-sm">
               <Link href="/terms" className="text-gray-400 hover:text-white transition-colors font-medium">
