@@ -76,7 +76,7 @@ spring:
             scope:
               - email
               - profile
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "${APP_BASE_URL}/login/oauth2/code/{registrationId}"
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
@@ -86,6 +86,7 @@ spring:
   
 server:
   port: ${PORT}
+  forward-headers-strategy: framework
   error:
     include-message: always
     include-binding-errors: always
