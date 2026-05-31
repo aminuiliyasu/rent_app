@@ -79,8 +79,34 @@ jobs:
             --service "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-web" \
             --force-new-deployment
 
-      - name: Wait for ECS services stable
+      - name: Wait for ECS rollout
         run: |
-          aws ecs wait services-stable \
-            --cluster "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-cluster" \
-            --services "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-api" "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-web"
+          cluster="${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-cluster"
+          services=(
+            "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-api"
+            "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-web"
+          )
+
+          # Spring Boot cold start + rolling deploy can exceed the default 10m AWS waiter.
+          for attempt in $(seq 1 90); do
+            stable=true
+            for svc in "${services[@]}"; do
+              read -r running desired rollout <<< "$(aws ecs describe-services \
+                --cluster "$cluster" \
+                --services "$svc" \
+                --query 'services[0].[runningCount,desiredCount,deployments[0].rolloutState]' \
+                --output text)"
+              echo "attempt $attempt/90: $svc running=$running desired=$desired rollout=$rollout"
+              if [ "$running" != "$desired" ] || [ "$rollout" != "COMPLETED" ]; then
+                stable=false
+              fi
+            done
+            if [ "$stable" = true ]; then
+              echo "ECS rollout complete."
+              exit 0
+            fi
+            sleep 20
+          done
+
+          echo "ECS rollout did not finish within 30 minutes."
+          exit 1
