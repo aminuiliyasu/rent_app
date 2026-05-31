@@ -177,11 +177,7 @@ export default function LoginPage() {
 
             <div className="mt-6">
               <a
-                href={(() => {
-                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1'
-                  const baseUrl = apiUrl.replace('/api/v1', '').replace(/\/$/, '')
-                  return `${baseUrl}/oauth2/authorization/google`
-                })()}
+                href="/oauth2/authorization/google"
                 className="btn-outline w-full text-center flex items-center justify-center gap-3 py-3.5 font-semibold hover:scale-105 transition-transform"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
