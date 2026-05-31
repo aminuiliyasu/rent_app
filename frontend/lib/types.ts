@@ -28,7 +28,7 @@ export enum BookingStatus {
 }
 
 export interface User {
-  id: number
+  id: number | string
   name: string
   email: string
   phone?: string
@@ -40,7 +40,7 @@ export interface User {
 }
 
 export interface Listing {
-  id: number
+  id: string | number
   type: ListingType
   title: string
   description?: string
@@ -154,14 +154,15 @@ export interface Category {
 }
 
 export interface MessageResponse {
-  id: number
-  bookingId: number
-  senderId: number
+  id: number | string
+  bookingId: number | string
+  senderId: number | string
   sender?: User
-  receiverId: number
+  receiverId: number | string
   receiver?: User
   content: string
   attachmentUrl?: string
+  messageType?: string
   readAt?: string
   createdAt: string
   /** STANDARD (default) | LIVE_REQUEST_REPLY (system prompt seeded for a feed-driven thread). */

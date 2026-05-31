@@ -78,7 +78,7 @@ export default function TrustReviewsSection({
   userId,
   variant = 'public',
 }: {
-  userId: number
+  userId: number | string
   variant?: 'self' | 'public'
 }) {
   const [trust, setTrust] = useState<UserTrust | null>(null)

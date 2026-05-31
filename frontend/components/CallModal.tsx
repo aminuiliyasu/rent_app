@@ -16,7 +16,7 @@ import {
 
 interface CallModalProps {
   call: Call | null
-  currentUserId: number
+  currentUserId: number | string
   onEnd: () => void
   onAnswer?: () => void
   onReject?: () => void
