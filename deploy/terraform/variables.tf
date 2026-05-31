@@ -95,3 +95,15 @@ variable "jwt_secret" {
   type      = string
   sensitive = true
 }
+
+variable "google_client_id" {
+  description = "Google OAuth2 client ID for Spring Security login"
+  type        = string
+  sensitive   = true
+}
+
+variable "google_client_secret" {
+  description = "Google OAuth2 client secret for Spring Security login"
+  type        = string
+  sensitive   = true
+}
