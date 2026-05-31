@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /listings/{listingId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null;
+    }
+
+    match /messages/{messageId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['bookingKey', 'bookingId', 'senderId', 'content', 'createdAt'])
+        && request.resource.data.bookingKey is string
+        && request.resource.data.bookingKey.size() > 0
+        && request.resource.data.senderId is int
+        && request.resource.data.content is string
+        && request.resource.data.createdAt is string
+        && (request.resource.data.bookingId is string || request.resource.data.bookingId is int);
+      allow update, delete: if false;
+    }
+
+    match /bookings/{bookingId} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

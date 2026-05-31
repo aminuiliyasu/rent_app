@@ -1,0 +1,23 @@
+aws_region   = "us-east-1"
+aws_profile  = "rhentify-aws" # separate AWS account — see deploy/AWS.md
+project_name = "rhentify"
+environment  = "prod"
+
+domain_name = "rhentify.com"
+
+# GitHub repository for CI/CD OIDC trust
+github_repo = "YOUR_GITHUB_USERNAME/rent_app"
+
+# Strong random string (openssl rand -base64 48)
+jwt_secret = "CHANGE_ME_TO_A_LONG_RANDOM_SECRET"
+
+# From Firebase Console → Project settings → Your web app
+firebase_api_key             = ""
+firebase_auth_domain         = "rentify-app-aminu.firebaseapp.com"
+firebase_project_id          = "rentify-app-aminu"
+firebase_storage_bucket      = "rentify-app-aminu.firebasestorage.app"
+firebase_messaging_sender_id = "634604527576"
+firebase_app_id              = ""
+
+api_desired_count = 2
+web_desired_count = 2

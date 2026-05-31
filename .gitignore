@@ -58,6 +58,12 @@ application-prod.yml
 .env
 .env.local
 
+# Terraform secrets / local state (never commit)
+deploy/terraform/terraform.tfvars
+deploy/terraform/terraform.tfstate
+deploy/terraform/terraform.tfstate.backup
+deploy/terraform/.terraform/
+
 # Logs
 logs/
 *.log
@@ -83,3 +89,4 @@ RUN_THIS.txt
 *.md
 !README.md
 !**/README.md
+!deploy/**/*.md

@@ -99,10 +99,11 @@ app:
   # AWS S3 Configuration
   aws:
     s3:
-      bucket-name: ${AWS_S3_BUCKET}
-      region: ${AWS_REGION}
-      access-key: ${AWS_ACCESS_KEY}
-      secret-key: ${AWS_SECRET_KEY}
+      bucket-name: ${AWS_S3_BUCKET:}
+      region: ${AWS_REGION:us-east-1}
+      access-key: ${AWS_ACCESS_KEY:}
+      secret-key: ${AWS_SECRET_KEY:}
+      public-base-url: ${AWS_S3_PUBLIC_BASE_URL:}
   
   # Google Maps API
   google:
@@ -150,3 +151,14 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
     name: logs/rentify.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized

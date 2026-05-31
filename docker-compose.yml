@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: rentify
+      POSTGRES_USER: rentify
+      POSTGRES_PASSWORD: rentify
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      DB_URL: jdbc:postgresql://db:5432/rentify
+      DB_USERNAME: rentify
+      DB_PASSWORD: rentify
+      DB_DRIVER: org.postgresql.Driver
+      DB_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      DB_DDL_AUTO: update
+      DB_SHOW_SQL: "false"
+      DB_FORMAT_SQL: "false"
+      DB_POOL_MAX: "10"
+      DB_POOL_MIN: "2"
+      JWT_SECRET: local-dev-jwt-secret-minimum-32-characters-long
+      JWT_EXPIRATION: "900000"
+      JWT_REFRESH_EXPIRATION: "604800000"
+      FRONTEND_URL: http://localhost:3000
+      APP_BASE_URL: http://localhost:8080
+      UPLOAD_DIR: uploads
+      MAIL_HOST: localhost
+      MAIL_PORT: "587"
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      AWS_S3_BUCKET: ""
+    depends_on:
+      - db
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:-}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID:-}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:-}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:-}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID:-}
+    ports:
+      - "3000:3000"
+    environment:
+      BACKEND_PROXY_URL: http://api:8080
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

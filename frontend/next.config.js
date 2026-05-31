@@ -2,15 +2,16 @@
 const backendProxy =
   process.env.BACKEND_PROXY_URL || process.env.BACKEND_URL || 'http://127.0.0.1:8080'
 
+const s3Host = process.env.NEXT_PUBLIC_S3_HOST || 'rentify-uploads.s3.amazonaws.com'
+
 const nextConfig = {
   reactStrictMode: true,
-  // NEXT_PUBLIC_API_URL is optional (.env.local). If unset, the client uses /api/v1 + rewrites (no CORS issues).
+  output: 'standalone',
   images: {
-    domains: ['localhost', '127.0.0.1', 'rentify-uploads.s3.amazonaws.com'],
     remotePatterns: [
       { protocol: 'http', hostname: 'localhost', port: '8080', pathname: '/uploads/**' },
       { protocol: 'http', hostname: '127.0.0.1', port: '8080', pathname: '/uploads/**' },
-      { protocol: 'https', hostname: 'rentify-uploads.s3.amazonaws.com', pathname: '/**' },
+      { protocol: 'https', hostname: s3Host.replace(/^https?:\/\//, '').split('/')[0], pathname: '/**' },
     ],
   },
   async rewrites() {

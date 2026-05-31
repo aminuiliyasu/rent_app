@@ -1,0 +1,13 @@
+target/
+.git/
+.idea/
+.cursor/
+.vscode/
+data/
+uploads/
+logs/
+frontend/
+deploy/
+*.md
+.env
+.env.*
