@@ -1,11 +1,22 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  MagnifyingGlassIcon,
-  SparklesIcon,
-} from '@heroicons/react/24/solid'
+import { MagnifyingGlassIcon, ArrowRightIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
+import { CheckBadgeIcon } from '@heroicons/react/24/solid'
+
+const TRUST_POINTS = [
+  'Verified local listings',
+  'Secure in-app messaging',
+  'No platform fees right now',
+] as const
+
+const STATS = [
+  { value: 'Minutes', label: 'to book nearby' },
+  { value: '100%', label: 'local-first' },
+  { value: '$0', label: 'booking fees today' },
+] as const
 
 export default function Hero() {
   const router = useRouter()
@@ -17,94 +28,116 @@ export default function Hero() {
   }
 
   return (
-    <div className="relative min-h-[90vh] flex items-center overflow-hidden" style={{
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%)',
-      backgroundSize: '400% 400%',
-      animation: 'gradient-shift 15s ease infinite'
-    }}>
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }}></div>
+    <section className="relative min-h-[100svh] overflow-hidden bg-ink-900 text-white">
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-[20%] top-0 h-[70%] w-[60%] rounded-full bg-accent/20 blur-[120px]" />
+        <div className="absolute -right-[10%] top-[20%] h-[50%] w-[45%] rounded-full bg-indigo-600/25 blur-[100px]" />
+        <div className="absolute bottom-0 left-1/2 h-[40%] w-[80%] -translate-x-1/2 rounded-full bg-amber-500/10 blur-[80px]" />
+        <div
+          className="absolute inset-0 opacity-[0.35]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.07) 1px, transparent 0)`,
+            backgroundSize: '40px 40px',
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-ink-900/20 via-transparent to-ink-900" />
       </div>
 
-      {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-        backgroundSize: '50px 50px'
-      }}></div>
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
-        <div className="text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center px-6 py-3 rounded-full bg-white/25 backdrop-blur-xl border-2 border-white/40 mb-10 animate-slide-down shadow-2xl">
-            <SparklesIcon className="h-5 w-5 text-white mr-2" />
-            <span className="text-base font-bold text-white">
-              Your local rental & hire marketplace
-            </span>
-          </div>
-
-          {/* Main Heading */}
-          <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-white mb-10 leading-tight animate-slide-up drop-shadow-2xl">
-            Anything you need.<br />
-            <span className="bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-400 bg-clip-text text-transparent drop-shadow-2xl" style={{ textShadow: '0 0 30px rgba(255, 235, 59, 0.5)' }}>
-              Hire anyone.
-            </span>
-            <br />
-            <span className="text-white drop-shadow-2xl">All around you</span>
-          </h1>
-          
-          <p className="text-2xl md:text-3xl lg:text-4xl text-white mb-16 max-w-5xl mx-auto font-medium leading-relaxed animate-slide-up drop-shadow-lg" style={{ animationDelay: '0.1s' }}>
-            Discover a wide range of items and skilled proffesional available for rent in your area
-            <span className="block mt-4 text-xl md:text-2xl text-white/95 font-normal">
-              Your marketplace for everything you need, when you need it.
-            </span>
+      <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-center px-4 pb-28 pt-28 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="eyebrow opacity-0-start animate-slide-down mb-8">
+            Access over ownership
           </p>
 
-          {/* Enhanced Search Bar */}
-          <form onSubmit={handleSearch} className="max-w-5xl mx-auto animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <div className="relative">
-              {/* Glow Effect */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity"></div>
-              
-              <div className="relative flex flex-col sm:flex-row gap-0 bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-white/50">
-                <div className="flex-1 relative">
-                  <div className="absolute left-6 top-1/2 transform -translate-y-1/2">
-                    <MagnifyingGlassIcon className="h-7 w-7 text-gray-400" />
-                  </div>
+          <h1 className="opacity-0-start animate-reveal stagger-1 font-serif text-5xl leading-[1.05] text-white sm:text-6xl md:text-7xl lg:text-[5.25rem]">
+            Rent what you need.
+            <br />
+            <span className="italic text-accent-light">Hire who you trust.</span>
+          </h1>
+
+          <p className="text-balance opacity-0-start animate-slide-up stagger-2 mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-white/65 sm:text-xl">
+            Gear, spaces, and skilled people — listed by neighbors, booked in minutes.
+            Stop buying things you&apos;ll use once. Start borrowing smarter.
+          </p>
+
+          {/* Search */}
+          <form
+            onSubmit={handleSearch}
+            className="opacity-0-start animate-slide-up stagger-3 mx-auto mt-12 max-w-2xl"
+          >
+            <div className="group relative rounded-2xl bg-white/10 p-1.5 ring-1 ring-white/15 backdrop-blur-md transition-all duration-300 focus-within:bg-white/15 focus-within:ring-accent/40">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="relative flex flex-1 items-center">
+                  <MagnifyingGlassIcon className="pointer-events-none absolute left-5 h-5 w-5 text-ink-400" />
                   <input
-                    type="text"
+                    type="search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search for items, workers, or services..."
-                    className="w-full pl-16 pr-6 py-6 text-gray-900 text-xl focus:outline-none placeholder:text-gray-400 font-semibold bg-transparent"
+                    placeholder="Try: camera, drill, van, photographer…"
+                    className="w-full rounded-xl bg-white py-4 pl-14 pr-4 text-base font-medium text-ink-900 placeholder:text-ink-400 focus:outline-none sm:text-lg"
+                    aria-label="Search listings"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="relative bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white px-12 py-6 whitespace-nowrap text-xl font-black shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105 active:scale-95 uppercase tracking-wider"
-                  style={{ backgroundSize: '200% 200%', animation: 'gradient-shift 3s ease infinite' }}
+                  className="btn-accent shrink-0 !rounded-xl sm:!px-8"
                 >
-                  <span className="relative z-10">Search</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"></div>
+                  Search
+                  <ArrowRightIcon className="h-4 w-4" />
                 </button>
               </div>
             </div>
           </form>
 
-          <p className="mt-8 mb-4 text-lg sm:text-xl md:text-2xl font-bold text-white text-center max-w-3xl mx-auto px-4 leading-snug drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
-            Currently, all transactions are 100% free
-          </p>
+          {/* Trust chips */}
+          <ul className="opacity-0-start animate-fade-in stagger-4 mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+            {TRUST_POINTS.map((point) => (
+              <li key={point} className="flex items-center gap-2 text-sm text-white/55">
+                <CheckBadgeIcon className="h-4 w-4 text-accent" />
+                {point}
+              </li>
+            ))}
+          </ul>
+
+          {/* Secondary CTAs */}
+          <div className="opacity-0-start animate-fade-in stagger-4 mt-10 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/listings/new"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/35 hover:bg-white/10"
+            >
+              List something you own
+              <ArrowRightIcon className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/how-it-works"
+              className="text-sm font-medium text-white/50 underline-offset-4 transition hover:text-white hover:underline"
+            >
+              See how Rhentify works
+            </Link>
+          </div>
         </div>
+
+        {/* Stats bar */}
+        <div className="opacity-0-start animate-slide-up stagger-4 mx-auto mt-20 grid w-full max-w-3xl grid-cols-3 gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md sm:gap-8 sm:p-8">
+          {STATS.map((stat) => (
+            <div key={stat.label} className="text-center">
+              <p className="font-serif text-2xl text-white sm:text-3xl">{stat.value}</p>
+              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-white/45 sm:text-sm">
+                {stat.label}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <p className="mx-auto mt-6 flex items-center justify-center gap-2 text-center text-xs text-white/40">
+          <ShieldCheckIcon className="h-4 w-4" />
+          Built for real neighborhoods — not anonymous marketplaces.
+        </p>
       </div>
 
-      {/* Wave Divider */}
-      <div className="absolute bottom-0 left-0 right-0">
-        <svg className="w-full h-24" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white" className="dark:fill-gray-50"/>
-        </svg>
-      </div>
-    </div>
+      {/* Bottom fade into content */}
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-sand-50 to-transparent dark:from-ink-950" />
+    </section>
   )
 }

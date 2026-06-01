@@ -1,33 +1,28 @@
 import Link from 'next/link'
-import { SparklesIcon } from '@heroicons/react/24/solid'
 
 export default function Footer() {
   return (
-    <footer className="relative bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 text-white overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl"></div>
+    <footer className="relative overflow-hidden bg-ink-900 text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-20 top-0 h-64 w-64 rounded-full bg-accent/15 blur-3xl" />
+        <div className="absolute -right-20 bottom-0 h-64 w-64 rounded-full bg-indigo-600/20 blur-3xl" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mb-12 grid grid-cols-1 gap-12 md:grid-cols-4">
           {/* Brand Column */}
           <div className="col-span-1 md:col-span-1">
-            <Link href="/" className="inline-flex items-center space-x-3 mb-6 group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-purple-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative bg-gradient-to-br from-purple-500 to-purple-600 p-3 rounded-xl shadow-lg">
-                  <SparklesIcon className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <span className="text-2xl font-black text-white">Rhentify</span>
+            <Link href="/" className="group mb-6 inline-flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white font-serif text-lg italic text-ink-900">
+                R
+              </span>
+              <span className="text-xl font-semibold text-white">Rhentify</span>
             </Link>
-            <p className="text-gray-300 text-sm leading-relaxed mb-4 font-medium">
-              Anything you need. Hire anyone. All around you
+            <p className="mb-4 text-sm font-medium leading-relaxed text-white/80">
+              Rent what you need. Hire who you trust.
             </p>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6">
-              Your trusted marketplace for rentals and services.
+            <p className="mb-6 text-sm leading-relaxed text-white/45">
+              The local marketplace for gear, spaces, and skilled people — built for neighborhoods that actually show up.
             </p>
             
             {/* Social Media Icons */}

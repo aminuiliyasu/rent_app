@@ -7,7 +7,7 @@ import { Listing } from '@/lib/types'
 import { formatListingCardPrice } from '@/lib/listingCurrency'
 import { firstListingImageUrl } from '@/lib/listingImageUrl'
 import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
-import { StarIcon, MapPinIcon, SparklesIcon, CubeIcon } from '@heroicons/react/24/solid'
+import { StarIcon, MapPinIcon, CubeIcon } from '@heroicons/react/24/solid'
 import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline'
 
 export default function FeaturedListings() {
@@ -21,19 +21,17 @@ export default function FeaturedListings() {
   }, [])
 
   return (
-    <section className="section-container bg-gradient-to-b from-white via-gray-50 to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16 animate-slide-up">
-          <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mb-4">
-            <SparklesIcon className="h-4 w-4 mr-2" />
-            <span className="text-sm font-semibold">Featured</span>
-          </div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white mb-4">
-            Discover Amazing{' '}
-            <span className="gradient-text">Listings</span>
+    <section className="section-container bg-white dark:bg-ink-900">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-16 text-center">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-accent-dark">
+            Featured near you
+          </p>
+          <h2 className="section-title">
+            Listings people are <span className="gradient-text">booking now</span>
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Handpicked rentals and services curated just for you
+          <p className="section-subtitle">
+            Real inventory from local owners — updated as the community grows.
           </p>
         </div>
         
@@ -146,7 +144,7 @@ export default function FeaturedListings() {
         {listings.length === 0 && (
           <div className="text-center py-20 animate-slide-up">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
-              <SparklesIcon className="h-10 w-10 text-gray-400" />
+              <CubeIcon className="h-10 w-10 text-ink-300" />
             </div>
             <p className="text-xl text-gray-600 dark:text-gray-400 font-medium">No listings available yet</p>
             <p className="text-gray-500 dark:text-gray-500 mt-2">Be the first to post a listing!</p>

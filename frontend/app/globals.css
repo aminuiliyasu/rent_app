@@ -2,163 +2,152 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
-
 @layer base {
   * {
     @apply antialiased;
   }
-  
-  body {
-    @apply bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300;
-    font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  html {
+    scroll-behavior: smooth;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-bold tracking-tight text-gray-900 dark:text-gray-100;
-    font-family: 'Poppins', sans-serif;
+
+  body {
+    @apply bg-sand-50 text-ink-800 font-sans transition-colors duration-300;
+  }
+
+  .dark body {
+    @apply bg-ink-950 text-ink-100;
+  }
+
+  h1, h2, h3 {
+    @apply font-serif tracking-tight text-ink-900;
+  }
+
+  .dark h1, .dark h2, .dark h3 {
+    @apply text-white;
   }
 }
 
 @layer components {
-  /* Modern Button Styles */
   .btn-primary {
-    @apply relative bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-4 focus:ring-blue-500/50;
-    background-size: 200% 200%;
-    animation: gradient-shift 3s ease infinite;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-ink-900 px-7 py-3.5 text-sm font-semibold text-white shadow-card transition-all duration-300 hover:bg-ink-800 hover:shadow-card-hover hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none;
   }
-  
+
+  .dark .btn-primary {
+    @apply bg-white text-ink-900 hover:bg-sand-100;
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-7 py-3.5 text-sm font-semibold text-ink-900 shadow-glow-sm transition-all duration-300 hover:bg-accent-light hover:shadow-glow hover:-translate-y-0.5 active:translate-y-0;
+  }
+
   .btn-secondary {
-    @apply bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-8 py-3.5 rounded-xl font-semibold shadow-md border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-gray-500/30;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-ink-200 bg-white px-7 py-3.5 text-sm font-semibold text-ink-800 shadow-sm transition-all duration-300 hover:border-ink-300 hover:bg-sand-50 hover:-translate-y-0.5;
   }
-  
+
+  .dark .btn-secondary {
+    @apply border-ink-700 bg-ink-800 text-ink-100 hover:bg-ink-700;
+  }
+
   .btn-outline {
-    @apply border-2 border-blue-600 text-blue-600 dark:text-blue-400 px-8 py-3.5 rounded-xl font-semibold bg-transparent hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:border-blue-700 dark:hover:border-blue-500 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/30;
-  }
-  
-  .btn-gradient {
-    @apply bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 active:scale-95 transition-all duration-300;
-    background-size: 200% 200%;
-    animation: gradient-shift 3s ease infinite;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-ink-900/15 bg-transparent px-6 py-3 text-sm font-semibold text-ink-800 transition-all duration-300 hover:border-ink-900/30 hover:bg-ink-900/5;
   }
 
-  /* Modern Input Fields */
+  .btn-ghost-light {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white;
+  }
+
   .input-field {
-    @apply w-full px-5 py-3.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-900 dark:text-gray-100 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-all duration-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-600;
+    @apply w-full rounded-2xl border border-ink-200/80 bg-white px-5 py-3.5 text-ink-900 outline-none transition-all placeholder:text-ink-400 focus:border-accent focus:ring-4 focus:ring-accent/15;
   }
 
-  /* Glass Morphism Cards */
   .card {
-    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-8 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300;
+    @apply rounded-3xl border border-ink-100 bg-white p-8 shadow-card transition-all duration-300 hover:shadow-card-hover;
   }
-  
+
+  .dark .card {
+    @apply border-ink-800 bg-ink-900;
+  }
+
   .card-glass {
-    @apply bg-gradient-to-br from-white/90 to-white/70 dark:from-gray-800/90 dark:to-gray-900/70 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/30 p-8;
+    @apply rounded-3xl border border-white/20 bg-white/80 p-8 shadow-card backdrop-blur-xl;
   }
 
-  /* Gradient Text */
-  .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600;
-    background-size: 200% 200%;
-    animation: gradient-shift 3s ease infinite;
-  }
-
-  /* Modern Navbar */
-  .navbar-glass {
-    @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg;
-  }
-
-  /* Hero Section - Removed as we're using inline styles for more control */
-
-  /* Listing Card — relative contains the absolute hover overlay; block avoids inline link layout quirks */
-  .listing-card {
-    @apply relative block bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 hover:scale-[1.02] hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50 dark:focus-visible:ring-offset-gray-950;
-  }
-
-  /* Badge */
-  .badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
-  }
-
-  .badge-primary {
-    @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300;
-  }
-
-  .badge-success {
-    @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300;
-  }
-
-  /* Section Container */
   .section-container {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20;
+    @apply mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8;
   }
 
-  /* Animated Background */
-  .animated-bg {
-    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-    background-size: 400% 400%;
-    animation: gradient-shift 15s ease infinite;
+  .listing-card {
+    @apply relative block overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50;
+  }
+
+  .nav-link {
+    @apply relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200;
+  }
+
+  .nav-link-light {
+    @apply text-white/75 hover:text-white;
+  }
+
+  .nav-link-dark {
+    @apply text-ink-600 hover:text-ink-900;
+  }
+
+  .dark .nav-link-dark {
+    @apply text-ink-300 hover:text-white;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur-md;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .gradient-text {
+    @apply font-serif italic text-accent-dark;
+  }
+
+  .section-title {
+    @apply font-serif text-4xl text-ink-900 sm:text-5xl md:text-6xl;
+  }
+
+  .dark .section-title {
+    @apply text-white;
+  }
+
+  .section-subtitle {
+    @apply mx-auto mt-4 max-w-2xl text-lg text-ink-500;
+  }
+
+  .dark .section-subtitle {
+    @apply text-ink-400;
   }
 }
 
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+/* Stagger children animation delays */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.35s; }
+.stagger-4 { animation-delay: 0.5s; }
+
+.opacity-0-start {
+  opacity: 0;
 }
 
-/* Smooth Scroll */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-gray-800;
+  @apply bg-sand-100;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+  @apply rounded-full bg-ink-300;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400 dark:bg-gray-500;
-}
-
-/* Loading Animation */
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Floating Animation */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+  @apply bg-ink-400;
 }

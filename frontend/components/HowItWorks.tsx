@@ -12,8 +12,8 @@ export default function HowItWorks() {
   const steps = [
     {
       number: '1',
-      title: 'Search & Discover',
-      description: 'Browse thousands of items and workers available in your area',
+      title: 'Discover',
+      description: 'Search gear, spaces, and vetted locals in your area',
       Icon: MagnifyingGlassIcon,
       gradient: 'from-blue-500 to-blue-600',
       bgGradient: 'from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20',
@@ -30,8 +30,8 @@ export default function HowItWorks() {
     },
     {
       number: '3',
-      title: 'Rent & Enjoy',
-      description: 'Pick up your item or meet your worker and enjoy your rental',
+      title: 'Enjoy',
+      description: 'Meet locally, pick up, or get it delivered — your call',
       Icon: SparklesIcon,
       gradient: 'from-purple-500 to-pink-500',
       bgGradient: 'from-purple-50 to-pink-100 dark:from-purple-900/20 dark:to-pink-800/20',
@@ -39,8 +39,8 @@ export default function HowItWorks() {
     },
     {
       number: '4',
-      title: 'Return & Review',
-      description: 'Return the item and leave a review to help others',
+      title: 'Review',
+      description: 'Close the loop with a review that builds community trust',
       Icon: StarIcon,
       gradient: 'from-yellow-500 to-orange-500',
       bgGradient: 'from-yellow-50 to-orange-100 dark:from-yellow-900/20 dark:to-orange-800/20',
@@ -49,15 +49,17 @@ export default function HowItWorks() {
   ]
 
   return (
-    <section className="section-container bg-gradient-to-b from-white via-indigo-50/30 to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16 animate-slide-up">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white mb-4">
-            How It{' '}
-            <span className="gradient-text">Works</span>
+    <section className="section-container bg-sand-100 dark:bg-ink-950">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-16 text-center">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-accent-dark">
+            How it works
+          </p>
+          <h2 className="section-title">
+            From search to <span className="gradient-text">handoff</span>
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Get started in just 4 simple steps
+          <p className="section-subtitle">
+            Four clear steps. No guesswork, no hidden friction.
           </p>
         </div>
         

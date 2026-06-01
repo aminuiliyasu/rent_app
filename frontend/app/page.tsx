@@ -7,14 +7,14 @@ import Footer from '@/components/Footer'
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-sand-50 dark:bg-ink-950">
       <Navbar />
-      <div className="pt-20">
+      <main>
         <Hero />
-      </div>
-      <CategoryGrid />
-      <FeaturedListings />
-      <HowItWorks />
+        <CategoryGrid />
+        <FeaturedListings />
+        <HowItWorks />
+      </main>
       <Footer />
     </div>
   )
