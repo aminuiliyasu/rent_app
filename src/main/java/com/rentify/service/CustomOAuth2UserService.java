@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service("customOAuth2UserService")
@@ -38,8 +39,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             
             User user = processOAuth2User(registrationId, attributes);
             
-            // Store user ID in attributes for later retrieval
-            Map<String, Object> userAttributes = oAuth2User.getAttributes();
+            // Google returns an immutable attribute map — copy before adding our fields
+            Map<String, Object> userAttributes = new HashMap<>(oAuth2User.getAttributes());
             userAttributes.put("internal_user_id", user.getId());
             userAttributes.put("internal_user_email", user.getEmail());
             
