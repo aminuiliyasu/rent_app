@@ -45,6 +45,7 @@ resource "aws_ecs_task_definition" "api" {
       { name = "DB_POOL_MIN", value = "5" },
       { name = "FRONTEND_URL", value = "https://${var.domain_name}" },
       { name = "APP_BASE_URL", value = "https://${var.domain_name}" },
+      { name = "SESSION_COOKIE_SECURE", value = "true" },
       { name = "UPLOAD_DIR", value = "uploads" },
       { name = "JWT_EXPIRATION", value = "900000" },
       { name = "JWT_REFRESH_EXPIRATION", value = "604800000" },
