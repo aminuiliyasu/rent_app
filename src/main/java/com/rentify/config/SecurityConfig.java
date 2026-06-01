@@ -1,5 +1,6 @@
 package com.rentify.config;
 
+import com.rentify.security.CookieOAuth2AuthorizationRequestRepository;
 import com.rentify.security.CustomUserDetailsService;
 import com.rentify.security.JwtAuthenticationFilter;
 import com.rentify.security.OAuth2AuthenticationFailureHandler;
@@ -22,7 +23,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
-import org.springframework.security.oauth2.client.web.HttpCookieOAuth2AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -80,7 +80,7 @@ public class SecurityConfig {
      */
     @Bean
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
-        return new HttpCookieOAuth2AuthorizationRequestRepository();
+        return new CookieOAuth2AuthorizationRequestRepository();
     }
     
     @Bean
