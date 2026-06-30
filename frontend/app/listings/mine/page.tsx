@@ -28,7 +28,7 @@ export default function MyListingsPage() {
   const router = useRouter()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
-  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [deletingId, setDeletingId] = useState<string | number | null>(null)
 
   const fetchListings = useCallback(async () => {
     try {
