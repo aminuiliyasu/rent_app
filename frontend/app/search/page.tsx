@@ -1,70 +1,101 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { Suspense, useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import ListingCard from '@/components/ListingCard'
 import SearchFilters from '@/components/SearchFilters'
 import api from '@/lib/api'
-import { Listing } from '@/lib/types'
+import { Category, Listing } from '@/lib/types'
+import { mergeCategoriesWithSeed, categoryHasPersistentId, resolveCategorySlug } from '@/lib/seedCategories'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { localizeCategories } from '@/lib/i18n/categoryNames'
 import { MagnifyingGlassIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import {
+  buildLocationQuery,
+  emptySearchFilters,
+  type SearchFilterState,
+} from '@/lib/searchFilters'
 
-interface SearchFilterState {
-  search: string
-  categoryId: number | null
-  categorySlug: string | null
-  type: string | null
-  minPrice: number | null
-  maxPrice: number | null
-  location: string
-  lat: number | null
-  lng: number | null
-  radius: number | null
+function parseInitialFilters(searchParams: { get: (key: string) => string | null }): SearchFilterState {
+  const catRaw = searchParams.get('category')
+  const parsedCat = catRaw ? Number(catRaw) : NaN
+  const categoryId =
+    catRaw != null && catRaw !== '' && Number.isFinite(parsedCat) && !Number.isNaN(parsedCat) && parsedCat > 0
+      ? parsedCat
+      : null
+  const slugRaw = searchParams.get('categorySlug')
+  const categorySlug =
+    categoryId != null
+      ? null
+      : slugRaw && slugRaw.trim()
+        ? resolveCategorySlug(slugRaw.trim())
+        : null
+
+  const district = searchParams.get('district') || ''
+  const area = searchParams.get('area') || searchParams.get('location') || ''
+
+  return {
+    search: searchParams.get('q') || '',
+    district,
+    area,
+    categoryId,
+    categorySlug,
+    type: searchParams.get('type') || null,
+    minPrice: null,
+    maxPrice: null,
+    lat: null,
+    lng: null,
+    radius: null,
+  }
 }
 
 export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
+          <Navbar />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent mx-auto" />
+          </div>
+          <Footer />
+        </div>
+      }
+    >
+      <SearchPageContent />
+    </Suspense>
+  )
+}
+
+function SearchPageContent() {
   const searchParams = useSearchParams()
+  const { locale, t } = useLanguage()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState<SearchFilterState>(() => {
-    const catRaw = searchParams.get('category')
-    const parsedCat = catRaw ? Number(catRaw) : NaN
-    const categoryId =
-      catRaw != null &&
-      catRaw !== '' &&
-      Number.isFinite(parsedCat) &&
-      !Number.isNaN(parsedCat) &&
-      parsedCat > 0
-        ? parsedCat
-        : null
-    const slugRaw = searchParams.get('categorySlug')
-    const categorySlug =
-      categoryId != null
-        ? null
-        : slugRaw && slugRaw.trim()
-          ? slugRaw.trim()
-          : null
-    return {
-      search: searchParams.get('q') || '',
-      categoryId,
-      categorySlug,
-      type: searchParams.get('type') || null,
-      minPrice: null,
-      maxPrice: null,
-      location: searchParams.get('location') || '',
-      lat: null,
-      lng: null,
-      radius: null,
-    }
-  })
+  const [categories, setCategories] = useState<Category[]>(() => mergeCategoriesWithSeed([]))
+  const [filters, setFilters] = useState<SearchFilterState>(() => parseInitialFilters(searchParams))
+
+  const displayCategories = localizeCategories(categories, locale)
+
+  useEffect(() => {
+    api
+      .get('/categories')
+      .then((res) => setCategories(mergeCategoriesWithSeed(res.data || [])))
+      .catch(() => setCategories(mergeCategoriesWithSeed([])))
+  }, [])
+
+  useEffect(() => {
+    setFilters(parseInitialFilters(searchParams))
+  }, [searchParams])
 
   const fetchListings = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
       const keyword = (filters.search || '').trim()
-      const place = (filters.location || '').trim()
+      const place = buildLocationQuery(filters.district, filters.area)
       if (keyword) params.append('search', keyword)
       if (place) params.append('location', place)
       if (filters.categoryId != null && filters.categoryId > 0 && !Number.isNaN(filters.categoryId)) {
@@ -101,28 +132,126 @@ export default function SearchPage() {
     void fetchListings()
   }, [fetchListings])
 
-  const headlineQuery = [filters.search, filters.location]
-    .map((s) => (s || '').trim())
-    .filter(Boolean)
-    .join(' ')
-    .trim()
+  const headlineParts = [
+    filters.search.trim(),
+    buildLocationQuery(filters.district, filters.area),
+    filters.categoryId || filters.categorySlug
+      ? displayCategories.find(
+          (c) =>
+            (filters.categoryId != null && c.id === filters.categoryId) ||
+            (filters.categorySlug && c.slug === filters.categorySlug)
+        )?.name
+      : '',
+  ].filter(Boolean)
+
+  const headlineQuery = headlineParts.join(' · ')
+
+  const selectCategory = (category: Category | null) => {
+    if (!category) {
+      setFilters((prev) => ({ ...prev, categoryId: null, categorySlug: null }))
+      return
+    }
+    if (categoryHasPersistentId(category)) {
+      setFilters((prev) => ({ ...prev, categoryId: category.id, categorySlug: null }))
+    } else {
+      setFilters((prev) => ({ ...prev, categoryId: null, categorySlug: category.slug }))
+    }
+  }
+
+  const isCategoryActive = (category: Category) =>
+    (filters.categoryId != null && category.id === filters.categoryId) ||
+    (filters.categorySlug != null && category.slug === filters.categorySlug)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Search + categories */}
+        <div className="mb-8 card-glass animate-slide-down">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                {t('search.itemLabel')}
+              </label>
+              <div className="relative">
+                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="search"
+                  value={filters.search}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                  placeholder={t('search.itemPlaceholder')}
+                  className="input-field pl-11"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                {t('search.districtLabel')}
+              </label>
+              <input
+                type="text"
+                value={filters.district}
+                onChange={(e) => setFilters((prev) => ({ ...prev, district: e.target.value }))}
+                placeholder={t('search.districtPlaceholder')}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                {t('search.areaLabel')}
+              </label>
+              <input
+                type="text"
+                value={filters.area}
+                onChange={(e) => setFilters((prev) => ({ ...prev, area: e.target.value }))}
+                placeholder={t('search.areaPlaceholder')}
+                className="input-field"
+              />
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-gray-200/80 dark:border-gray-700/80">
+            <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">{t('search.browseCategories')}</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => selectCategory(null)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                filters.categoryId == null && !filters.categorySlug
+                  ? 'bg-primary-800 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              {t('search.allCategories')}
+            </button>
+            {displayCategories.map((category) => (
+              <button
+                key={category.slug || String(category.id)}
+                type="button"
+                onClick={() => selectCategory(category)}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                  isCategoryActive(category)
+                    ? 'bg-primary-800 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+          </div>
+        </div>
+
         {/* Header */}
-        <div className="mb-8 animate-slide-down">
+        <div className="mb-6 animate-slide-down">
           <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-3">
             {headlineQuery ? (
               <>
-                Search results for{' '}
-                <span className="gradient-text">&quot;{headlineQuery}&quot;</span>
+                Search results for <span className="gradient-text">&quot;{headlineQuery}&quot;</span>
               </>
             ) : (
               <>
-                Discover{' '}
-                <span className="gradient-text">Amazing Listings</span>
+                Discover <span className="gradient-text">Amazing Listings</span>
               </>
             )}
           </h1>
@@ -135,62 +264,40 @@ export default function SearchPage() {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <aside className="lg:w-80 flex-shrink-0">
-            <div className="sticky top-24">
-              <SearchFilters filters={filters} setFilters={setFilters} />
-            </div>
-          </aside>
+        <SearchFilters filters={filters} setFilters={setFilters} />
 
-          {/* Results */}
-          <main className="flex-1">
-            {loading ? (
-              <div className="text-center py-20">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 mb-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
+        <main>
+          {loading ? (
+            <div className="text-center py-20">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 mb-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent" />
+              </div>
+              <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">Loading amazing listings...</p>
+            </div>
+          ) : listings.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {listings.map((listing, idx) => (
+                <div key={listing.id} className="animate-slide-up" style={{ animationDelay: `${idx * 0.05}s` }}>
+                  <ListingCard listing={listing} />
                 </div>
-                <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">Loading amazing listings...</p>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 animate-slide-up">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 mb-6">
+                <MagnifyingGlassIcon className="h-10 w-10 text-gray-400" />
               </div>
-            ) : listings.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {listings.map((listing, idx) => (
-                  <div key={listing.id} className="animate-slide-up" style={{ animationDelay: `${idx * 0.05}s` }}>
-                    <ListingCard listing={listing} />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-20 animate-slide-up">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 mb-6">
-                  <MagnifyingGlassIcon className="h-10 w-10 text-gray-400" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No listings found</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">Try adjusting your search filters</p>
-                <button
-                  onClick={() =>
-                    setFilters({
-                      ...filters,
-                      search: '',
-                      categoryId: null,
-                      categorySlug: null,
-                      type: null,
-                      minPrice: null,
-                      maxPrice: null,
-                      location: '',
-                      lat: null,
-                      lng: null,
-                      radius: null,
-                    })
-                  }
-                  className="btn-outline"
-                >
-                  Clear Filters
-                </button>
-              </div>
-            )}
-          </main>
-        </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No listings found</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">Try another item name, district, or category</p>
+              <button
+                onClick={() => setFilters(emptySearchFilters())}
+                className="btn-outline"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
+        </main>
       </div>
       <Footer />
     </div>

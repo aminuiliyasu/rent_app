@@ -101,7 +101,7 @@ export default function ListingDetailPage() {
       toast.success('Listing deleted')
       router.push('/dashboard')
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete listing')
+      toast.error(error.response?.data?.message || error.response?.data?.error || 'Failed to delete listing')
     } finally {
       setDeleting(false)
     }

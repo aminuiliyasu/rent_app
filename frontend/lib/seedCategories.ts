@@ -5,15 +5,26 @@ export const SEED_CATEGORY_DEFINITIONS: ReadonlyArray<{ name: string; slug: stri
   { name: 'Tools & DIY', slug: 'tools-equipment' },
   { name: 'Electronics', slug: 'electronics' },
   { name: 'Home & Living', slug: 'home-living' },
-  { name: 'Apartment', slug: 'apartment' },
+  { name: 'Spaces', slug: 'apartment' },
   { name: 'Professional Services', slug: 'services' },
   { name: 'Scooter & Bikes', slug: 'vehicles' },
   { name: 'Pet Lovers', slug: 'pet-lovers' },
-  { name: 'Parties&Events', slug: 'parties-events' },
+  { name: 'Socials', slug: 'socials' },
   { name: 'Other', slug: 'other' },
 ]
 
 export const ACTIVE_CATEGORY_SLUGS = SEED_CATEGORY_DEFINITIONS.map((c) => c.slug)
+
+/** Retired slugs that should resolve to an active category. */
+const LEGACY_CATEGORY_SLUG_ALIASES: Record<string, string> = {
+  'parties-events': 'socials',
+}
+
+export function resolveCategorySlug(slug: string | null | undefined): string | null {
+  if (!slug?.trim()) return null
+  const key = slugKey(slug)
+  return LEGACY_CATEGORY_SLUG_ALIASES[key] ?? key
+}
 
 const CATEGORY_DISPLAY_ORDER = new Map(ACTIVE_CATEGORY_SLUGS.map((slug, index) => [slug, index]))
 

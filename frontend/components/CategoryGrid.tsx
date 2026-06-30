@@ -40,6 +40,7 @@ const SLUG_ICONS: Record<string, IconComponent> = {
   apartment: HomeIcon,
   services: BuildingOffice2Icon,
   'pet-lovers': HeartIcon,
+  socials: CalendarDaysIcon,
   'parties-events': CalendarDaysIcon,
   housing: HomeIcon,
   furniture: HomeModernIcon,

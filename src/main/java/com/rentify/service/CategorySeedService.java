@@ -28,21 +28,22 @@ public class CategorySeedService {
             "services",
             "vehicles",
             "pet-lovers",
-            "parties-events",
+            "socials",
             "other"
     );
 
-    private static final Map<String, String> LEGACY_SLUG_MIGRATIONS = Map.of(
-            "furniture", "home-living",
-            "housing", "apartment",
-            "infant-items", "home-living",
-            "garages", "home-living",
-            "professional-services", "services",
-            "sports-recreation", "parties-events",
-            "fashion-costumes", "parties-events",
-            "fashion-customs", "other",
-            "pet-lover", "pet-lovers",
-            "event-supplies", "parties-events"
+    private static final Map<String, String> LEGACY_SLUG_MIGRATIONS = Map.ofEntries(
+            Map.entry("furniture", "home-living"),
+            Map.entry("housing", "apartment"),
+            Map.entry("infant-items", "home-living"),
+            Map.entry("garages", "home-living"),
+            Map.entry("professional-services", "services"),
+            Map.entry("sports-recreation", "socials"),
+            Map.entry("fashion-costumes", "socials"),
+            Map.entry("fashion-customs", "other"),
+            Map.entry("pet-lover", "pet-lovers"),
+            Map.entry("event-supplies", "socials"),
+            Map.entry("parties-events", "socials")
     );
 
     @Autowired
@@ -56,11 +57,11 @@ public class CategorySeedService {
         ensureCategory("Tools & DIY", "tools-equipment");
         ensureCategory("Electronics", "electronics");
         ensureCategory("Home & Living", "home-living");
-        ensureCategory("Apartment", "apartment");
+        ensureCategory("Spaces", "apartment");
         ensureCategory("Professional Services", "services");
         ensureCategory("Scooter & Bikes", "vehicles");
         ensureCategory("Pet Lovers", "pet-lovers");
-        ensureCategory("Parties&Events", "parties-events");
+        ensureCategory("Socials", "socials");
         ensureCategory("Other", "other");
 
         migrateLegacyCategories();

@@ -5,11 +5,12 @@ const CATEGORY_NAMES_EN: Record<string, string> = {
   'tools-equipment': 'Tools & DIY',
   electronics: 'Electronics',
   'home-living': 'Home & Living',
-  apartment: 'Apartment',
+  apartment: 'Spaces',
   services: 'Professional Services',
   vehicles: 'Scooter & Bikes',
   'pet-lovers': 'Pet Lovers',
-  'parties-events': 'Parties&Events',
+  socials: 'Socials',
+  'parties-events': 'Socials',
   other: 'Other',
 }
 
@@ -17,11 +18,12 @@ const CATEGORY_NAMES_HU: Record<string, string> = {
   'tools-equipment': 'Szerszámok és barkács',
   electronics: 'Elektronika',
   'home-living': 'Otthon és lakás',
-  apartment: 'Lakás',
+  apartment: 'Helyiségek',
   services: 'Szakmai szolgáltatások',
   vehicles: 'Rollerek és biciklik',
   'pet-lovers': 'Állatbarát',
-  'parties-events': 'Bulik és események',
+  socials: 'Socialok',
+  'parties-events': 'Socialok',
   other: 'Egyéb',
 }
 
@@ -54,6 +56,9 @@ export function localizeCategoryName(name: string | undefined, locale: Locale): 
     if (enName === normalized) {
       return getCategoryDisplayName(slug, locale, name)
     }
+  }
+  if (normalized === 'Parties&Events') {
+    return getCategoryDisplayName('socials', locale, name)
   }
   return name
 }

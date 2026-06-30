@@ -1,16 +1,21 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type Dispatch, type SetStateAction } from 'react'
 import { ListingType, Category } from '@/lib/types'
 import api from '@/lib/api'
 import { mergeCategoriesWithSeed, categoryHasPersistentId } from '@/lib/seedCategories'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { localizeCategories } from '@/lib/i18n/categoryNames'
-import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import type { SearchFilterState } from '@/lib/searchFilters'
+import {
+  FunnelIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from '@heroicons/react/24/outline'
 
 interface SearchFiltersProps {
-  filters: any
-  setFilters: (filters: any) => void
+  filters: SearchFilterState
+  setFilters: Dispatch<SetStateAction<SearchFilterState>>
 }
 
 export default function SearchFilters({ filters, setFilters }: SearchFiltersProps) {
@@ -27,20 +32,16 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
       .catch(() => setCategories(mergeCategoriesWithSeed([])))
   }, [])
 
-  const updateFilter = (key: string, value: any) => {
+  const updateFilter = <K extends keyof SearchFilterState>(key: K, value: SearchFilterState[K]) => {
     setFilters({ ...filters, [key]: value })
   }
 
   const hasGeoFilter = Boolean(filters.lat && filters.lng)
 
   const activeFiltersCount = [
-    filters.search,
-    filters.categoryId,
-    filters.categorySlug,
     filters.type,
     filters.minPrice != null && !Number.isNaN(filters.minPrice),
     filters.maxPrice != null && !Number.isNaN(filters.maxPrice),
-    filters.location,
     hasGeoFilter,
     hasGeoFilter && filters.radius != null && !Number.isNaN(filters.radius),
   ].filter(Boolean).length
@@ -48,70 +49,64 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
   const displayCategories = localizeCategories(categories, locale)
 
   return (
-    <div className="card-glass overflow-visible">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500">
+    <div className="card-glass overflow-visible mb-8">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 shrink-0">
             <FunnelIcon className="h-5 w-5 text-white" />
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Filters</h2>
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('filters.title')}</h2>
             {activeFiltersCount > 0 && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">{activeFiltersCount} active</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {t('filters.active', { count: String(activeFiltersCount) })}
+              </p>
             )}
           </div>
         </div>
+
         <button
           type="button"
           onClick={() => setShowFilters(!showFilters)}
-          className="lg:hidden inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          className={`inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all shrink-0 ${
+            showFilters
+              ? 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
+              : 'bg-primary-800 text-white shadow-md hover:bg-primary-900 ring-2 ring-primary-700/30'
+          }`}
           aria-expanded={showFilters}
         >
-          {showFilters ? <XMarkIcon className="h-5 w-5" /> : <FunnelIcon className="h-5 w-5" />}
-          {showFilters ? 'Hide' : 'Filters'}
+          <FunnelIcon className="h-5 w-5" />
+          {showFilters ? t('filters.toggleHide') : t('filters.toggleShow')}
           {!showFilters && activeFiltersCount > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-xs">{activeFiltersCount}</span>
+            <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-xs font-bold">
+              {activeFiltersCount}
+            </span>
+          )}
+          {showFilters ? (
+            <ChevronUpIcon className="h-4 w-4 opacity-70" />
+          ) : (
+            <ChevronDownIcon className="h-4 w-4 opacity-90" />
           )}
         </button>
       </div>
 
       {showFilters && (
-        <div className="space-y-6">
-          {/* Search */}
+        <div className="mt-6 pt-6 border-t border-gray-200/80 dark:border-gray-700/80 space-y-6 animate-slide-down">
           <div className="relative">
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              Search
-            </label>
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => updateFilter('search', e.target.value)}
-              className="input-field"
-              placeholder="Search listings..."
-            />
-          </div>
-
-          {/* Type */}
-          <div className="relative">
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              Type
-            </label>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t('filters.type')}</label>
             <select
               value={filters.type || ''}
               onChange={(e) => updateFilter('type', e.target.value || null)}
               className="input-field"
             >
-              <option value="">All Types</option>
-              <option value={ListingType.ITEM}>Items</option>
-              <option value={ListingType.WORKER}>Workers</option>
+              <option value="">{t('filters.allTypes')}</option>
+              <option value={ListingType.ITEM}>{t('filters.items')}</option>
+              <option value={ListingType.WORKER}>{t('filters.workers')}</option>
             </select>
           </div>
 
-          {/* Category */}
           <div className="relative">
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              {t('category.label')}
-            </label>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t('category.label')}</label>
             <select
               value={
                 filters.categoryId != null && filters.categoryId > 0
@@ -144,58 +139,36 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
             </select>
           </div>
 
-          {/* Price Range */}
           <div className="relative">
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              Price Range (per day)
+              {t('filters.priceRange')}
             </label>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  placeholder="Min"
-                  value={filters.minPrice ?? ''}
-                  onChange={(e) => updateFilter('minPrice', e.target.value ? Number(e.target.value) : null)}
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  placeholder="Max"
-                  value={filters.maxPrice ?? ''}
-                  onChange={(e) => updateFilter('maxPrice', e.target.value ? Number(e.target.value) : null)}
-                  className="input-field"
-                />
-              </div>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder={t('filters.min')}
+                value={filters.minPrice ?? ''}
+                onChange={(e) => updateFilter('minPrice', e.target.value ? Number(e.target.value) : null)}
+                className="input-field"
+              />
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder={t('filters.max')}
+                value={filters.maxPrice ?? ''}
+                onChange={(e) => updateFilter('maxPrice', e.target.value ? Number(e.target.value) : null)}
+                className="input-field"
+              />
             </div>
           </div>
 
-          {/* Location — own stacking context so borders / siblings never paint over the label */}
-          <div className="relative z-10 pt-2">
-            <label
-              htmlFor="filter-location"
-              className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 relative bg-transparent"
-            >
-              Location (Optional)
+          <div className="relative">
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+              Radius (km)
             </label>
-            <input
-              id="filter-location"
-              type="text"
-              placeholder="City, country, district…"
-              value={filters.location || ''}
-              onChange={(e) => updateFilter('location', e.target.value)}
-              className="input-field mb-3"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2 mb-1">
-              Matches <strong className="text-gray-600 dark:text-gray-300">city</strong>,{' '}
-              <strong className="text-gray-600 dark:text-gray-300">country</strong>, or{' '}
-              <strong className="text-gray-600 dark:text-gray-300">district</strong> (address) only — separate from Search above.
-            </p>
             <input
               type="number"
               min={1}
@@ -206,26 +179,22 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
             />
           </div>
 
-          {/* Reset */}
           <button
             type="button"
             onClick={() =>
-              setFilters({
-                search: '',
-                categoryId: null,
-                categorySlug: null,
+              setFilters((prev) => ({
+                ...prev,
                 type: null,
                 minPrice: null,
                 maxPrice: null,
-                location: '',
                 lat: null,
                 lng: null,
                 radius: null,
-              })
+              }))
             }
             className="w-full btn-secondary font-semibold"
           >
-            Reset All Filters
+            {t('filters.resetRefinements')}
           </button>
         </div>
       )}

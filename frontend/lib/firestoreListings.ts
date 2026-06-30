@@ -10,7 +10,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { Listing, ListingStatus, ListingType } from '@/lib/types'
-import { db } from '@/lib/firebase'
+import { requireDb } from '@/lib/firebase'
 
 type ListingInput = {
   type: ListingType
@@ -41,7 +41,7 @@ type ListingInput = {
 const LISTINGS_COLLECTION = 'listings'
 
 export async function createListingInFirestore(input: ListingInput): Promise<string> {
-  const created = await addDoc(collection(db, LISTINGS_COLLECTION), {
+  const created = await addDoc(collection(requireDb(), LISTINGS_COLLECTION), {
     ...input,
     status: ListingStatus.ACTIVE,
     isFeatured: false,
@@ -57,7 +57,7 @@ export async function createListingInFirestore(input: ListingInput): Promise<str
 
 export async function getActiveListingsFromFirestore(max = 20): Promise<Listing[]> {
   const q = query(
-    collection(db, LISTINGS_COLLECTION),
+    collection(requireDb(), LISTINGS_COLLECTION),
     where('status', '==', ListingStatus.ACTIVE),
     limit(max)
   )
@@ -94,7 +94,7 @@ export async function getFilteredListingsFromFirestore(filters: {
 }
 
 export async function getListingFromFirestore(id: string): Promise<Listing | null> {
-  const listingDoc = await getDoc(doc(db, LISTINGS_COLLECTION, id))
+  const listingDoc = await getDoc(doc(requireDb(), LISTINGS_COLLECTION, id))
   if (!listingDoc.exists()) {
     return null
   }

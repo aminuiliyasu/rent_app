@@ -2,6 +2,7 @@ package com.rentify.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -71,6 +72,15 @@ public class GlobalExceptionHandler {
         error.put("error", "Account locked");
         error.put("message", "Your account has been locked. Please contact support.");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        log.warn("Data integrity violation: {}", ex.getMessage());
+        return buildBody(
+                HttpStatus.CONFLICT,
+                "This listing cannot be deleted because it is still linked to other records. "
+                        + "Try again after any active bookings are finished.");
     }
 
     @ExceptionHandler(RuntimeException.class)

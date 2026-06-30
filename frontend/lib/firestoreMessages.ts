@@ -9,7 +9,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore'
 import { MessageResponse, User } from '@/lib/types'
-import { db } from '@/lib/firebase'
+import { requireDb } from '@/lib/firebase'
 import api from '@/lib/api'
 
 const MESSAGES_COLLECTION = 'messages'
@@ -57,9 +57,9 @@ async function loadFirestoreMessagesOnly(bookingId: number | string): Promise<Me
   const variants = collectBookingIdVariants(bookingId)
 
   const snapshots = await Promise.all([
-    getDocs(query(collection(db, MESSAGES_COLLECTION), where('bookingKey', '==', key))),
+    getDocs(query(collection(requireDb(), MESSAGES_COLLECTION), where('bookingKey', '==', key))),
     ...variants.map((candidate) =>
-      getDocs(query(collection(db, MESSAGES_COLLECTION), where('bookingId', '==', candidate)))
+      getDocs(query(collection(requireDb(), MESSAGES_COLLECTION), where('bookingId', '==', candidate)))
     ),
   ])
 
@@ -109,7 +109,7 @@ export async function sendMessageToFirestore(params: {
     createdAt: now,
     createdAtServer: serverTimestamp(),
   }
-  const written = await addDoc(collection(db, MESSAGES_COLLECTION), payload)
+  const written = await addDoc(collection(requireDb(), MESSAGES_COLLECTION), payload)
   return {
     id: written.id,
     bookingId: params.bookingId,
@@ -155,7 +155,7 @@ export function subscribeToMessagesForBooking(
 
   unsubs.push(
     onSnapshot(
-      query(collection(db, MESSAGES_COLLECTION), where('bookingKey', '==', key)),
+      query(collection(requireDb(), MESSAGES_COLLECTION), where('bookingKey', '==', key)),
       scheduleRefresh,
       snapErr
     )
@@ -164,7 +164,7 @@ export function subscribeToMessagesForBooking(
   for (const candidate of variants) {
     unsubs.push(
       onSnapshot(
-        query(collection(db, MESSAGES_COLLECTION), where('bookingId', '==', candidate)),
+        query(collection(requireDb(), MESSAGES_COLLECTION), where('bookingId', '==', candidate)),
         scheduleRefresh,
         snapErr
       )

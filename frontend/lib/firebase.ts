@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider } from 'firebase/auth'
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore'
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app'
+import { getAuth, GoogleAuthProvider, type Auth } from 'firebase/auth'
+import { getFirestore, enableIndexedDbPersistence, type Firestore } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,14 +11,36 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
+export function isFirebaseConfigured(): boolean {
+  return Boolean(
+    firebaseConfig.apiKey &&
+      firebaseConfig.projectId &&
+      firebaseConfig.appId
+  )
+}
 
-export const auth = getAuth(app)
+let app: FirebaseApp | null = null
+let auth: Auth | null = null
+let db: Firestore | null = null
+
+if (isFirebaseConfigured()) {
+  app = getApps().length ? getApp() : initializeApp(firebaseConfig)
+  auth = getAuth(app)
+  db = getFirestore(app)
+
+  if (typeof window !== 'undefined' && db) {
+    enableIndexedDbPersistence(db).catch(() => {
+      // Ignore when another tab already has persistence lock.
+    })
+  }
+}
+
+export { app, auth, db }
 export const googleProvider = new GoogleAuthProvider()
-export const db = getFirestore(app)
 
-if (typeof window !== 'undefined') {
-  enableIndexedDbPersistence(db).catch(() => {
-    // Ignore when another tab already has persistence lock.
-  })
+export function requireDb(): Firestore {
+  if (!db) {
+    throw new Error('Firebase is not configured. Set NEXT_PUBLIC_FIREBASE_* env vars.')
+  }
+  return db
 }

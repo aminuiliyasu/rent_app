@@ -42,6 +42,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Page<Booking> findByListingOwnerId(@Param("ownerId") Long ownerId, Pageable pageable);
     
     List<Booking> findByListingIdAndStatus(Long listingId, BookingStatus status);
+
+    List<Booking> findByListingId(Long listingId);
     
     @Query("SELECT b FROM Booking b WHERE b.listing.id = :listingId " +
            "AND b.rentWishPost IS NULL " +

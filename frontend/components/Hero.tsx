@@ -15,14 +15,17 @@ export default function Hero() {
   const router = useRouter()
   const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
+  const [locationQuery, setLocationQuery] = useState('')
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     const q = searchQuery.trim()
+    const location = locationQuery.trim()
     const params = new URLSearchParams()
     if (q) params.set('q', q)
-    params.set('location', 'Budapest')
-    router.push(`/search?${params.toString()}`)
+    if (location) params.set('location', location)
+    const query = params.toString()
+    router.push(query ? `/search?${query}` : '/search')
   }
 
   const trustItems = [t('hero.trust1'), t('hero.trust2'), t('hero.trust3')]
@@ -53,28 +56,38 @@ export default function Hero() {
             <span className="block mt-2 text-accent-light font-semibold">{t('hero.titleLine2')}</span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-stone-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-stone-300 mb-10 max-w-2xl mx-auto leading-relaxed text-balance">
             {t('hero.subtitle')}
           </p>
 
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-8">
-            <div className="flex flex-col sm:flex-row gap-0 sm:gap-0 bg-white rounded-xl p-2 shadow-lg shadow-black/20 border border-stone-200/10">
-              <div className="flex-1 relative">
+          <form onSubmit={handleSearch} className="max-w-3xl mx-auto mb-8">
+            <div className="flex flex-col sm:flex-row gap-3 bg-white rounded-xl p-2 shadow-lg shadow-black/20 border border-stone-200/10">
+              <div className="flex-1 relative min-w-0">
                 <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-stone-400" />
                 <input
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t('hero.searchPlaceholder')}
-                  aria-label={t('hero.searchAria')}
+                  placeholder={t('search.itemPlaceholder')}
+                  aria-label={t('search.itemLabel')}
                   className="w-full pl-14 pr-4 py-4 text-gray-900 rounded-lg focus:outline-none text-lg md:text-xl font-normal bg-transparent"
+                />
+              </div>
+              <div className="sm:w-52 shrink-0">
+                <input
+                  type="text"
+                  value={locationQuery}
+                  onChange={(e) => setLocationQuery(e.target.value)}
+                  placeholder={t('search.locationPlaceholder')}
+                  aria-label={t('search.locationLabel')}
+                  className="w-full px-4 py-4 text-gray-900 rounded-lg focus:outline-none text-base md:text-lg font-normal bg-stone-50 border border-stone-200/80"
                 />
               </div>
               <button
                 type="submit"
-                className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-lg font-semibold px-8 py-4 rounded-lg transition-colors"
+                className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-lg font-semibold px-8 py-4 rounded-lg transition-colors shrink-0"
               >
-                {t('hero.searchButton')}
+                {t('search.submit')}
                 <ArrowRightIcon className="h-5 w-5" />
               </button>
             </div>

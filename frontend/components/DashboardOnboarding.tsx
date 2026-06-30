@@ -79,7 +79,7 @@ export default function DashboardOnboarding({
           <PlusIcon className="h-8 w-8 text-green-600 dark:text-green-400 mb-3 group-hover:scale-110 transition-transform" />
           <h3 className="font-bold text-gray-900 dark:text-white mb-1">List an item</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Earn from things you already own. No platform fees right now.
+            Earn from things you already own. No platform fees.
           </p>
         </Link>
 

@@ -3,6 +3,7 @@ package com.rentify.service;
 import com.rentify.dto.request.CreateListingRequest;
 import com.rentify.dto.response.ListingResponse;
 import com.rentify.dto.response.ReviewResponse;
+import com.rentify.model.Booking;
 import com.rentify.model.Category;
 import com.rentify.model.Listing;
 import com.rentify.model.ListingImage;
@@ -10,7 +11,9 @@ import com.rentify.model.enums.BookingStatus;
 import com.rentify.model.enums.ListingStatus;
 import com.rentify.model.enums.ListingType;
 import com.rentify.model.User;
+import com.rentify.repository.AvailabilityRepository;
 import com.rentify.repository.BookingRepository;
+import com.rentify.repository.CallRepository;
 import com.rentify.repository.CategoryRepository;
 import com.rentify.repository.ListingImageRepository;
 import com.rentify.repository.ListingRepository;
@@ -50,6 +53,12 @@ public class ListingService {
     private ListingImageRepository listingImageRepository;
 
     @Autowired
+    private AvailabilityRepository availabilityRepository;
+
+    @Autowired
+    private CallRepository callRepository;
+
+    @Autowired
     private ReviewService reviewService;
 
     @Transactional(readOnly = true)
@@ -70,7 +79,8 @@ public class ListingService {
 
         Long resolvedCategoryId = categoryId;
         if (resolvedCategoryId == null && categorySlug != null && !categorySlug.isBlank()) {
-            Optional<Category> bySlug = categoryRepository.findBySlug(categorySlug.trim());
+            String slug = resolveCategorySlug(categorySlug.trim());
+            Optional<Category> bySlug = categoryRepository.findBySlug(slug);
             if (bySlug.isEmpty()) {
                 return Page.empty(pageable);
             }
@@ -247,7 +257,15 @@ public class ListingService {
                                 + "Wait until bookings finish or contact support.");
             }
         }
-        
+
+        // Remove related rows explicitly — JPA cascade alone can miss lazy collections
+        // and calls are not cascaded from bookings.
+        for (Booking booking : bookingRepository.findByListingId(id)) {
+            callRepository.deleteByBookingId(booking.getId());
+            bookingRepository.delete(booking);
+        }
+        listingImageRepository.deleteByListing_Id(id);
+        availabilityRepository.deleteByListingId(id);
         listingRepository.delete(listing);
     }
     
@@ -357,5 +375,13 @@ public class ListingService {
             return "HUF";
         }
         return c;
+    }
+
+    /** Maps retired category slugs to their active replacement. */
+    private static String resolveCategorySlug(String slug) {
+        if ("parties-events".equalsIgnoreCase(slug)) {
+            return "socials";
+        }
+        return slug;
     }
 }

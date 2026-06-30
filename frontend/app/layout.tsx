@@ -20,9 +20,10 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001'),
   title: 'Rhentify — Rent anything. Hire locally.',
   description:
-    'Rent gear, spaces, and skilled people in Budapest. Local listings, secure messaging, and no platform fees right now.',
+    'Rent gear, spaces, and skilled people in Budapest. Local listings, secure messaging, and no platform fees.',
   icons: {
     icon: '/logo/rhentify-icon.png',
     apple: '/logo/rhentify-icon.png',

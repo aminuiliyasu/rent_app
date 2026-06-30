@@ -24,6 +24,8 @@ public interface CallRepository extends JpaRepository<Call, Long> {
     @Query("SELECT c FROM Call c WHERE c.booking.id = :bookingId " +
            "ORDER BY c.createdAt DESC")
     List<Call> findByBookingId(@Param("bookingId") Long bookingId);
+
+    void deleteByBookingId(Long bookingId);
     
     @Query("SELECT c FROM Call c WHERE c.status = :status " +
            "AND (c.caller.id = :userId OR c.receiver.id = :userId)")

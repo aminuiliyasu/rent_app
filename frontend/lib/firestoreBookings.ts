@@ -1,5 +1,5 @@
 import { addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { requireDb } from '@/lib/firebase'
 import { BookingStatus } from '@/lib/types'
 import { getListingFromFirestore } from '@/lib/firestoreListings'
 
@@ -16,7 +16,7 @@ export async function createBookingInFirestore(input: {
   totalAmount: number
 }): Promise<string> {
   const nowIso = new Date().toISOString()
-  const created = await addDoc(collection(db, 'bookings'), {
+  const created = await addDoc(collection(requireDb(), 'bookings'), {
     ...input,
     status: 'PENDING',
     deposit: 0,
@@ -51,7 +51,7 @@ export interface FirestoreOwnerBooking {
 }
 
 export async function getOwnerBookingsFromFirestore(ownerId: number): Promise<FirestoreOwnerBooking[]> {
-  const bookingsRef = collection(db, 'bookings')
+  const bookingsRef = collection(requireDb(), 'bookings')
   const q = query(bookingsRef, where('ownerId', '==', ownerId))
   const snapshot = await getDocs(q)
   const mapped = snapshot.docs.map((docSnapshot) => {
@@ -62,7 +62,7 @@ export async function getOwnerBookingsFromFirestore(ownerId: number): Promise<Fi
 }
 
 export async function getRenterBookingsFromFirestore(renterId: number): Promise<FirestoreOwnerBooking[]> {
-  const bookingsRef = collection(db, 'bookings')
+  const bookingsRef = collection(requireDb(), 'bookings')
   const q = query(bookingsRef, where('renterId', '==', renterId))
   const snapshot = await getDocs(q)
   const mapped = snapshot.docs.map((docSnapshot) => {
@@ -73,7 +73,7 @@ export async function getRenterBookingsFromFirestore(renterId: number): Promise<
 }
 
 export async function getBookingFromFirestore(bookingId: string): Promise<FirestoreOwnerBooking | null> {
-  const bookingDoc = await getDoc(doc(db, 'bookings', bookingId))
+  const bookingDoc = await getDoc(doc(requireDb(), 'bookings', bookingId))
   if (!bookingDoc.exists()) {
     return null
   }
@@ -87,7 +87,7 @@ export async function updateBookingStatusInFirestore(
   status: BookingStatus | string
 ): Promise<void> {
   const nowIso = new Date().toISOString()
-  await updateDoc(doc(db, 'bookings', bookingId), {
+  await updateDoc(doc(requireDb(), 'bookings', bookingId), {
     status,
     updatedAtIso: nowIso,
     updatedAt: serverTimestamp(),
