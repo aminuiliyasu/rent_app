@@ -24,6 +24,13 @@ import axios from 'axios'
 
 const BUDGET_MAX_CHARS = 280
 
+type RentWishVisibilityHours = 12 | 24
+
+const VISIBILITY_OPTIONS: { value: RentWishVisibilityHours; label: string }[] = [
+  { value: 12, label: '12 hours' },
+  { value: 24, label: '24 hours' },
+]
+
 const DELIVERY_OPTIONS: { value: DeliveryPreference; label: string; icon: typeof TruckIcon }[] = [
   { value: 'PICKUP', label: 'Pickup', icon: ShoppingBagIcon },
   { value: 'DELIVERY', label: 'Delivery', icon: TruckIcon },
@@ -76,6 +83,7 @@ export default function FeedPage() {
   const [country, setCountry] = useState('')
   const [budgetText, setBudgetText] = useState('')
   const [deliveryPreference, setDeliveryPreference] = useState<DeliveryPreference | ''>('')
+  const [visibilityHours, setVisibilityHours] = useState<RentWishVisibilityHours>(12)
 
   const [replyTarget, setReplyTarget] = useState<RentWishPost | null>(null)
   const [hostListings, setHostListings] = useState<Listing[]>([])
@@ -116,8 +124,9 @@ export default function FeedPage() {
         country: country.trim() || undefined,
         budgetText: budgetText.trim() || undefined,
         deliveryPreference: deliveryPreference || undefined,
+        visibilityHours,
       })
-      toast.success('Posted — visible for 24 hours')
+      toast.success(`Posted — visible for ${visibilityHours} hours`)
       setTitle('')
       setDescription('')
       setDistrict('')
@@ -191,8 +200,9 @@ export default function FeedPage() {
             <span className="gradient-text">Rent requests</span>
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl">
-            See what people are looking to rent right now. Each post stays live for{' '}
-            <strong className="text-gray-800 dark:text-gray-200">24 hours</strong>, then it disappears from rent requests.
+            See what people are looking to rent right now. When you publish, choose how long your post stays live —{' '}
+            <strong className="text-gray-800 dark:text-gray-200">12 hours</strong> or{' '}
+            <strong className="text-gray-800 dark:text-gray-200">24 hours</strong> — then it disappears from rent requests.
           </p>
         </div>
 
@@ -379,12 +389,48 @@ export default function FeedPage() {
               </p>
             </div>
 
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-gray-800 dark:text-gray-200">
+                <ClockIcon className="inline h-4 w-4 mr-1 text-amber-500" aria-hidden />
+                How long should it stay live?
+              </label>
+              <div
+                role="radiogroup"
+                aria-label="Post visibility duration"
+                className="flex flex-wrap gap-2"
+              >
+                {VISIBILITY_OPTIONS.map((opt) => {
+                  const active = visibilityHours === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => setVisibilityHours(opt.value)}
+                      className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${
+                        active
+                          ? 'bg-amber-500 border-amber-500 text-white shadow'
+                          : 'bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:border-amber-400 hover:text-amber-600 dark:hover:text-amber-300'
+                      }`}
+                    >
+                      <ClockIcon className="h-4 w-4" aria-hidden />
+                      {opt.label}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Shorter posts (12h) for urgent needs; 24h gives owners more time to reply.
+              </p>
+            </div>
+
             <button
               type="submit"
               disabled={submitting}
               className="btn-primary w-full sm:w-auto px-8 py-3 disabled:opacity-60"
             >
-              {submitting ? 'Posting…' : 'Publish (24h)'}
+              {submitting ? 'Posting…' : `Publish (${visibilityHours}h)`}
             </button>
           </form>
         ) : (
@@ -413,7 +459,7 @@ export default function FeedPage() {
             </div>
           ) : posts.length === 0 ? (
             <p className="text-center py-16 text-gray-500 dark:text-gray-400 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
-              No active requests in the last 24 hours. Be the first to post.
+              No active requests right now. Be the first to post.
             </p>
           ) : (
             <ul className="space-y-4">
@@ -467,7 +513,7 @@ export default function FeedPage() {
                     })()}
                     <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
                       <ClockIcon className="h-5 w-5 shrink-0" />
-                      Expires {safeExpiresLabel(post.expiresAt)}
+                      {post.visibilityHours ?? 24}h · Expires {safeExpiresLabel(post.expiresAt)}
                     </span>
                     {isAuthenticated && user && user.id !== post.authorId && (
                       <button

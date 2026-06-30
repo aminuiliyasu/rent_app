@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
@@ -16,6 +16,8 @@ import {
   MicrophoneIcon,
   MagnifyingGlassIcon,
   StarIcon as StarIconOutline,
+  ChevronLeftIcon,
+  CalendarDaysIcon,
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 
@@ -69,6 +71,36 @@ function timeLabel(iso: string): string {
   return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
 }
 
+function inboxStatusLabel(status: string): ReactNode {
+  const normalized = status.toUpperCase()
+  if (normalized === 'PENDING') {
+    return (
+      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-gray-700 dark:text-amber-300">
+        pending
+      </span>
+    )
+  }
+  if (normalized === 'CONFIRMED') {
+    return (
+      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-gray-700 dark:text-emerald-300">
+        confirmed
+      </span>
+    )
+  }
+  if (normalized === 'CANCELLED') {
+    return (
+      <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:px-2 dark:py-0.5 dark:rounded-full dark:bg-gray-700 dark:text-gray-200">
+        cancelled
+      </span>
+    )
+  }
+  return (
+    <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:px-2 dark:py-0.5 dark:rounded-full dark:bg-gray-700 dark:text-gray-300">
+      {normalized.toLowerCase()}
+    </span>
+  )
+}
+
 function dateSeparatorLabel(iso: string): string {
   const d = new Date(iso)
   const now = new Date()
@@ -83,9 +115,11 @@ function dateSeparatorLabel(iso: string): string {
 export default function MessagesPage() {
   const { isAuthenticated, user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [bookings, setBookings] = useState<Booking[]>([])
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
+  const [showChat, setShowChat] = useState(false)
   const [messages, setMessages] = useState<MessageResponse[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [bookingsLoading, setBookingsLoading] = useState(true)
@@ -135,16 +169,31 @@ export default function MessagesPage() {
       })
 
       setBookings(unique)
+      const bookingFromUrl = searchParams.get('booking')
+      const urlId = bookingFromUrl ? Number(bookingFromUrl) : NaN
+      const urlBooking = Number.isFinite(urlId) ? unique.find((b) => b.id === urlId) : undefined
+
       setSelectedBooking((prev) => {
+        if (urlBooking) return urlBooking
         if (prev && unique.some((b) => b.id === prev.id)) return prev
         return unique[0] || null
       })
+      setShowChat(Boolean(urlBooking))
     } catch (error) {
       console.error('Error fetching bookings:', error)
       toast.error('Failed to load bookings')
     } finally {
       setBookingsLoading(false)
     }
+  }, [searchParams])
+
+  const selectBooking = useCallback((booking: Booking) => {
+    setSelectedBooking(booking)
+    setShowChat(true)
+  }, [])
+
+  const backToInbox = useCallback(() => {
+    setShowChat(false)
   }, [])
 
   useEffect(() => {
@@ -352,162 +401,160 @@ export default function MessagesPage() {
   const selectedPartner = partnerOf(selectedBooking)
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page header */}
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-              Messages
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Your booking conversations in one place.
-            </p>
-          </div>
-          {pendingReviewCount > 0 && (
-            <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1.5 text-xs font-semibold dark:bg-amber-500/10 dark:border-amber-400/30 dark:text-amber-200">
-              <StarIconSolid className="h-4 w-4" />
-              {pendingReviewCount} {pendingReviewCount === 1 ? 'review' : 'reviews'} pending from you
+      <div className="pt-20 pb-6">
+        <div className="max-w-lg md:max-w-xl lg:max-w-2xl mx-auto w-full px-4 sm:px-6">
+          {/* Page header — inbox view only */}
+          {!showChat && (
+            <div className="mb-4">
+              <h1 className="font-serif text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+                Messages
+              </h1>
+              <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
+                Pick a name from your bookings, then chat.
+              </p>
+              {pendingReviewCount > 0 && (
+                <div className="inline-flex items-center gap-2 mt-3 rounded-full bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1.5 text-xs font-semibold dark:bg-amber-500/10 dark:border-amber-400/30 dark:text-amber-200">
+                  <StarIconSolid className="h-4 w-4 shrink-0" />
+                  {pendingReviewCount} review{pendingReviewCount === 1 ? '' : 's'} needed
+                </div>
+              )}
             </div>
           )}
-        </div>
 
-        {/* Chat shell */}
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-[320px,1fr] h-[calc(100vh-14rem)] min-h-[520px]">
-            {/* Conversations list */}
-            <aside className="flex flex-col border-r border-gray-200 dark:border-gray-800 min-h-0">
-              <div className="px-4 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search conversations"
-                    className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 border border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-blue-500 focus:outline-none transition-colors"
-                  />
+          {/* Inbox + chat shell — same width on all devices */}
+          <div
+            className={`rounded-2xl border border-gray-200/80 dark:border-gray-800 bg-white dark:bg-[#161b22] shadow-sm overflow-hidden flex flex-col w-full ${
+              showChat
+                ? 'h-[calc(100dvh-5.5rem)] sm:h-[calc(100dvh-6rem)]'
+                : 'min-h-[min(420px,calc(100dvh-12rem))]'
+            }`}
+          >
+            {/* Inbox list */}
+            {!showChat && (
+              <>
+                <div className="px-4 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">
+                    Inbox · {filteredBookings.length} booking{filteredBookings.length === 1 ? '' : 's'}
+                  </p>
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="h-5 w-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search name or listing"
+                      className="w-full pl-11 pr-4 py-3 text-base rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 border-0 focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                {filteredBookings.length > 0 ? (
-                  <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {filteredBookings.map((booking) => {
-                      const partner = partnerOf(booking)
-                      const isActive = selectedBooking?.id === booking.id
-                      const title = booking.listing?.title || `Booking #${booking.id}`
-                      const { needsMyReview, waitingOnPartnerReview } = reviewAttentionForInbox(
-                        booking.status,
-                        booking.reviewSummary,
-                      )
-                      return (
-                        <li key={booking.id}>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedBooking(booking)}
-                            className={`relative w-full text-left px-4 py-3 flex gap-3 items-start transition-colors ${
-                              isActive
-                                ? 'bg-blue-50 dark:bg-blue-900/20'
-                                : 'hover:bg-gray-50 dark:hover:bg-gray-800/60'
-                            }`}
-                          >
-                            {needsMyReview && (
-                              <span
-                                aria-hidden
-                                className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"
-                              />
-                            )}
-                            <div
-                              className={`flex-shrink-0 h-10 w-10 rounded-full text-white text-sm font-semibold flex items-center justify-center ${avatarColor(partner.id ?? booking.id)}`}
+
+                <div className="flex-1 overflow-y-auto">
+                  {filteredBookings.length > 0 ? (
+                    <ul>
+                      {filteredBookings.map((booking) => {
+                        const partner = partnerOf(booking)
+                        const title = booking.listing?.title || `Booking #${booking.id}`
+                        const { needsMyReview } = reviewAttentionForInbox(
+                          booking.status,
+                          booking.reviewSummary,
+                        )
+                        return (
+                          <li key={booking.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                            <button
+                              type="button"
+                              onClick={() => selectBooking(booking)}
+                              className={`relative w-full text-left px-4 py-4 sm:py-5 flex gap-3.5 items-start transition-colors touch-manipulation hover:bg-slate-100/80 dark:hover:bg-[#1c2330] active:bg-blue-50 dark:active:bg-blue-900/25 ${
+                                selectedBooking?.id === booking.id
+                                  ? 'bg-slate-100 dark:bg-[#1c2330]'
+                                  : 'bg-white dark:bg-[#161b22]'
+                              }`}
                             >
-                              {initialsOf(partner.name)}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                              {needsMyReview && (
+                                <span aria-hidden className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />
+                              )}
+                              <div
+                                className={`flex-shrink-0 h-12 w-12 rounded-full text-white text-sm font-bold flex items-center justify-center ${avatarColor(partner.id ?? booking.id)}`}
+                              >
+                                {initialsOf(partner.name)}
+                              </div>
+                              <div className="min-w-0 flex-1 pt-0.5">
+                                <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate leading-tight">
                                   {partner.name}
                                 </p>
-                                <span
-                                  className={`shrink-0 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ${
-                                    booking.status === 'CONFIRMED'
-                                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                                      : booking.status === 'PENDING'
-                                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
-                                  }`}
-                                >
-                                  {booking.status.toLowerCase()}
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                                {title}
-                              </p>
-                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
-                                <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                                  {formatBookingRange(booking.startDate, booking.endDate)}
+                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                                  {title}
                                 </p>
-                                {needsMyReview && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] font-bold dark:bg-amber-500/20 dark:text-amber-200">
-                                    <StarIconSolid className="h-3 w-3" />
-                                    Needs your review
+                                <div className="flex flex-wrap items-center gap-2 mt-2">
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {formatBookingRange(booking.startDate, booking.endDate)}
                                   </span>
-                                )}
-                                {waitingOnPartnerReview && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 text-violet-800 px-2 py-0.5 text-[10px] font-bold dark:bg-violet-500/20 dark:text-violet-200">
-                                    <StarIconOutline className="h-3 w-3" />
-                                    Waiting on them
-                                  </span>
-                                )}
+                                  {inboxStatusLabel(booking.status)}
+                                </div>
                               </div>
-                            </div>
-                          </button>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                ) : (
-                  <div className="px-6 py-12 text-center">
-                    <ChatBubbleLeftRightIcon className="h-10 w-10 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {bookings.length === 0 ? 'No conversations yet' : 'No matches'}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      {bookings.length === 0
-                        ? 'Start a booking to begin messaging.'
-                        : 'Try a different search.'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </aside>
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  ) : (
+                    <div className="px-6 py-16 text-center">
+                      <ChatBubbleLeftRightIcon className="h-12 w-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                      <p className="text-base font-medium text-gray-700 dark:text-gray-300">
+                        {bookings.length === 0 ? 'No bookings yet' : 'No matches'}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-2">
+                        {bookings.length === 0
+                          ? 'When someone books with you, they appear here.'
+                          : 'Try another search.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
 
-            {/* Conversation pane */}
-            <section className="flex flex-col min-h-0">
-              {selectedBooking ? (
-                <>
+            {/* Chat view — full panel after tapping a name */}
+            {showChat && selectedBooking && (
+              <section className="flex flex-col h-full min-h-0 flex-1">
                   {/* Conversation header */}
-                  <header className="border-b border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center gap-3 px-5 py-3">
+                  <header className="border-b border-gray-200 dark:border-gray-800 shrink-0 bg-white dark:bg-gray-900">
+                    <div className="flex items-center gap-2 px-2 py-2.5 sm:px-4">
+                      <button
+                        type="button"
+                        onClick={backToInbox}
+                        className="inline-flex items-center justify-center h-11 w-11 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 shrink-0"
+                        aria-label="Back to inbox"
+                      >
+                        <ChevronLeftIcon className="h-6 w-6" />
+                      </button>
                       <div
-                        className={`flex-shrink-0 h-10 w-10 rounded-full text-white text-sm font-semibold flex items-center justify-center ${avatarColor(selectedPartner.id ?? selectedBooking.id)}`}
+                        className={`flex-shrink-0 h-11 w-11 rounded-full text-white text-sm font-semibold flex items-center justify-center ${avatarColor(selectedPartner.id ?? selectedBooking.id)}`}
                       >
                         {initialsOf(selectedPartner.name)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                        <p className="text-base font-semibold text-gray-900 dark:text-white truncate leading-tight">
                           {selectedPartner.name}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                           {selectedBooking.listing?.title || `Booking #${selectedBooking.id}`}
                         </p>
                       </div>
                       <Link
                         href={`/bookings/${selectedBooking.id}`}
-                        className="hidden sm:inline-flex text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-semibold px-3 py-2.5 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors min-h-[44px]"
                       >
-                        View booking
+                        <CalendarDaysIcon className="h-5 w-5 shrink-0" />
+                        <span className="hidden sm:inline">Booking</span>
                       </Link>
+                    </div>
+                    <div className="px-3 pb-2 md:px-4 flex flex-wrap items-center gap-2">
+                      {inboxStatusLabel(selectedBooking.status)}
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {formatBookingRange(selectedBooking.startDate, selectedBooking.endDate)}
+                      </span>
                     </div>
                     {(() => {
                       const { needsMyReview, waitingOnPartnerReview } = reviewAttentionForInbox(
@@ -516,7 +563,7 @@ export default function MessagesPage() {
                       )
                       if (needsMyReview) {
                         return (
-                          <div className="mx-3 mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-900 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-100">
+                          <div className="mx-3 mb-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-900 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-100">
                             <div className="flex items-start gap-2 min-w-0">
                               <StarIconSolid className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                               <div className="min-w-0">
@@ -563,7 +610,7 @@ export default function MessagesPage() {
                   {/* Messages */}
                   <div
                     ref={messagesContainerRef}
-                    className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 bg-gray-50 dark:bg-gray-950/40"
+                    className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 sm:px-5 py-4 bg-gray-50 dark:bg-gray-950/40"
                   >
                     {messageGroups.length > 0 ? (
                       messageGroups.map((group) => (
@@ -587,7 +634,7 @@ export default function MessagesPage() {
                                   className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
                                 >
                                   <div
-                                    className={`max-w-[80%] sm:max-w-md rounded-2xl px-4 py-2 ${
+                                    className={`max-w-[88%] sm:max-w-md rounded-2xl px-3.5 py-2 sm:px-4 sm:py-2 ${
                                       isMine
                                         ? 'bg-blue-600 text-white rounded-br-sm'
                                         : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-bl-sm'
@@ -616,7 +663,7 @@ export default function MessagesPage() {
                                         Your browser does not support audio playback.
                                       </audio>
                                     ) : (
-                                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                      <p className="text-base leading-relaxed whitespace-pre-wrap break-words">
                                         {message.content}
                                       </p>
                                     )}
@@ -652,17 +699,23 @@ export default function MessagesPage() {
                   </div>
 
                   {/* Composer */}
-                  <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-3">
+                  <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shrink-0">
                     <div className="flex items-end gap-2">
                       <button
                         type="button"
                         onMouseDown={startRecording}
                         onMouseUp={stopRecording}
                         onMouseLeave={() => isRecording && stopRecording()}
-                        onTouchStart={startRecording}
-                        onTouchEnd={stopRecording}
+                        onTouchStart={(e) => {
+                          e.preventDefault()
+                          void startRecording()
+                        }}
+                        onTouchEnd={(e) => {
+                          e.preventDefault()
+                          stopRecording()
+                        }}
                         title="Hold to record voice note"
-                        className={`shrink-0 inline-flex items-center justify-center h-10 w-10 rounded-full transition-colors ${
+                        className={`shrink-0 inline-flex items-center justify-center h-11 w-11 rounded-full transition-colors ${
                           isRecording
                             ? 'bg-red-600 text-white animate-pulse'
                             : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -682,13 +735,13 @@ export default function MessagesPage() {
                         placeholder="Type a message"
                         rows={1}
                         disabled={isSending}
-                        className="flex-1 resize-none max-h-32 px-4 py-2.5 rounded-2xl bg-gray-100 dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 border border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-blue-500 focus:outline-none transition-colors"
+                        className="flex-1 resize-none max-h-32 min-h-[44px] px-4 py-2.5 rounded-2xl bg-gray-100 dark:bg-gray-800 text-base sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 border border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-blue-500 focus:outline-none transition-colors"
                       />
                       <button
                         type="button"
                         onClick={() => void sendMessage()}
                         disabled={!newMessage.trim() || isSending}
-                        className="shrink-0 inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="shrink-0 inline-flex items-center justify-center h-11 w-11 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         aria-label="Send message"
                       >
                         <PaperAirplaneIcon className="h-5 w-5" />
@@ -701,25 +754,12 @@ export default function MessagesPage() {
                       </p>
                     )}
                   </div>
-                </>
-              ) : (
-                <div className="flex-1 flex items-center justify-center px-6 py-12">
-                  <div className="text-center max-w-sm">
-                    <ChatBubbleLeftRightIcon className="h-12 w-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Select a conversation
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      Pick a booking on the left to view its messages.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </section>
+              </section>
+            )}
           </div>
         </div>
       </div>
-      <Footer />
+      {!showChat && <Footer />}
     </div>
   )
 }

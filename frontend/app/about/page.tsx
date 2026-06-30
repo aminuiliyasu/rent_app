@@ -21,7 +21,7 @@ export default function AboutPage() {
             </p>
             
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-              Founded with the vision of creating a trusted community marketplace, we&apos;ve built a platform that prioritizes security, transparency, and user satisfaction. Every transaction is protected, every user is verified, and every interaction is designed to be seamless.
+              We&apos;re starting in Budapest and growing neighborhood by neighborhood. Rhentify is built for real local connections — clear listings, in-app chat, mutual reviews, and no platform fees while we launch.
             </p>
           </div>
         </div>

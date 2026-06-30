@@ -143,7 +143,7 @@ public class BookingService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        if (post.getCreatedAt().isBefore(now.minusHours(24))) {
+        if (!RentWishPostService.isStillVisible(post, now)) {
             throw badRequest("This rent request has expired");
         }
 

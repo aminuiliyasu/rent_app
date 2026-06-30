@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { ListingType, Category } from '@/lib/types'
 import api from '@/lib/api'
 import { mergeCategoriesWithSeed, categoryHasPersistentId } from '@/lib/seedCategories'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { localizeCategories } from '@/lib/i18n/categoryNames'
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 interface SearchFiltersProps {
@@ -12,7 +14,8 @@ interface SearchFiltersProps {
 }
 
 export default function SearchFilters({ filters, setFilters }: SearchFiltersProps) {
-  const [showFilters, setShowFilters] = useState(true)
+  const { locale, t } = useLanguage()
+  const [showFilters, setShowFilters] = useState(false)
   const [categories, setCategories] = useState<Category[]>(() => mergeCategoriesWithSeed([]))
 
   useEffect(() => {
@@ -42,6 +45,8 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
     hasGeoFilter && filters.radius != null && !Number.isNaN(filters.radius),
   ].filter(Boolean).length
 
+  const displayCategories = localizeCategories(categories, locale)
+
   return (
     <div className="card-glass overflow-visible">
       <div className="flex items-center justify-between mb-6">
@@ -59,9 +64,14 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
         <button
           type="button"
           onClick={() => setShowFilters(!showFilters)}
-          className="lg:hidden p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="lg:hidden inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          aria-expanded={showFilters}
         >
           {showFilters ? <XMarkIcon className="h-5 w-5" /> : <FunnelIcon className="h-5 w-5" />}
+          {showFilters ? 'Hide' : 'Filters'}
+          {!showFilters && activeFiltersCount > 0 && (
+            <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-xs">{activeFiltersCount}</span>
+          )}
         </button>
       </div>
 
@@ -100,7 +110,7 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
           {/* Category */}
           <div className="relative">
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              Category
+              {t('category.label')}
             </label>
             <select
               value={
@@ -122,8 +132,8 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
               }}
               className="input-field"
             >
-              <option value="">All categories</option>
-              {categories.map((c) => (
+              <option value="">{t('category.all')}</option>
+              {displayCategories.map((c) => (
                 <option
                   key={c.slug || String(c.id)}
                   value={categoryHasPersistentId(c) ? `id:${c.id}` : `slug:${c.slug}`}

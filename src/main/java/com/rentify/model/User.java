@@ -78,6 +78,12 @@ public class User extends BaseEntity {
     
     @Column(name = "facebook_id", unique = true)
     private String facebookId;
+
+    @Column(name = "password_reset_token", length = 100)
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_expires_at")
+    private java.time.LocalDateTime passwordResetExpiresAt;
     
     // Relationships
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

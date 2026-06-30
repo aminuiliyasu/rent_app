@@ -73,4 +73,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
     long countByStatus(ListingStatus status);
     
     long countByTypeAndStatus(ListingType type, ListingStatus status);
+
+    @Query("SELECT l FROM Listing l WHERE l.category.id = :categoryId")
+    List<Listing> findByCategoryId(@Param("categoryId") Long categoryId);
 }

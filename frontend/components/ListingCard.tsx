@@ -72,23 +72,23 @@ export default function ListingCard({ listing }: ListingCardProps) {
       
       {/* Content */}
       <div className="p-5">
-        <h3 className="font-bold text-lg mb-2 line-clamp-2 text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        <h3 className="font-bold text-xl mb-2 line-clamp-2 text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           {listing.title}
         </h3>
 
         {listing.ownerName && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-1">
             Listed by <span className="font-semibold text-gray-700 dark:text-gray-200">{listing.ownerName}</span>
           </p>
         )}
         
         {desc && (
-          <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mb-4">{desc}</p>
+          <p className="text-gray-600 dark:text-gray-400 text-base line-clamp-2 mb-4">{desc}</p>
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           {locationLine ? (
-            <div className="flex min-w-0 max-w-[85%] items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex min-w-0 max-w-[85%] items-start gap-2 text-base text-gray-600 dark:text-gray-400">
               <MapPinIcon className="h-4 w-4 shrink-0 text-blue-500 mt-0.5" aria-hidden />
               <span className="font-medium leading-snug line-clamp-2">{locationLine}</span>
             </div>

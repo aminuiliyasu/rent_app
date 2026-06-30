@@ -6,15 +6,17 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import api from '@/lib/api'
 import { uploadImage } from '@/lib/upload'
 import toast from 'react-hot-toast'
-import { BanknotesIcon, PhotoIcon } from '@heroicons/react/24/outline'
+import { BanknotesIcon, PhotoIcon, LanguageIcon } from '@heroicons/react/24/outline'
 import TrustReviewsSection from '@/components/TrustReviewsSection'
 
 export default function ProfilePage() {
   const { isAuthenticated, user, loading: authLoading } = useAuth()
   const { presentation, setPresentation } = useCurrencyPresentation()
+  const { locale, setLocale, t } = useLanguage()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
@@ -110,7 +112,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">My Profile</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">{t('profile.myProfile')}</h1>
         
         <div className="card">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -243,17 +245,61 @@ export default function ProfilePage() {
                 disabled={loading || uploadingImage}
                 className="btn-primary flex-1"
               >
-                {loading ? 'Saving...' : 'Save Changes'}
+                {loading ? t('profile.saving') : t('profile.saveChanges')}
               </button>
               <button
                 type="button"
                 onClick={() => router.back()}
                 className="btn-secondary"
               >
-                Cancel
+                {t('profile.cancel')}
               </button>
             </div>
           </form>
+        </div>
+
+        <div className="card mt-8">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/15 to-purple-500/15 ring-1 ring-violet-500/20 dark:from-violet-400/10 dark:to-purple-400/10 dark:ring-violet-400/25">
+              <LanguageIcon className="h-6 w-6 text-violet-600 dark:text-violet-400" aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('profile.languageTitle')}</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">{t('profile.languageDesc')}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setLocale('en')
+                toast.success(t('profile.languageChanged'))
+              }}
+              className={`rounded-xl border px-4 py-3 text-left transition-all ${
+                locale === 'en'
+                  ? 'border-violet-500 bg-violet-50/90 ring-2 ring-violet-500/30 dark:border-violet-400 dark:bg-violet-950/40 dark:ring-violet-400/25'
+                  : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-600 dark:bg-gray-800/50 dark:hover:border-gray-500'
+              }`}
+            >
+              <span className="block font-semibold text-gray-900 dark:text-white">{t('profile.english')}</span>
+              <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">{t('profile.englishHint')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLocale('hu')
+                toast.success(t('profile.languageChanged'))
+              }}
+              className={`rounded-xl border px-4 py-3 text-left transition-all ${
+                locale === 'hu'
+                  ? 'border-violet-500 bg-violet-50/90 ring-2 ring-violet-500/30 dark:border-violet-400 dark:bg-violet-950/40 dark:ring-violet-400/25'
+                  : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-600 dark:bg-gray-800/50 dark:hover:border-gray-500'
+              }`}
+            >
+              <span className="block font-semibold text-gray-900 dark:text-white">{t('profile.hungarian')}</span>
+              <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">{t('profile.hungarianHint')}</span>
+            </button>
+          </div>
         </div>
 
         <div className="card mt-8">

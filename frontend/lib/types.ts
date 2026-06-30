@@ -92,6 +92,7 @@ export interface RentWishPost {
   expiresAt: string
   budgetText?: string | null
   deliveryPreference?: DeliveryPreference | null
+  visibilityHours?: 12 | 24
 }
 
 export interface Review {

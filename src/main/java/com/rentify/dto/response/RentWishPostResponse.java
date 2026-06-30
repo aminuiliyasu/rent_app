@@ -25,4 +25,7 @@ public class RentWishPostResponse {
 
     /** PICKUP | DELIVERY | EITHER (null when renter didn't specify). */
     private String deliveryPreference;
+
+    /** 12 or 24 — chosen visibility window. */
+    private Integer visibilityHours;
 }

@@ -46,4 +46,8 @@ public class RentWishPost extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "delivery_preference", length = 16)
     private DeliveryPreference deliveryPreference;
+
+    /** How long the post stays visible in the feed (12 or 24). */
+    @Column(name = "visibility_hours", nullable = false, columnDefinition = "integer default 24")
+    private Integer visibilityHours = 24;
 }

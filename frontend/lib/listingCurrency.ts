@@ -4,35 +4,19 @@
 
 export type CurrencyPresentation = 'iso' | 'symbol'
 
+export const DEFAULT_LISTING_CURRENCY = 'HUF'
+
 export const LISTING_CURRENCY_OPTIONS: { code: string; label: string }[] = [
+  { code: 'HUF', label: 'Hungarian Forint (HUF)' },
   { code: 'USD', label: 'US Dollar (USD)' },
   { code: 'EUR', label: 'Euro (EUR)' },
   { code: 'GBP', label: 'British Pound (GBP)' },
-  { code: 'HUF', label: 'Hungarian Forint (HUF)' },
-  { code: 'CHF', label: 'Swiss Franc (CHF)' },
-  { code: 'PLN', label: 'Polish Złoty (PLN)' },
-  { code: 'RON', label: 'Romanian Leu (RON)' },
-  { code: 'SEK', label: 'Swedish Krona (SEK)' },
-  { code: 'NOK', label: 'Norwegian Krone (NOK)' },
-  { code: 'DKK', label: 'Danish Krone (DKK)' },
-  { code: 'CZK', label: 'Czech Koruna (CZK)' },
   { code: 'NGN', label: 'Nigerian Naira (NGN)' },
-  { code: 'ZAR', label: 'South African Rand (ZAR)' },
-  { code: 'KES', label: 'Kenyan Shilling (KES)' },
-  { code: 'INR', label: 'Indian Rupee (INR)' },
-  { code: 'JPY', label: 'Japanese Yen (JPY)' },
-  { code: 'CNY', label: 'Chinese Yuan (CNY)' },
-  { code: 'AUD', label: 'Australian Dollar (AUD)' },
-  { code: 'CAD', label: 'Canadian Dollar (CAD)' },
-  { code: 'NZD', label: 'New Zealand Dollar (NZD)' },
-  { code: 'BRL', label: 'Brazilian Real (BRL)' },
-  { code: 'MXN', label: 'Mexican Peso (MXN)' },
-  { code: 'AED', label: 'UAE Dirham (AED)' },
 ]
 
 export function getListingCurrencyCode(listing: { pricingCurrency?: string | null }): string {
   const c = listing.pricingCurrency?.trim().toUpperCase()
-  return c && c.length === 3 ? c : 'USD'
+  return c && c.length === 3 ? c : DEFAULT_LISTING_CURRENCY
 }
 
 /**
@@ -45,7 +29,7 @@ export function formatMoneyAmount(
   presentation: CurrencyPresentation = 'iso'
 ): string {
   if (amount == null || Number.isNaN(amount)) return '—'
-  const code = (currencyCode || 'USD').toUpperCase()
+  const code = (currencyCode || DEFAULT_LISTING_CURRENCY).toUpperCase()
   try {
     return new Intl.NumberFormat(undefined, {
       style: 'currency',

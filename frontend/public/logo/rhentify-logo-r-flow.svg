@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="64" viewBox="0 0 280 64" fill="none" role="img" aria-label="Rhentify">
+  <title>Rhentify</title>
+  <defs>
+    <marker id="logo-flow-left" markerWidth="8" markerHeight="8" refX="2" refY="4" orient="auto">
+      <path d="M8 0 L0 4 L8 8 Z" fill="#054494"/>
+    </marker>
+    <marker id="logo-flow-right" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#b8965a"/>
+    </marker>
+  </defs>
+  <!-- Mark: centered R with arrows (0–64) -->
+  <g transform="translate(0 0)">
+    <path
+      d="M32 8 C20 8 10 16 8 26"
+      stroke="#054494"
+      stroke-width="2.75"
+      stroke-linecap="round"
+      fill="none"
+      marker-end="url(#logo-flow-left)"
+    />
+    <path
+      d="M32 56 C44 56 54 48 56 38"
+      stroke="#b8965a"
+      stroke-width="2.75"
+      stroke-linecap="round"
+      fill="none"
+      marker-end="url(#logo-flow-right)"
+    />
+    <text x="32" y="42" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="700" fill="#054494">R</text>
+  </g>
+  <text x="76" y="44" font-family="Georgia, 'Times New Roman', serif" font-size="38" font-weight="600" fill="#0f172a" letter-spacing="-0.5">hentify</text>
+</svg>

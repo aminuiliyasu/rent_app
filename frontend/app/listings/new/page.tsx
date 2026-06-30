@@ -1,17 +1,19 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
 import api from '@/lib/api'
 import { uploadMultipleImages } from '@/lib/upload'
-import { parsePriceWithCurrency } from '@/lib/parsePriceInput'
-import { LISTING_CURRENCY_OPTIONS } from '@/lib/listingCurrency'
+import { buildListingPayload, listingToFormData } from '@/lib/listingFormShared'
+import { DEFAULT_LISTING_CURRENCY, LISTING_CURRENCY_OPTIONS } from '@/lib/listingCurrency'
 import toast from 'react-hot-toast'
 import { ListingType } from '@/lib/types'
 import { mergeCategoriesWithSeed, categoryHasPersistentId } from '@/lib/seedCategories'
+import { localizeCategories } from '@/lib/i18n/categoryNames'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { toAppListingImageUrl } from '@/lib/listingImageUrl'
 import {
   XMarkIcon,
@@ -31,6 +33,7 @@ interface Category {
 
 export default function CreateListingPage() {
   const { isAuthenticated } = useAuth()
+  const { locale } = useLanguage()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
@@ -60,7 +63,7 @@ export default function CreateListingPage() {
     workerProfession: '',
     serviceArea: '',
     availableDays: '',
-    pricingCurrency: 'USD',
+    pricingCurrency: DEFAULT_LISTING_CURRENCY,
   })
 
   useEffect(() => {
@@ -80,6 +83,11 @@ export default function CreateListingPage() {
       setCategories(mergeCategoriesWithSeed([]))
     }
   }
+
+  const displayCategories = useMemo(
+    () => localizeCategories(categories, locale),
+    [categories, locale],
+  )
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -133,102 +141,10 @@ export default function CreateListingPage() {
     setLoading(true)
 
     try {
-      const rawCashDeposit = formData.cashDeposit.trim()
-      const parsedCashDeposit = rawCashDeposit ? Number(rawCashDeposit) : null
-      const hasNumericCashDeposit = parsedCashDeposit !== null && Number.isFinite(parsedCashDeposit)
-      const cashDepositNote = rawCashDeposit && !hasNumericCashDeposit ? rawCashDeposit : null
-      const itemDepositNote = formData.itemDeposit.trim() || null
-      const depositNotes = [
-        cashDepositNote ? `Cash deposit note: ${cashDepositNote}` : null,
-        itemDepositNote ? `Item deposit: ${itemDepositNote}` : null,
-      ].filter(Boolean)
-      const descriptionWithDepositNote = depositNotes.length
-        ? `${formData.description || ''}${formData.description ? '\n\n' : ''}${depositNotes.join('\n')}`
-        : formData.description
-
-      const selectedCur = formData.pricingCurrency.trim().toUpperCase() || 'USD'
-
-      const embeddedCurrencyClashes = (label: string, raw: string) => {
-        const t = raw.trim()
-        const m = t.match(/^([A-Za-z]{3})\s+/)
-        if (m && m[1].toUpperCase() !== selectedCur) {
-          toast.error(
-            `${label}: remove "${m[1].toUpperCase()}" from the field — enter amounts in ${selectedCur} only, or change the listing currency above.`
-          )
-          return false
-        }
-        return true
-      }
-
-      const parsedHour = parsePriceWithCurrency(formData.priceHour)
-      const parsedDay = parsePriceWithCurrency(formData.priceDay)
-      const parsedWeek = parsePriceWithCurrency(formData.priceWeek)
-      const parsedMonth = parsePriceWithCurrency(formData.priceMonth)
-
-      const requireParsed = (label: string, raw: string, parsed: { amount: number | null }) => {
-        if (!raw.trim()) return true
-        if (parsed.amount === null) {
-          toast.error(`${label}: enter a number (e.g. 25 or 19.99) in ${selectedCur}`)
-          return false
-        }
-        return true
-      }
-
-      if (
-        !embeddedCurrencyClashes('Hourly rate', formData.priceHour) ||
-        !embeddedCurrencyClashes('Daily rate', formData.priceDay) ||
-        !embeddedCurrencyClashes('Weekly rate', formData.priceWeek) ||
-        !embeddedCurrencyClashes('Monthly rate', formData.priceMonth) ||
-        !requireParsed('Hourly rate', formData.priceHour, parsedHour) ||
-        !requireParsed('Daily rate', formData.priceDay, parsedDay) ||
-        !requireParsed('Weekly rate', formData.priceWeek, parsedWeek) ||
-        !requireParsed('Monthly rate', formData.priceMonth, parsedMonth)
-      ) {
+      const payload = await buildListingPayload(formData, selectedImages)
+      if (!payload) {
         setLoading(false)
         return
-      }
-
-      let resolvedCategoryId: number
-      const catVal = formData.categoryId
-      if (!catVal) {
-        toast.error('Please select a category')
-        setLoading(false)
-        return
-      }
-      if (catVal.startsWith('slug:')) {
-        const slug = catVal.slice(5)
-        try {
-          const res = await api.get(`/categories/by-slug/${encodeURIComponent(slug)}`)
-          resolvedCategoryId = res.data.id
-        } catch {
-          toast.error(
-            'This category is not available in the database yet. Restart the Spring Boot server so categories can be seeded, then try again.'
-          )
-          setLoading(false)
-          return
-        }
-      } else {
-        resolvedCategoryId = Number(catVal)
-        if (!Number.isFinite(resolvedCategoryId) || resolvedCategoryId <= 0) {
-          toast.error('Invalid category')
-          setLoading(false)
-          return
-        }
-      }
-
-      const payload = {
-        ...formData,
-        description: descriptionWithDepositNote,
-        categoryId: resolvedCategoryId,
-        priceHour: parsedHour.amount,
-        priceDay: parsedDay.amount,
-        priceWeek: parsedWeek.amount,
-        priceMonth: parsedMonth.amount,
-        deposit: hasNumericCashDeposit ? parsedCashDeposit : null,
-        pricingCurrency: selectedCur,
-        deliveryRadius: formData.deliveryRadius ? Number(formData.deliveryRadius) : null,
-        availableDays: formData.availableDays || null,
-        imageUrls: selectedImages,
       }
 
       const response = await api.post('/listings', payload)
@@ -340,7 +256,7 @@ export default function CreateListingPage() {
                   required
                 >
                   <option value="">Select a category</option>
-                  {categories.map((category) => (
+                  {displayCategories.map((category) => (
                     <option
                       key={category.slug || category.id}
                       value={

@@ -1,0 +1,7 @@
+aws_region   = "us-east-1"
+project_name = "rentify"
+environment  = "prod"
+frontend_url = "https://yourdomain.com"
+db_username  = "rentify"
+db_password  = "replace-with-a-strong-password"
+jwt_secret   = "replace-with-a-long-random-secret-at-least-32-characters"

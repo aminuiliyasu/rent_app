@@ -1,5 +1,6 @@
 package com.rentify.service;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -36,9 +37,10 @@ public class FileUploadService {
     @Autowired(required = false)
     private S3Client s3Client;
 
-    public FileUploadService() {
+    @PostConstruct
+    void initUploadDirectories() {
         try {
-            Path uploadPath = Paths.get("uploads");
+            Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }

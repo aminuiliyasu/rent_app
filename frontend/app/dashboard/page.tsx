@@ -7,18 +7,17 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
 import api from '@/lib/api'
-import { Listing, Booking } from '@/lib/types'
-import { formatListingCardPrice } from '@/lib/listingCurrency'
-import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
+import { Booking } from '@/lib/types'
 import toast from 'react-hot-toast'
 import { bookedListingTitle, formatBookingDateRange } from '@/lib/bookingUi'
+import DashboardOnboarding from '@/components/DashboardOnboarding'
+import DashboardMyListings from '@/components/DashboardMyListings'
 import { 
   CalendarDaysIcon, 
-  RectangleStackIcon, 
   ChatBubbleLeftRightIcon,
   ArrowRightIcon,
-  PlusIcon,
   SparklesIcon,
+  RectangleStackIcon,
 } from '@heroicons/react/24/outline'
 
 interface DashboardStats {
@@ -31,19 +30,26 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { isAuthenticated, user, loading: authLoading } = useAuth()
-  const { presentation } = useCurrencyPresentation()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [myListings, setMyListings] = useState<Listing[]>([])
   const [recentBookings, setRecentBookings] = useState<Booking[]>([])
   const [listingTitlesById, setListingTitlesById] = useState<Record<number, string>>({})
   const [loading, setLoading] = useState(true)
+  const [showWelcome, setShowWelcome] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push('/login')
+      router.replace('/login')
     }
   }, [isAuthenticated, authLoading, router])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (sessionStorage.getItem('rhentify_welcome') === '1') {
+      sessionStorage.removeItem('rhentify_welcome')
+      setShowWelcome(true)
+    }
+  }, [])
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -57,9 +63,6 @@ export default function DashboardPage() {
       
       const statsResponse = await api.get('/users/dashboard/stats')
       setStats(statsResponse.data)
-      
-      const listingsResponse = await api.get('/listings/my?page=0&size=5')
-      setMyListings(listingsResponse.data.content || [])
       
       const bookingsResponse = await api.get('/bookings/my?page=0&size=5')
       const recent: Booking[] = bookingsResponse.data.content || []
@@ -99,7 +102,7 @@ export default function DashboardPage() {
     }
   }
 
-  if (authLoading || loading || !isAuthenticated) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
         <Navbar />
@@ -113,7 +116,23 @@ export default function DashboardPage() {
     )
   }
 
-  const hasCreatedListings = (stats?.myListings || 0) > 0
+  if (!isAuthenticated) {
+    return null
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500">
+            <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
 
   const statCards = [
     {
@@ -123,23 +142,19 @@ export default function DashboardPage() {
       gradient: 'from-blue-500 to-blue-600',
       bgGradient: 'from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30',
     },
-    ...(hasCreatedListings
-      ? [
-          {
-            title: 'My Listings',
-            value: stats?.myListings || 0,
-            icon: RectangleStackIcon,
-            gradient: 'from-green-500 to-green-600',
-            bgGradient: 'from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30',
-          },
-        ]
-      : []),
     {
       title: 'Unread Messages',
       value: stats?.unreadMessages || 0,
       icon: ChatBubbleLeftRightIcon,
       gradient: 'from-purple-500 to-pink-500',
       bgGradient: 'from-purple-100 to-pink-200 dark:from-purple-900/30 dark:to-pink-800/30',
+    },
+    {
+      title: 'My Listings',
+      value: stats?.myListings || 0,
+      icon: RectangleStackIcon,
+      gradient: 'from-green-500 to-emerald-600',
+      bgGradient: 'from-green-100 to-emerald-200 dark:from-green-900/30 dark:to-emerald-800/30',
     },
   ]
 
@@ -168,6 +183,12 @@ export default function DashboardPage() {
           </div>
         </div>
         
+        <DashboardOnboarding
+          showWelcome={showWelcome}
+          hasListings={(stats?.myListings || 0) > 0}
+          hasBookings={(stats?.totalBookings || 0) > 0}
+        />
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {statCards.map((stat, idx) => (
@@ -250,76 +271,8 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-          
-          {/* My Listings */}
-          <div className="card-glass animate-slide-up" style={{ animationDelay: '0.5s' }}>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <RectangleStackIcon className="h-6 w-6 text-green-500" />
-                My Listings
-              </h2>
-              <Link 
-                href="/listings/new" 
-                className="btn-primary text-sm px-4 py-2 flex items-center gap-2"
-              >
-                <PlusIcon className="h-4 w-4" />
-                Create new
-              </Link>
-            </div>
-            {myListings.length > 0 ? (
-              <div className="space-y-4">
-                {myListings.map((listing) => {
-                  const rateLine = formatListingCardPrice(listing, presentation)
-                  return (
-                  <Link
-                    key={listing.id}
-                    href={`/listings/${listing.id}`}
-                    className="block p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="font-bold text-gray-900 dark:text-white mb-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                          {listing.title}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {listing.categoryName}
-                          {rateLine ? (
-                            <>
-                              {' '}
-                              •{' '}
-                              <span className="font-semibold text-blue-600 dark:text-blue-400">
-                                {rateLine.formatted}
-                                {rateLine.suffix}
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-gray-500 dark:text-gray-500"> • Rates on request</span>
-                          )}
-                        </p>
-                      </div>
-                      <span className={`px-4 py-2 rounded-full text-xs font-bold ${
-                        listing.status === 'ACTIVE' ? 'bg-gradient-to-r from-green-400 to-green-500 text-white' :
-                        listing.status === 'DRAFT' ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white' :
-                        'bg-gradient-to-r from-yellow-400 to-orange-400 text-white'
-                      }`}>
-                        {listing.status}
-                      </span>
-                    </div>
-                  </Link>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <RectangleStackIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400 font-medium mb-4">No listings yet</p>
-                <Link href="/listings/new" className="btn-primary inline-flex items-center gap-2">
-                  <PlusIcon className="h-5 w-5" />
-                  Create Your First Listing
-                </Link>
-              </div>
-            )}
-          </div>
+
+          <DashboardMyListings />
         </div>
       </div>
       <Footer />

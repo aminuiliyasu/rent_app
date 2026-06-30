@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="80" viewBox="0 0 320 80" fill="none" role="img" aria-label="Rhentify">
+  <title>Rhentify</title>
+  <!-- Icon mark -->
+  <rect x="4" y="12" width="56" height="56" rx="12" stroke="#054494" stroke-width="2" fill="#ffffff"/>
+  <g transform="translate(32 40)" stroke="#054494" stroke-width="1.75" stroke-linecap="round">
+    <path d="M0 -11 L0 11"/>
+    <path d="M-11 0 L11 0"/>
+    <path d="M-7.8 -7.8 L7.8 7.8"/>
+    <path d="M7.8 -7.8 L-7.8 7.8"/>
+  </g>
+  <circle cx="32" cy="40" r="2.5" fill="#054494"/>
+  <!-- Wordmark -->
+  <text x="78" y="50" font-family="'Cormorant Garamond', Georgia, 'Times New Roman', serif" font-size="42" font-weight="600" fill="#0f172a" letter-spacing="-0.5">Rhentify</text>
+</svg>

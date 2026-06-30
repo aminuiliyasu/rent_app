@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="96" viewBox="0 0 360 96" fill="none">
+  <title>Concept C  Local pin + trust</title>
+  <g transform="translate(40 52)">
+    <path d="M0 -22 C12 -22 20 -12 20 0 C20 14 0 28 0 28 C0 28 -20 14 -20 0 C-20 -12 -12 -22 0 -22Z" fill="#054494"/>
+    <circle cx="0" cy="-2" r="9" fill="#fff"/>
+    <path d="M-4 0 L-1 4 L6 -5" stroke="#054494" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  <text x="92" y="58" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-weight="600" fill="#0f172a">Rhentify</text>
+</svg>

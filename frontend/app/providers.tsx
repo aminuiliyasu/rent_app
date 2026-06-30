@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { CurrencyPresentationProvider } from '@/contexts/CurrencyPresentationContext'
+import { LanguageProvider } from '@/contexts/LanguageContext'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -18,13 +19,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CurrencyPresentationProvider>
-        <ThemeProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </ThemeProvider>
-      </CurrencyPresentationProvider>
+      <LanguageProvider>
+        <CurrencyPresentationProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </ThemeProvider>
+        </CurrencyPresentationProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   )
 }

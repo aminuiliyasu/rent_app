@@ -39,6 +39,9 @@ export default function RegisterPage() {
     try {
       await register(formData.name, formData.email, formData.password, formData.phone || undefined)
       toast.success('Account created successfully!')
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('rhentify_welcome', '1')
+      }
       router.push('/dashboard')
     } catch (error: any) {
       console.error('Registration error:', error)
@@ -93,7 +96,7 @@ export default function RegisterPage() {
             Create your account
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Join thousands of renters and owners
+            Be an early member — we&apos;re growing in Budapest
           </p>
         </div>
 

@@ -35,4 +35,7 @@ public class CreateRentWishPostRequest {
     @Pattern(regexp = "^(PICKUP|DELIVERY|EITHER)$",
             message = "deliveryPreference must be PICKUP, DELIVERY or EITHER")
     private String deliveryPreference;
+
+    /** 12 or 24 — how long the post stays live. Defaults to 24 when omitted. */
+    private Integer visibilityHours;
 }

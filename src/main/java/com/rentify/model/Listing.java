@@ -65,7 +65,7 @@ public class Listing extends BaseEntity {
 
     /** ISO 4217 code for displaying rates (e.g. USD, EUR, HUF). */
     @Column(name = "pricing_currency", length = 3)
-    private String pricingCurrency = "USD";
+    private String pricingCurrency = "HUF";
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Comparator;
 import java.util.List;
 
 @RestController
@@ -23,10 +22,7 @@ public class CategoryController {
 
     @GetMapping
     public ResponseEntity<List<Category>> getAllCategories() {
-        categorySeedService.ensureDefaultCategories();
-        List<Category> categories = categoryRepository.findAll();
-        categories.sort(Comparator.comparing(Category::getName, String.CASE_INSENSITIVE_ORDER));
-        return ResponseEntity.ok(categories);
+        return ResponseEntity.ok(categorySeedService.getActiveCategories());
     }
 
     @GetMapping("/by-slug/{slug}")

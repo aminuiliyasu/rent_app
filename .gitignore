@@ -57,6 +57,14 @@ application-prod.yml
 # Environment variables
 .env
 .env.local
+.env.docker
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+infrastructure/aws/terraform/terraform.tfvars
 
 # Terraform secrets / local state (never commit)
 deploy/terraform/terraform.tfvars

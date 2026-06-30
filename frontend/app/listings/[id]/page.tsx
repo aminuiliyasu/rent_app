@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import api from '@/lib/api'
@@ -27,10 +28,12 @@ import {
 import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
 import { formatListingLocationLine } from '@/lib/listingLocation'
 import { galleryImageUrls } from '@/lib/listingImageUrl'
+import { isListingOwner } from '@/lib/listingOwner'
+import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 export default function ListingDetailPage() {
   const params = useParams()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const { presentation } = useCurrencyPresentation()
   const router = useRouter()
   const [listing, setListing] = useState<Listing | null>(null)
@@ -38,6 +41,7 @@ export default function ListingDetailPage() {
   const [loading, setLoading] = useState(true)
   const [selectedDates, setSelectedDates] = useState({ start: '', end: '' })
   const [selectedImage, setSelectedImage] = useState(0)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     const id = typeof params.id === 'string' ? params.id : params.id?.[0]
@@ -87,6 +91,22 @@ export default function ListingDetailPage() {
     router.push(`/bookings/new?listingId=${params.id}&start=${selectedDates.start}&end=${selectedDates.end}`)
   }
 
+  const handleDeleteListing = async () => {
+    if (!listing) return
+    if (!confirm(`Delete "${listing.title}"? This cannot be undone.`)) return
+
+    try {
+      setDeleting(true)
+      await api.delete(`/listings/${listing.id}`)
+      toast.success('Listing deleted')
+      router.push('/dashboard')
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete listing')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
@@ -124,11 +144,37 @@ export default function ListingDetailPage() {
   const cardPrice = formatListingCardPrice(listing, presentation)
   const descriptionDisplay = stripLegacyPricingAppendix(listing.description)
   const locationLine = formatListingLocationLine(listing)
+  const isOwner = isListingOwner(user, listing)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {isOwner && (
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
+              You own this listing — edit details or remove it anytime.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/listings/${listing.id}/edit`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700"
+              >
+                <PencilSquareIcon className="h-4 w-4" />
+                Edit listing
+              </Link>
+              <button
+                type="button"
+                onClick={handleDeleteListing}
+                disabled={deleting}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+              >
+                <TrashIcon className="h-4 w-4" />
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
@@ -372,6 +418,30 @@ export default function ListingDetailPage() {
                 )}
               </div>
 
+              {isOwner ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    This is your listing. Renters will request dates here — you manage it from the banner above or{' '}
+                    <Link href="/listings/mine" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+                      My listings
+                    </Link>
+                    .
+                  </p>
+                  <Link
+                    href={`/listings/${listing.id}/edit`}
+                    className="block w-full btn-primary py-3 text-center font-semibold"
+                  >
+                    Edit listing
+                  </Link>
+                  <Link
+                    href="/bookings/my-listings"
+                    className="block w-full py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
+                    View booking requests
+                  </Link>
+                </div>
+              ) : (
+                <>
               {/* Date Selection */}
               <div className="space-y-4 mb-6">
                 <div>
@@ -424,6 +494,8 @@ export default function ListingDetailPage() {
                   Select dates, review pricing, and securely pay through chats
                 </p>
               </div>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -6,9 +6,11 @@ import com.rentify.dto.response.ReviewResponse;
 import com.rentify.model.Category;
 import com.rentify.model.Listing;
 import com.rentify.model.ListingImage;
+import com.rentify.model.enums.BookingStatus;
 import com.rentify.model.enums.ListingStatus;
 import com.rentify.model.enums.ListingType;
 import com.rentify.model.User;
+import com.rentify.repository.BookingRepository;
 import com.rentify.repository.CategoryRepository;
 import com.rentify.repository.ListingImageRepository;
 import com.rentify.repository.ListingRepository;
@@ -37,6 +39,9 @@ public class ListingService {
     
     @Autowired
     private ReviewRepository reviewRepository;
+
+    @Autowired
+    private BookingRepository bookingRepository;
     
     @Autowired
     private UserRepository userRepository;
@@ -178,6 +183,9 @@ public class ListingService {
         if (request.getPriceMonth() != null) listing.setPriceMonth(request.getPriceMonth());
         if (request.getPriceHour() != null) listing.setPriceHour(request.getPriceHour());
         if (request.getDeposit() != null) listing.setDeposit(request.getDeposit());
+        if (request.getPricingCurrency() != null) {
+            listing.setPricingCurrency(normalizePricingCurrency(request.getPricingCurrency()));
+        }
         if (request.getLat() != null) listing.setLat(request.getLat());
         if (request.getLng() != null) listing.setLng(request.getLng());
         if (request.getAddress() != null) listing.setAddress(request.getAddress());
@@ -226,6 +234,18 @@ public class ListingService {
         Long userId = CurrentUser.getCurrentUserId();
         if (!listing.getOwner().getId().equals(userId)) {
             throw new RuntimeException("You don't have permission to delete this listing");
+        }
+
+        for (BookingStatus status : List.of(
+                BookingStatus.PENDING,
+                BookingStatus.CONFIRMED,
+                BookingStatus.IN_PROGRESS,
+                BookingStatus.DISPUTED)) {
+            if (!bookingRepository.findByListingIdAndStatus(id, status).isEmpty()) {
+                throw new RuntimeException(
+                        "Cannot delete this listing while it has active bookings. "
+                                + "Wait until bookings finish or contact support.");
+            }
         }
         
         listingRepository.delete(listing);
@@ -284,7 +304,7 @@ public class ListingService {
         response.setPricingCurrency(
                 listing.getPricingCurrency() != null && !listing.getPricingCurrency().isBlank()
                         ? listing.getPricingCurrency()
-                        : "USD");
+                        : "HUF");
         response.setStatus(listing.getStatus());
         response.setLat(listing.getLat());
         response.setLng(listing.getLng());
@@ -330,11 +350,11 @@ public class ListingService {
 
     private static String normalizePricingCurrency(String raw) {
         if (raw == null || raw.isBlank()) {
-            return "USD";
+            return "HUF";
         }
         String c = raw.trim().toUpperCase();
         if (c.length() != 3) {
-            return "USD";
+            return "HUF";
         }
         return c;
     }

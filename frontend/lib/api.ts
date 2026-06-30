@@ -1,4 +1,17 @@
-import axios from 'axios'
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+
+const NETWORK_RETRY_MAX = 10
+const NETWORK_RETRY_BASE_MS = 1500
+
+function isTransientApiError(error: AxiosError): boolean {
+  if (!error.response) return true
+  const status = error.response.status
+  return status === 500 || status === 502 || status === 503 || status === 504
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 /**
  * Browser: relative `/api/v1` → Next.js rewrites → Spring (same origin, avoids CORS).
@@ -38,14 +51,26 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Handle token refresh on 401
+// Retry when Spring Boot or the dev proxy is still starting
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config
-    
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean
+      __networkRetryCount?: number
+    }
+
+    if (originalRequest && isTransientApiError(error)) {
+      const retryCount = originalRequest.__networkRetryCount ?? 0
+      if (retryCount < NETWORK_RETRY_MAX) {
+        originalRequest.__networkRetryCount = retryCount + 1
+        await sleep(Math.min(NETWORK_RETRY_BASE_MS * (retryCount + 1), 5000))
+        return api(originalRequest)
+      }
+    }
+
     // Don't retry refresh for auth endpoints to avoid infinite loops
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/')) {
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !originalRequest.url?.includes('/auth/')) {
       originalRequest._retry = true
       
       const refreshToken = localStorage.getItem('refreshToken')

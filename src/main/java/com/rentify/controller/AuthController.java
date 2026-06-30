@@ -1,8 +1,10 @@
 package com.rentify.controller;
 
+import com.rentify.dto.request.ForgotPasswordRequest;
 import com.rentify.dto.request.LoginRequest;
 import com.rentify.dto.request.RefreshTokenRequest;
 import com.rentify.dto.request.RegisterRequest;
+import com.rentify.dto.request.ResetPasswordRequest;
 import com.rentify.dto.response.JwtAuthenticationResponse;
 import com.rentify.service.AuthService;
 import jakarta.validation.Valid;
@@ -21,64 +23,14 @@ public class AuthController {
     
     @PostMapping("/register")
     public ResponseEntity<JwtAuthenticationResponse> register(@Valid @RequestBody RegisterRequest request) {
-        // #region agent log
-        try {
-            java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-            fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"A\",\"location\":\"AuthController.register:23\",\"message\":\"Register endpoint called\",\"data\":{\"email\":\"" + (request.getEmail() != null ? request.getEmail() : "null") + "\",\"hasName\":\"" + (request.getName() != null) + "\"},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-            fw.close();
-        } catch (Exception e) {}
-        // #endregion
-        try {
-            JwtAuthenticationResponse response = authService.register(request);
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"A\",\"location\":\"AuthController.register:30\",\"message\":\"Register successful\",\"data\":{\"hasToken\":\"" + (response.getAccessToken() != null) + "\",\"hasUser\":\"" + (response.getUser() != null) + "\"},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                fw.close();
-            } catch (Exception e) {}
-            // #endregion
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"A\",\"location\":\"AuthController.register:38\",\"message\":\"Register exception\",\"data\":{\"exceptionType\":\"" + e.getClass().getSimpleName() + "\",\"message\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "null") + "\"},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                fw.close();
-            } catch (Exception ex) {}
-            // #endregion
-            throw e;
-        }
+        JwtAuthenticationResponse response = authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
     @PostMapping("/login")
     public ResponseEntity<JwtAuthenticationResponse> login(@Valid @RequestBody LoginRequest request) {
-        // #region agent log
-        try {
-            java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-            fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"B\",\"location\":\"AuthController.login:45\",\"message\":\"Login endpoint called\",\"data\":{\"email\":\"" + (request.getEmail() != null ? request.getEmail() : "null") + "\"},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-            fw.close();
-        } catch (Exception e) {}
-        // #endregion
-        try {
-            JwtAuthenticationResponse response = authService.login(request);
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"B\",\"location\":\"AuthController.login:52\",\"message\":\"Login successful\",\"data\":{\"hasToken\":\"" + (response.getAccessToken() != null) + "\"},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                fw.close();
-            } catch (Exception e) {}
-            // #endregion
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"B\",\"location\":\"AuthController.login:60\",\"message\":\"Login exception\",\"data\":{\"exceptionType\":\"" + e.getClass().getSimpleName() + "\",\"message\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "null") + "\"},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                fw.close();
-            } catch (Exception ex) {}
-            // #endregion
-            throw e;
-        }
+        JwtAuthenticationResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
     }
     
     @PostMapping("/refresh")
@@ -91,5 +43,17 @@ public class AuthController {
     public ResponseEntity<com.rentify.dto.response.UserResponse> getCurrentUser() {
         com.rentify.dto.response.UserResponse user = authService.getCurrentUser();
         return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<java.util.Map<String, String>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(authService.requestPasswordReset(request.getEmail()));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<java.util.Map<String, String>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(authService.resetPassword(request.getToken(), request.getPassword()));
     }
 }

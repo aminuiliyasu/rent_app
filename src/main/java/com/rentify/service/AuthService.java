@@ -20,11 +20,22 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 public class AuthService {
+
+    private static final SecureRandom RESET_TOKEN_RANDOM = new SecureRandom();
     
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EmailService emailService;
     
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -37,106 +48,39 @@ public class AuthService {
     
     @Transactional
     public JwtAuthenticationResponse register(RegisterRequest request) {
-        // #region agent log
-        try {
-            java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-            fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"C\",\"location\":\"AuthService.register:38\",\"message\":\"Register service called\",\"data\":{\"email\":\"" + (request.getEmail() != null ? request.getEmail() : "null") + "\"},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-            fw.close();
-        } catch (Exception e) {}
-        // #endregion
-        try {
-            if (userRepository.existsByEmail(request.getEmail())) {
-                // #region agent log
-                try {
-                    java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                    fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"D\",\"location\":\"AuthService.register:42\",\"message\":\"Email exists check\",\"data\":{\"exists\":true},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                    fw.close();
-                } catch (Exception e) {}
-                // #endregion
-                throw new RuntimeException("Email already exists");
-            }
-            
-            if (request.getPhone() != null && userRepository.existsByPhone(request.getPhone())) {
-                throw new RuntimeException("Phone number already exists");
-            }
-            
-            User user = new User();
-            user.setName(request.getName());
-            user.setEmail(request.getEmail());
-            user.setPhone(request.getPhone());
-            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-            user.setRole(UserRole.RENTER);
-            user.setKycStatus(KycStatus.NOT_REQUIRED);
-            user.setEmailVerified(false);
-            user.setPhoneVerified(false);
-            user.setIsActive(true);
-            user.setIsBanned(false);
-            
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"D\",\"location\":\"AuthService.register:65\",\"message\":\"Before userRepository.save\",\"data\":{\"userId\":null},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                fw.close();
-            } catch (Exception e) {}
-            // #endregion
-            user = userRepository.save(user);
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"D\",\"location\":\"AuthService.register:67\",\"message\":\"After userRepository.save\",\"data\":{\"userId\":\"" + (user.getId() != null ? user.getId() : "null") + "\"},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                fw.close();
-            } catch (Exception e) {}
-            // #endregion
-            
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"E\",\"location\":\"AuthService.register:70\",\"message\":\"Before authenticationManager.authenticate\",\"data\":{},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                fw.close();
-            } catch (Exception e) {}
-            // #endregion
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"E\",\"location\":\"AuthService.register:75\",\"message\":\"After authenticationManager.authenticate\",\"data\":{\"authenticated\":\"" + (authentication != null && authentication.isAuthenticated()) + "\"},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                fw.close();
-            } catch (Exception e) {}
-            // #endregion
-            
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"F\",\"location\":\"AuthService.register:82\",\"message\":\"Before token generation\",\"data\":{},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                fw.close();
-            } catch (Exception e) {}
-            // #endregion
-            String accessToken = tokenProvider.generateToken(authentication);
-            String refreshToken = tokenProvider.generateRefreshToken(request.getEmail());
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"F\",\"location\":\"AuthService.register:85\",\"message\":\"After token generation\",\"data\":{\"hasAccessToken\":\"" + (accessToken != null && !accessToken.isEmpty()) + "\",\"hasRefreshToken\":\"" + (refreshToken != null && !refreshToken.isEmpty()) + "\"},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                fw.close();
-            } catch (Exception e) {}
-            // #endregion
-            
-            UserResponse userResponse = mapToUserResponse(user);
-            
-            return new JwtAuthenticationResponse(accessToken, refreshToken, "Bearer", userResponse);
-        } catch (Exception e) {
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter("/home/aminu-iliyasu/Desktop/rent_app/.cursor/debug.log", true);
-                fw.write("{\"runId\":\"run1\",\"hypothesisId\":\"C\",\"location\":\"AuthService.register:95\",\"message\":\"Register service exception\",\"data\":{\"exceptionType\":\"" + e.getClass().getSimpleName() + "\",\"message\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'").replace("\n", " ") : "null") + "\",\"stackTrace\":\"" + (e.getStackTrace().length > 0 ? e.getStackTrace()[0].toString().replace("\"", "'") : "none") + "\"},\"timestamp\":" + System.currentTimeMillis() + "}\n");
-                fw.close();
-            } catch (Exception ex) {}
-            // #endregion
-            throw e;
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already exists");
         }
+
+        if (request.getPhone() != null && userRepository.existsByPhone(request.getPhone())) {
+            throw new RuntimeException("Phone number already exists");
+        }
+
+        User user = new User();
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setRole(UserRole.RENTER);
+        user.setKycStatus(KycStatus.NOT_REQUIRED);
+        user.setEmailVerified(false);
+        user.setPhoneVerified(false);
+        user.setIsActive(true);
+        user.setIsBanned(false);
+
+        user = userRepository.save(user);
+
+        Authentication authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String accessToken = tokenProvider.generateToken(authentication);
+        String refreshToken = tokenProvider.generateRefreshToken(request.getEmail());
+
+        UserResponse userResponse = mapToUserResponse(user);
+
+        return new JwtAuthenticationResponse(accessToken, refreshToken, "Bearer", userResponse);
     }
     
     public JwtAuthenticationResponse login(LoginRequest request) {
@@ -223,6 +167,54 @@ public class AuthService {
         return mapToUserResponse(user);
     }
     
+    @Transactional
+    public Map<String, String> requestPasswordReset(String email) {
+        Map<String, String> response = new HashMap<>();
+        response.put(
+            "message",
+            "If an account exists for that email, we sent password reset instructions."
+        );
+
+        userRepository.findByEmail(email.trim()).ifPresent(user -> {
+            if (user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
+                return;
+            }
+            byte[] tokenBytes = new byte[32];
+            RESET_TOKEN_RANDOM.nextBytes(tokenBytes);
+            String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
+
+            user.setPasswordResetToken(token);
+            user.setPasswordResetExpiresAt(LocalDateTime.now().plusHours(1));
+            userRepository.save(user);
+            emailService.sendPasswordResetEmail(user.getEmail(), token);
+        });
+
+        return response;
+    }
+
+    @Transactional
+    public Map<String, String> resetPassword(String token, String newPassword) {
+        User user = userRepository.findByPasswordResetToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid or expired reset link"));
+
+        if (user.getPasswordResetExpiresAt() == null
+                || user.getPasswordResetExpiresAt().isBefore(LocalDateTime.now())) {
+            user.setPasswordResetToken(null);
+            user.setPasswordResetExpiresAt(null);
+            userRepository.save(user);
+            throw new RuntimeException("Invalid or expired reset link");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetExpiresAt(null);
+        userRepository.save(user);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Password updated. You can sign in with your new password.");
+        return response;
+    }
+
     private UserResponse mapToUserResponse(User user) {
         return new UserResponse(
             user.getId(),

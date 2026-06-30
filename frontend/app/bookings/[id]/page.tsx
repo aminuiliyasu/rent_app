@@ -353,12 +353,12 @@ export default function BookingDetailPage() {
   const bookedItemTitle = bookedListingTitle(booking)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 pt-20">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 pt-16 sm:pt-20">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-12">
         {/* Hero: role + listing + progress */}
-        <div className="mb-8 overflow-hidden rounded-3xl border border-white/60 bg-gradient-to-br from-white to-blue-50/80 shadow-xl shadow-blue-500/5 dark:border-gray-700/50 dark:from-gray-900 dark:to-slate-900/90">
-          <div className="grid gap-6 p-6 sm:p-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+        <div className="mb-6 sm:mb-8 overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-gradient-to-br from-white to-blue-50/80 shadow-xl shadow-blue-500/5 dark:border-gray-700/50 dark:from-gray-900 dark:to-slate-900/90">
+          <div className="grid gap-4 p-4 sm:gap-6 sm:p-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
             <div className="min-w-0 space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span
@@ -376,13 +376,13 @@ export default function BookingDetailPage() {
                   {isOwner ? 'You are the host' : 'You are renting'}
                 </span>
               </div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+              <h1 className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
                 {bookedItemTitle}
               </h1>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              <p className="hidden sm:block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 Booked item: <span className="text-gray-700 dark:text-gray-200">{bookedItemTitle}</span>
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 sm:line-clamp-none">
                 {isOwner
                   ? `${partnerDisplay} wants to rent your item for these dates. Keep everything in one thread below.`
                   : `You’re booking from ${partnerDisplay}. Message them anytime about pickup or details.`}
@@ -397,7 +397,7 @@ export default function BookingDetailPage() {
                 <BookingFlowTimeline status={booking.status} activeStep={flowStep} />
               </div>
             </div>
-            <div className="relative mx-auto aspect-[4/3] w-full max-w-[220px] shrink-0 overflow-hidden rounded-2xl bg-gray-100 shadow-inner dark:bg-gray-800 md:mx-0 md:max-w-[260px]">
+            <div className="relative mx-auto aspect-[4/3] w-full max-w-[180px] shrink-0 overflow-hidden rounded-xl sm:max-w-[220px] sm:rounded-2xl bg-gray-100 shadow-inner dark:bg-gray-800 md:mx-0 md:max-w-[260px]">
               {listingImage ? (
                 <Image src={listingImage} alt="" fill className="object-cover" sizes="260px" unoptimized />
               ) : (
@@ -417,9 +417,9 @@ export default function BookingDetailPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-2">
-            <div className="card-glass">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+          <div className="flex flex-col gap-5 sm:gap-6 lg:col-span-2 order-2 lg:order-1">
+            <div className="card-glass order-3 lg:order-none">
               <h2 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">Dates &amp; price</h2>
               <div className="flex flex-wrap items-center gap-2 text-gray-700 dark:text-gray-300">
                 <CalendarIcon className="h-5 w-5 shrink-0 text-blue-500" />
@@ -483,7 +483,7 @@ export default function BookingDetailPage() {
             </div>
 
             {(canStartRental || canCompleteRental) && (
-              <div className="card-glass border border-emerald-200/60 dark:border-emerald-900/40">
+              <div className="card-glass border border-emerald-200/60 dark:border-emerald-900/40 order-4 lg:order-none">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">Host checklist</h2>
                 <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
                   {booking.status === 'CONFIRMED'
@@ -506,44 +506,71 @@ export default function BookingDetailPage() {
             )}
 
             {isRenter && (booking.status === 'CONFIRMED' || booking.status === 'IN_PROGRESS') && (
-              <div className="rounded-2xl border border-sky-200/80 bg-sky-50/50 px-5 py-4 dark:border-sky-900/50 dark:bg-sky-950/20">
+              <div className="rounded-2xl border border-sky-200/80 bg-sky-50/50 px-5 py-4 dark:border-sky-900/50 dark:bg-sky-950/20 order-5 lg:order-none">
                 <p className="text-sm leading-relaxed text-sky-950 dark:text-sky-100">
                   Your host updates progress here. Use <strong>Messages</strong> below to agree on pickup, return time, or ask questions — everything stays on the record.
                 </p>
               </div>
             )}
 
+            <div className="card-glass overflow-hidden p-0 lg:hidden order-1 lg:order-none">
+              <div className="flex items-center gap-3 px-4 py-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-lg font-bold text-white">
+                  {nameInitials(partner?.name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    {isOwner ? 'Your guest' : 'Your host'}
+                  </p>
+                  <p className="truncate text-base font-bold text-gray-900 dark:text-white">{partnerDisplay}</p>
+                </div>
+                {partner?.id != null && (
+                  <Link
+                    href={`/users/${partner.id}`}
+                    className="shrink-0 text-xs font-semibold text-indigo-600 dark:text-indigo-400"
+                  >
+                    Profile
+                  </Link>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 border-t border-gray-200 px-3 py-2 dark:border-gray-700">
+                <Link href="#booking-messages" className="btn-primary py-2.5 text-center text-xs">
+                  Messages
+                </Link>
+                <Link href="#booking-reviews" className="btn-secondary py-2.5 text-center text-xs">
+                  Reviews
+                </Link>
+              </div>
+            </div>
+
             {/* Messages first for visibility */}
-            <div className="card-glass overflow-hidden p-0" id="booking-messages">
-              <div className="border-b border-gray-200/80 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 px-6 py-5 dark:border-gray-700 dark:from-blue-950/40 dark:to-indigo-950/30">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="card-glass overflow-hidden p-0 scroll-mt-24 order-2 lg:order-none" id="booking-messages">
+              <div className="border-b border-gray-200/80 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 px-4 py-4 sm:px-6 sm:py-5 dark:border-gray-700 dark:from-blue-950/40 dark:to-indigo-950/30">
+                <div className="flex flex-col gap-3">
                   <div>
-                    <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white">
-                      <ChatBubbleLeftRightIcon className="h-7 w-7 text-blue-500" />
-                      Messages with {partnerDisplay}
+                    <h2 className="flex items-center gap-2 text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                      <ChatBubbleLeftRightIcon className="h-6 w-6 sm:h-7 sm:w-7 text-blue-500 shrink-0" />
+                      <span className="truncate">Messages with {partnerDisplay}</span>
                     </h2>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                       One thread for this booking — coordinate pickup, returns, and questions.
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Link
-                      href="/messages"
-                      className="btn-secondary px-4 py-2 text-sm"
-                    >
-                      All conversations
+                  <div className="grid grid-cols-3 gap-2">
+                    <Link href="/messages" className="btn-secondary px-2 py-2.5 text-center text-xs sm:text-sm">
+                      Inbox
                     </Link>
                     <button
                       type="button"
                       onClick={() => initiateCall(CallType.VIDEO)}
-                      className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-600"
+                      className="rounded-xl bg-emerald-500 px-2 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:bg-emerald-600"
                     >
                       Video
                     </button>
                     <button
                       type="button"
                       onClick={() => initiateCall(CallType.AUDIO)}
-                      className="rounded-xl bg-blue-500 px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-blue-600"
+                      className="rounded-xl bg-blue-500 px-2 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:bg-blue-600"
                     >
                       Voice
                     </button>
@@ -551,7 +578,7 @@ export default function BookingDetailPage() {
                 </div>
               </div>
 
-              <div className="space-y-3 px-6 py-5">
+              <div className="space-y-3 px-4 py-4 sm:px-6 sm:py-5">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Quick replies</p>
                 <div className="flex flex-wrap gap-2">
                   {['Thanks!', 'On my way', 'Can we adjust pickup time?', 'Returned safely'].map((q) => (
@@ -567,7 +594,7 @@ export default function BookingDetailPage() {
                 </div>
               </div>
 
-              <div className="max-h-[28rem] space-y-4 overflow-y-auto px-6 pb-2">
+              <div className="min-h-[40vh] max-h-[55vh] sm:max-h-[28rem] space-y-4 overflow-y-auto overscroll-contain px-4 pb-2 sm:px-6">
                 {messages.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 py-12 text-center dark:border-gray-700 dark:bg-gray-900/30">
                     <ChatBubbleLeftRightIcon className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
@@ -579,7 +606,7 @@ export default function BookingDetailPage() {
                     const mine = msg.senderId === user?.id
                     return (
                       <div key={msg.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                        <div className="max-w-[85%] sm:max-w-[75%]">
+                        <div className="max-w-[90%] sm:max-w-[75%]">
                           <div className={`mb-1 flex items-center gap-2 px-1 text-xs ${mine ? 'justify-end' : 'justify-start'}`}>
                             <span className={mine ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}>
                               {mine ? 'You' : msg.sender?.name || 'User'}
@@ -621,14 +648,14 @@ export default function BookingDetailPage() {
                 )}
               </div>
 
-              <form onSubmit={sendMessage} className="space-y-3 border-t border-gray-200 bg-gray-50/80 px-6 py-5 dark:border-gray-700 dark:bg-gray-900/40">
-                <div className="flex flex-col gap-3 sm:flex-row">
+              <form onSubmit={sendMessage} className="space-y-3 border-t border-gray-200 bg-gray-50/80 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:border-gray-700 dark:bg-gray-900/40 sm:px-6 sm:py-5">
+                <div className="flex flex-col gap-3">
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder={`Message ${partnerDisplay}…`}
-                    className="input-field flex-1 rounded-2xl border-0 bg-white dark:bg-gray-800"
+                    className="input-field w-full rounded-2xl border-0 bg-white text-base sm:text-sm dark:bg-gray-800 min-h-[44px]"
                     disabled={sendingMessage}
                   />
                   <div className="flex gap-2">
@@ -636,12 +663,19 @@ export default function BookingDetailPage() {
                       type="button"
                       onMouseDown={startRecording}
                       onMouseUp={stopRecording}
-                      onTouchStart={startRecording}
-                      onTouchEnd={stopRecording}
-                      className={`rounded-2xl px-4 py-3 transition-colors ${
+                      onTouchStart={(e) => {
+                        e.preventDefault()
+                        void startRecording()
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault()
+                        stopRecording()
+                      }}
+                      className={`flex-1 sm:flex-none rounded-2xl px-4 py-3 min-h-[44px] transition-colors touch-manipulation ${
                         isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-violet-500 text-white hover:bg-violet-600'
                       }`}
                       title="Hold to record"
+                      aria-label="Record voice note"
                     >
                       <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                         <path
@@ -651,7 +685,7 @@ export default function BookingDetailPage() {
                         />
                       </svg>
                     </button>
-                    <button type="submit" disabled={sendingMessage || !newMessage.trim()} className="btn-primary rounded-2xl px-8">
+                    <button type="submit" disabled={sendingMessage || !newMessage.trim()} className="btn-primary flex-1 sm:flex-none rounded-2xl px-6 sm:px-8 min-h-[44px]">
                       Send
                     </button>
                   </div>
@@ -667,7 +701,7 @@ export default function BookingDetailPage() {
 
             {/* Reviews */}
             <div
-              className="scroll-mt-28 overflow-hidden rounded-3xl border-2 border-amber-200/80 bg-gradient-to-br from-amber-50/90 via-white to-orange-50/40 shadow-xl shadow-amber-500/10 dark:border-amber-900/40 dark:from-amber-950/30 dark:via-gray-900 dark:to-orange-950/20"
+              className="scroll-mt-28 overflow-hidden rounded-3xl border-2 border-amber-200/80 bg-gradient-to-br from-amber-50/90 via-white to-orange-50/40 shadow-xl shadow-amber-500/10 dark:border-amber-900/40 dark:from-amber-950/30 dark:via-gray-900 dark:to-orange-950/20 order-6 lg:order-none"
               id="booking-reviews"
             >
               <div className="border-b border-amber-200/60 bg-amber-100/40 px-6 py-5 dark:border-amber-900/50 dark:bg-amber-950/30">
@@ -840,7 +874,7 @@ export default function BookingDetailPage() {
             </div>
           </div>
 
-          <aside className="lg:col-span-1">
+          <aside className="lg:col-span-1 order-1 lg:order-2 hidden lg:block">
             <div className="card-glass sticky top-24 space-y-5">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
@@ -878,7 +912,9 @@ export default function BookingDetailPage() {
           </aside>
         </div>
       </div>
-      <Footer />
+      <div className="hidden md:block">
+        <Footer />
+      </div>
       
       {/* Call Modal */}
       {activeCall && (

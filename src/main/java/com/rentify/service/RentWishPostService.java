@@ -10,16 +10,18 @@ import com.rentify.repository.UserRepository;
 import com.rentify.util.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class RentWishPostService {
 
-    private static final int VISIBILITY_HOURS = 24;
+    private static final int MAX_VISIBILITY_HOURS = 24;
 
     @Autowired
     private RentWishPostRepository rentWishPostRepository;
@@ -29,8 +31,14 @@ public class RentWishPostService {
 
     @Transactional(readOnly = true)
     public Page<RentWishPostResponse> listVisible(Pageable pageable) {
-        LocalDateTime cutoff = LocalDateTime.now().minusHours(VISIBILITY_HOURS);
-        return rentWishPostRepository.findByCreatedAtAfter(cutoff, pageable).map(this::toResponse);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime cutoff = now.minusHours(MAX_VISIBILITY_HOURS);
+        Page<RentWishPost> raw = rentWishPostRepository.findByCreatedAtAfter(cutoff, pageable);
+        List<RentWishPostResponse> content = raw.getContent().stream()
+                .filter(post -> isStillVisible(post, now))
+                .map(this::toResponse)
+                .toList();
+        return new PageImpl<>(content, pageable, content.size());
     }
 
     @Transactional
@@ -57,9 +65,25 @@ public class RentWishPostService {
 
         post.setBudgetText(trimToNull(request.getBudgetText()));
         post.setDeliveryPreference(parseDeliveryPreference(request.getDeliveryPreference()));
+        post.setVisibilityHours(normalizeVisibilityHours(request.getVisibilityHours()));
 
         RentWishPost saved = rentWishPostRepository.save(post);
         return toResponse(saved);
+    }
+
+    public static int resolveVisibilityHours(RentWishPost post) {
+        return normalizeVisibilityHours(post.getVisibilityHours());
+    }
+
+    public static boolean isStillVisible(RentWishPost post, LocalDateTime now) {
+        return post.getCreatedAt().plusHours(resolveVisibilityHours(post)).isAfter(now);
+    }
+
+    private static int normalizeVisibilityHours(Integer raw) {
+        if (raw != null && raw == 12) {
+            return 12;
+        }
+        return 24;
     }
 
     private static String trimToNull(String raw) {
@@ -92,6 +116,7 @@ public class RentWishPostService {
     }
 
     private RentWishPostResponse toResponse(RentWishPost post) {
+        int hours = resolveVisibilityHours(post);
         return RentWishPostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
@@ -103,9 +128,10 @@ public class RentWishPostService {
                 .authorId(post.getAuthor().getId())
                 .authorName(post.getAuthor().getName())
                 .createdAt(post.getCreatedAt())
-                .expiresAt(post.getCreatedAt().plusHours(VISIBILITY_HOURS))
+                .expiresAt(post.getCreatedAt().plusHours(hours))
                 .budgetText(post.getBudgetText())
                 .deliveryPreference(post.getDeliveryPreference() != null ? post.getDeliveryPreference().name() : null)
+                .visibilityHours(hours)
                 .build();
     }
 }
