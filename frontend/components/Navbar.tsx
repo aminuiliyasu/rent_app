@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   Bars3Icon,
   XMarkIcon,
@@ -21,7 +22,9 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme()
   const { t } = useLanguage()
   const router = useRouter()
+  const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const isSearchPage = pathname === '/search'
 
   const handleLogout = () => {
     logout()
@@ -32,14 +35,27 @@ export default function Navbar() {
     <nav className="navbar-glass fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <Link href="/" className="flex items-center space-x-3 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-              <SparklesIcon className="h-5 w-5 text-primary-800 dark:text-primary-300" />
-            </div>
-            <span className="font-serif text-2xl font-semibold tracking-tight text-gray-900 dark:text-stone-100">
-              Rhentify
-            </span>
-          </Link>
+          {isSearchPage ? (
+            <Link href="/" className="flex items-center group shrink-0">
+              <Image
+                src="/logo/rhentify-logo-dark.png"
+                alt="Rhentify"
+                width={152}
+                height={38}
+                priority
+                className="h-9 w-auto"
+              />
+            </Link>
+          ) : (
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                <SparklesIcon className="h-5 w-5 text-primary-800 dark:text-primary-300" />
+              </div>
+              <span className="font-serif text-2xl font-semibold tracking-tight text-gray-900 dark:text-stone-100">
+                Rhentify
+              </span>
+            </Link>
+          )}
 
           <div className="hidden md:flex items-center space-x-2">
             <Link
