@@ -19,6 +19,7 @@ import {
   BuildingOffice2Icon,
   BeakerIcon,
   CalendarDaysIcon,
+  ShoppingBagIcon,
   UserIcon,
   MusicalNoteIcon,
   PhotoIcon,
@@ -40,8 +41,8 @@ const SLUG_ICONS: Record<string, IconComponent> = {
   apartment: HomeIcon,
   services: BuildingOffice2Icon,
   'pet-lovers': HeartIcon,
-  socials: CalendarDaysIcon,
-  'parties-events': CalendarDaysIcon,
+  socials: ShoppingBagIcon,
+  'parties-events': ShoppingBagIcon,
   housing: HomeIcon,
   furniture: HomeModernIcon,
   'professional-services': BuildingOffice2Icon,
@@ -100,8 +101,14 @@ function categoryIcon(slug: string, name: string): IconComponent {
   if (n.includes('book') || n.includes('library')) {
     return BookOpenIcon
   }
-  if (n.includes('clothing') || n.includes('fashion') || n.includes('apparel') || n.includes('costume')) {
-    return SwatchIcon
+  if (
+    n.includes('clothing') ||
+    n.includes('fashion') ||
+    n.includes('apparel') ||
+    n.includes('costume') ||
+    n.includes('social')
+  ) {
+    return ShoppingBagIcon
   }
   if (n.includes('kitchen') || n.includes('cooking') || n.includes('appliance')) {
     return FireIcon

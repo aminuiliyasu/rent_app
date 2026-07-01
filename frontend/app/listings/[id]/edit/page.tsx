@@ -10,6 +10,17 @@ import { uploadMultipleImages } from '@/lib/upload'
 import { buildListingPayload, listingToFormData } from '@/lib/listingFormShared'
 import { isListingOwner } from '@/lib/listingOwner'
 import { DEFAULT_LISTING_CURRENCY, LISTING_CURRENCY_OPTIONS } from '@/lib/listingCurrency'
+import AvailableDaysPicker from '@/components/AvailableDaysPicker'
+import WorkerListingSection from '@/components/WorkerListingSection'
+import {
+  ITEM_DESCRIPTION_PLACEHOLDER,
+  ITEM_TITLE_PLACEHOLDER,
+  servicesCategoryValue,
+  upgradeCategoryIdIfSeeded,
+  workerCategoriesForSelect,
+  WORKER_DESCRIPTION_PLACEHOLDER,
+  WORKER_TITLE_PLACEHOLDER,
+} from '@/lib/listingFormWorker'
 import toast from 'react-hot-toast'
 import { ListingType } from '@/lib/types'
 import { mergeCategoriesWithSeed, categoryHasPersistentId } from '@/lib/seedCategories'
@@ -23,7 +34,6 @@ import {
   PencilSquareIcon,
   CurrencyDollarIcon,
   MapPinIcon,
-  UserIcon,
 } from '@heroicons/react/24/outline'
 
 interface Category {
@@ -119,6 +129,26 @@ export default function EditListingPage() {
     () => localizeCategories(categories, locale),
     [categories, locale],
   )
+  const isWorker = formData.type === ListingType.WORKER
+
+  useEffect(() => {
+    setFormData((prev) => {
+      const upgraded = upgradeCategoryIdIfSeeded(prev.categoryId, categories)
+      return upgraded === prev.categoryId ? prev : { ...prev, categoryId: upgraded }
+    })
+  }, [categories])
+
+  useEffect(() => {
+    if (!isWorker) return
+    setFormData((prev) => {
+      const nextId = upgradeCategoryIdIfSeeded(servicesCategoryValue(categories), categories)
+      return prev.categoryId === nextId ? prev : { ...prev, categoryId: nextId }
+    })
+  }, [isWorker, categories])
+
+  const categoriesForSelect = isWorker
+    ? workerCategoriesForSelect(displayCategories)
+    : displayCategories
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -259,9 +289,12 @@ export default function EditListingPage() {
                   required
                   disabled
                 >
-                  <option value={ListingType.ITEM}>Item</option>
-                  <option value={ListingType.WORKER}>Worker</option>
+                  <option value={ListingType.ITEM}>Item — rent gear, tools, or things</option>
+                  <option value={ListingType.WORKER}>Service — offer your skills or time</option>
                 </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Listing type cannot be changed after publishing.
+                </p>
               </div>
 
               {/* Title */}
@@ -275,7 +308,7 @@ export default function EditListingPage() {
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="input-field"
                   required
-                  placeholder="e.g., Professional Camera Equipment"
+                  placeholder={isWorker ? WORKER_TITLE_PLACEHOLDER : ITEM_TITLE_PLACEHOLDER}
                 />
               </div>
 
@@ -289,7 +322,7 @@ export default function EditListingPage() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="input-field"
                   rows={5}
-                  placeholder="Describe your listing in detail..."
+                  placeholder={isWorker ? WORKER_DESCRIPTION_PLACEHOLDER : ITEM_DESCRIPTION_PLACEHOLDER}
                 />
               </div>
 
@@ -303,9 +336,10 @@ export default function EditListingPage() {
                   onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                   className="input-field font-semibold"
                   required
+                  disabled={isWorker}
                 >
-                  <option value="">Select a category</option>
-                  {displayCategories.map((category) => (
+                  {!isWorker && <option value="">Select a category</option>}
+                  {categoriesForSelect.map((category) => (
                     <option
                       key={category.slug || category.id}
                       value={
@@ -318,23 +352,24 @@ export default function EditListingPage() {
                     </option>
                   ))}
                 </select>
+                {isWorker && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Service listings stay under Services.
+                  </p>
+                )}
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Available Days
-                </label>
-                <select
-                  value={formData.availableDays}
-                  onChange={(e) => setFormData({ ...formData, availableDays: e.target.value })}
-                  className="input-field font-semibold"
-                >
-                  <option value="">Select availability</option>
-                  <option value="EVERYDAY">Every day</option>
-                  <option value="WEEKDAYS">Weekdays (Mon-Fri)</option>
-                  <option value="WEEKENDS">Weekends (Sat-Sun)</option>
-                </select>
-              </div>
+              {!isWorker && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                    Available Days
+                  </label>
+                  <AvailableDaysPicker
+                    value={formData.availableDays}
+                    onChange={(availableDays) => setFormData({ ...formData, availableDays })}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -344,6 +379,11 @@ export default function EditListingPage() {
               <PhotoIcon className="h-6 w-6 text-purple-500" />
               Images
             </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              {isWorker
+                ? 'Add a clear profile photo or examples of your work — first image is the cover.'
+                : 'Add photos of your item — first image is the cover.'}
+            </p>
             
             <div className="space-y-6">
               {/* Primary preview — same image shown first when browsing */}
@@ -461,12 +501,14 @@ export default function EditListingPage() {
             </div>
             
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Enter amounts as numbers (decimals allowed). Leave a field blank if you don&apos;t use that period.
+              {isWorker
+                ? 'Most services use an hourly rate. Add a daily rate too if you offer full-day bookings.'
+                : "Enter amounts as numbers (decimals allowed). Leave a field blank if you don't use that period."}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div>
+            <div className={`grid grid-cols-1 gap-6 ${isWorker ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4'}`}>
+              <div className={isWorker ? 'sm:col-span-2 lg:col-span-1' : ''}>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Hourly rate
+                  Hourly rate{isWorker ? ' *' : ''}
                 </label>
                 <input
                   type="text"
@@ -492,6 +534,8 @@ export default function EditListingPage() {
                   placeholder="e.g. 150"
                 />
               </div>
+              {!isWorker && (
+                <>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                   Weekly rate
@@ -520,13 +564,15 @@ export default function EditListingPage() {
                   placeholder="e.g. 3200"
                 />
               </div>
+                </>
+              )}
             </div>
 
             <div className="mt-6">
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                 Security Deposit
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`grid grid-cols-1 gap-4 ${isWorker ? '' : 'md:grid-cols-2'}`}>
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
                     Cash Deposit
@@ -536,9 +582,10 @@ export default function EditListingPage() {
                     value={formData.cashDeposit}
                     onChange={(e) => setFormData({ ...formData, cashDeposit: e.target.value })}
                     className="input-field"
-                    placeholder="e.g., 100"
+                    placeholder={isWorker ? 'Optional — e.g. 5000' : 'e.g., 100'}
                   />
                 </div>
+                {!isWorker && (
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
                     Item Deposit
@@ -551,6 +598,7 @@ export default function EditListingPage() {
                     placeholder="e.g., National ID card"
                   />
                 </div>
+                )}
               </div>
             </div>
           </div>
@@ -602,53 +650,17 @@ export default function EditListingPage() {
             </div>
           </div>
 
-          {/* Worker-specific fields */}
-          {formData.type === ListingType.WORKER && (
-            <div className="card-glass animate-slide-up" style={{ animationDelay: '0.4s' }}>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                <UserIcon className="h-7 w-7 text-purple-600 dark:text-purple-400 shrink-0" aria-hidden />
-                Worker Information
-              </h2>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    Worker Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.workerName}
-                    onChange={(e) => setFormData({ ...formData, workerName: e.target.value })}
-                    className="input-field"
-                    placeholder="Full name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    Profession
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.workerProfession}
-                    onChange={(e) => setFormData({ ...formData, workerProfession: e.target.value })}
-                    className="input-field"
-                    placeholder="e.g., Electrician, Photographer"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    Bio
-                  </label>
-                  <textarea
-                    value={formData.workerBio}
-                    onChange={(e) => setFormData({ ...formData, workerBio: e.target.value })}
-                    className="input-field"
-                    rows={4}
-                    placeholder="Tell us about your skills and experience..."
-                  />
-                </div>
-              </div>
-            </div>
+          {isWorker && (
+            <WorkerListingSection
+              values={{
+                workerName: formData.workerName,
+                workerProfession: formData.workerProfession,
+                workerBio: formData.workerBio,
+                serviceArea: formData.serviceArea,
+                availableDays: formData.availableDays,
+              }}
+              onChange={(patch) => setFormData((prev) => ({ ...prev, ...patch }))}
+            />
           )}
 
           {/* Submit Buttons */}

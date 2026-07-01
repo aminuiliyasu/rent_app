@@ -36,6 +36,14 @@ public class CreateRentWishPostRequest {
             message = "deliveryPreference must be PICKUP, DELIVERY or EITHER")
     private String deliveryPreference;
 
+    /** NONE | CASH | ITEM | FLEXIBLE */
+    @Pattern(regexp = "^(NONE|CASH|ITEM|FLEXIBLE)$",
+            message = "depositPreference must be NONE, CASH, ITEM or FLEXIBLE")
+    private String depositPreference;
+
+    @Size(max = 120, message = "Deposit note can be at most 120 characters")
+    private String depositNote;
+
     /** 12 or 24 — how long the post stays live. Defaults to 24 when omitted. */
     private Integer visibilityHours;
 }

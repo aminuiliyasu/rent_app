@@ -28,6 +28,14 @@ public class RentWishPostSchemaMigration implements CommandLineRunner {
         }
         jdbcTemplate.update(
                 "UPDATE rent_wish_posts SET visibility_hours = 24 WHERE visibility_hours IS NULL");
+        if (!columnExists("RENT_WISH_POSTS", "DEPOSIT_PREFERENCE")) {
+            jdbcTemplate.execute(
+                    "ALTER TABLE rent_wish_posts ADD COLUMN deposit_preference VARCHAR(16)");
+        }
+        if (!columnExists("RENT_WISH_POSTS", "DEPOSIT_NOTE")) {
+            jdbcTemplate.execute(
+                    "ALTER TABLE rent_wish_posts ADD COLUMN deposit_note VARCHAR(120)");
+        }
     }
 
     private boolean tableExists(String tableName) {

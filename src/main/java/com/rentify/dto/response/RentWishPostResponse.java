@@ -26,6 +26,12 @@ public class RentWishPostResponse {
     /** PICKUP | DELIVERY | EITHER (null when renter didn't specify). */
     private String deliveryPreference;
 
+    /** NONE | CASH | ITEM | FLEXIBLE (null when renter didn't specify). */
+    private String depositPreference;
+
+    /** Optional deposit detail — amount or collateral item. */
+    private String depositNote;
+
     /** 12 or 24 — chosen visibility window. */
     private Integer visibilityHours;
 }

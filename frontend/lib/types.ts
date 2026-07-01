@@ -78,6 +78,8 @@ export interface Listing {
 
 export type DeliveryPreference = 'PICKUP' | 'DELIVERY' | 'EITHER'
 
+export type DepositPreference = 'NONE' | 'CASH' | 'ITEM' | 'FLEXIBLE'
+
 export interface RentWishPost {
   id: number
   title: string
@@ -92,6 +94,8 @@ export interface RentWishPost {
   expiresAt: string
   budgetText?: string | null
   deliveryPreference?: DeliveryPreference | null
+  depositPreference?: DepositPreference | null
+  depositNote?: string | null
   visibilityHours?: 12 | 24
 }
 

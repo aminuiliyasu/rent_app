@@ -5,7 +5,7 @@ export type TranslationKey = keyof typeof en
 const en = {
   // Navbar
   'nav.browse': 'Browse',
-  'nav.rentRequests': 'Rent requests',
+  'nav.rentRequests': 'Request',
   'nav.postListing': 'Post Listing',
   'nav.dashboard': 'Dashboard',
   'nav.messages': 'Messages',
@@ -60,6 +60,37 @@ const en = {
   'hero.stat2Label': 'local-first',
   'hero.stat3Value': '0 Ft',
   'hero.stat3Label': 'platform fee',
+
+  // How it works
+  'howItWorks.titlePrefix': 'How it',
+  'howItWorks.titleHighlight': 'works',
+  'howItWorks.subtitle': 'Four simple steps to rent or earn in {region}',
+  'howItWorks.feeNote': 'No platform fees — agree details in chat, then book.',
+  'howItWorks.forRenters': 'For renters',
+  'howItWorks.forOwners': 'For owners',
+  'howItWorks.step1Title': 'Search locally',
+  'howItWorks.step1Desc':
+    'Browse gear, spaces, and services near you — filter by category, district, or what you need.',
+  'howItWorks.step2Title': 'Message & book',
+  'howItWorks.step2Desc':
+    'Ask questions in the app, agree dates and price, then confirm the booking together.',
+  'howItWorks.step3Title': 'Meet or pick up',
+  'howItWorks.step3Desc':
+    'Collect the item, use the space, or welcome your service provider at the agreed time.',
+  'howItWorks.step4Title': 'Review & repeat',
+  'howItWorks.step4Desc':
+    'Leave feedback after the rental — it helps the community and your next booking.',
+  'howItWorks.owner1Title': 'List in minutes',
+  'howItWorks.owner1Desc': 'Post gear, a space, or a service with photos, rates, and availability.',
+  'howItWorks.owner2Title': 'Get requests',
+  'howItWorks.owner2Desc': 'Renters find your listing, message you, and book when it suits you.',
+  'howItWorks.owner3Title': 'Hand over & earn',
+  'howItWorks.owner3Desc': 'Arrange pickup or a visit — payment terms stay between you and the renter.',
+  'howItWorks.owner4Title': 'Build trust',
+  'howItWorks.owner4Desc': 'Good reviews bring repeat bookings and a stronger local reputation.',
+  'howItWorks.browseCta': 'Browse listings',
+  'howItWorks.listCta': 'List something you own',
+  'howItWorks.safetyLink': 'Safety & trust tips',
 
   // Profile — language
   'profile.myProfile': 'My Profile',
@@ -138,7 +169,7 @@ const en = {
 
 const hu: Record<TranslationKey, string> = {
   'nav.browse': 'Böngészés',
-  'nav.rentRequests': 'Bérleti igények',
+  'nav.rentRequests': 'Kérés',
   'nav.postListing': 'Hirdetés feladása',
   'nav.dashboard': 'Irányítópult',
   'nav.messages': 'Üzenetek',
@@ -192,6 +223,36 @@ const hu: Record<TranslationKey, string> = {
   'hero.stat2Label': 'helyi fókusz',
   'hero.stat3Value': '0 Ft',
   'hero.stat3Label': 'platformdíj',
+
+  'howItWorks.titlePrefix': 'Hogyan',
+  'howItWorks.titleHighlight': 'működik',
+  'howItWorks.subtitle': 'Négy egyszerű lépés bérléshez vagy keresethez itt: {region}',
+  'howItWorks.feeNote': 'Nincs platformdíj — egyeztess üzenetben, aztán foglalj.',
+  'howItWorks.forRenters': 'Bérlőknek',
+  'howItWorks.forOwners': 'Tulajdonosoknak',
+  'howItWorks.step1Title': 'Keress helyben',
+  'howItWorks.step1Desc':
+    'Böngéssz felszerelés, helyiség és szolgáltatás hirdetéseket — szűrj kategória vagy kerület szerint.',
+  'howItWorks.step2Title': 'Írj és foglalj',
+  'howItWorks.step2Desc':
+    'Kérdezz az alkalmazásban, egyezz meg időpontban és árban, majd erősítsd meg a foglalást.',
+  'howItWorks.step3Title': 'Találkozz vagy vedd át',
+  'howItWorks.step3Desc':
+    'Vedd át a tárgyat, használd a helyet, vagy fogadd a szolgáltatót a megbeszélt időben.',
+  'howItWorks.step4Title': 'Értékelj és térj vissza',
+  'howItWorks.step4Desc':
+    'Ossz meg visszajelzést a bérlés után — ez segít a közösségnek és a következő foglalásnak.',
+  'howItWorks.owner1Title': 'Add fel percek alatt',
+  'howItWorks.owner1Desc': 'Tárgy, hely vagy szolgáltatás — fotók, árak és elérhetőség.',
+  'howItWorks.owner2Title': 'Kapj megkereséseket',
+  'howItWorks.owner2Desc': 'A bérlők megtalálnak, üzennek, és foglalnak, ha neked is megfelel.',
+  'howItWorks.owner3Title': 'Add át és keress',
+  'howItWorks.owner3Desc': 'Egyeztess átvételt vagy látogatást — a fizetés köztetek marad.',
+  'howItWorks.owner4Title': 'Építs bizalmat',
+  'howItWorks.owner4Desc': 'A jó értékelések ismétlődő foglalásokat és erős helyi hírnevet hoznak.',
+  'howItWorks.browseCta': 'Hirdetések böngészése',
+  'howItWorks.listCta': 'Add fel, amid van',
+  'howItWorks.safetyLink': 'Biztonság és bizalom',
 
   'profile.myProfile': 'Profilom',
   'profile.languageTitle': 'Platform nyelve',

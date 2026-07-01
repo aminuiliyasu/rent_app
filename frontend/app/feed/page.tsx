@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import api from '@/lib/api'
-import { RentWishPost, Listing, ListingStatus, DeliveryPreference } from '@/lib/types'
+import { RentWishPost, Listing, ListingStatus, DeliveryPreference, DepositPreference } from '@/lib/types'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
 import {
@@ -18,11 +18,15 @@ import {
   CurrencyDollarIcon,
   TruckIcon,
   ShoppingBagIcon,
+  BanknotesIcon,
+  KeyIcon,
+  NoSymbolIcon,
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 
 const BUDGET_MAX_CHARS = 280
+const DEPOSIT_NOTE_MAX_CHARS = 120
 
 type RentWishVisibilityHours = 12 | 24
 
@@ -37,10 +41,68 @@ const DELIVERY_OPTIONS: { value: DeliveryPreference; label: string; icon: typeof
   { value: 'EITHER', label: 'Either works', icon: ChatBubbleLeftRightIcon },
 ]
 
+const DEPOSIT_OPTIONS: { value: DepositPreference; label: string; icon: typeof BanknotesIcon }[] = [
+  { value: 'NONE', label: 'Prefer no deposit', icon: NoSymbolIcon },
+  { value: 'CASH', label: 'Cash deposit OK', icon: BanknotesIcon },
+  { value: 'ITEM', label: 'Item deposit OK', icon: KeyIcon },
+  { value: 'FLEXIBLE', label: 'Discuss in chat', icon: ChatBubbleLeftRightIcon },
+]
+
 function deliveryLabel(pref: DeliveryPreference | null | undefined): string | null {
   if (!pref) return null
   return DELIVERY_OPTIONS.find((d) => d.value === pref)?.label ?? null
 }
+
+const DEPOSIT_BADGE_LABELS: Record<DepositPreference, string> = {
+  NONE: 'No deposit',
+  CASH: 'Cash deposit',
+  ITEM: 'Item deposit',
+  FLEXIBLE: 'Flexible',
+}
+
+function depositBadgeText(pref: DepositPreference, note?: string | null): string {
+  const base = DEPOSIT_BADGE_LABELS[pref]
+  const trimmed = note?.trim()
+  if (trimmed && (pref === 'CASH' || pref === 'ITEM')) {
+    return `${base} · ${trimmed}`
+  }
+  return base
+}
+
+function depositIcon(pref: DepositPreference | null | undefined) {
+  if (!pref) return BanknotesIcon
+  return DEPOSIT_OPTIONS.find((d) => d.value === pref)?.icon ?? BanknotesIcon
+}
+
+const DEPOSIT_VALUES = new Set<DepositPreference>(['NONE', 'CASH', 'ITEM', 'FLEXIBLE'])
+
+function asDepositPreference(raw: unknown): DepositPreference | null {
+  if (typeof raw !== 'string' || !raw.trim()) return null
+  const upper = raw.trim().toUpperCase() as DepositPreference
+  return DEPOSIT_VALUES.has(upper) ? upper : null
+}
+
+type RawRentWishPost = RentWishPost & {
+  deposit_preference?: string | null
+  deposit_note?: string | null
+  delivery_preference?: string | null
+  budget_text?: string | null
+}
+
+function normalizeRentWishPost(raw: RawRentWishPost): RentWishPost {
+  return {
+    ...raw,
+    budgetText: raw.budgetText ?? raw.budget_text ?? null,
+    deliveryPreference: (raw.deliveryPreference ?? raw.delivery_preference ?? null) as
+      | DeliveryPreference
+      | null,
+    depositPreference: asDepositPreference(raw.depositPreference ?? raw.deposit_preference),
+    depositNote: raw.depositNote ?? raw.deposit_note ?? null,
+  }
+}
+
+const metaPillClass =
+  'inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-semibold leading-tight'
 
 /** Joins district · city · country, removing duplicates and empty parts. Falls back to legacy `location`. */
 function formatPostLocation(post: RentWishPost): string | null {
@@ -83,6 +145,8 @@ export default function FeedPage() {
   const [country, setCountry] = useState('')
   const [budgetText, setBudgetText] = useState('')
   const [deliveryPreference, setDeliveryPreference] = useState<DeliveryPreference | ''>('')
+  const [depositPreference, setDepositPreference] = useState<DepositPreference | ''>('')
+  const [depositNote, setDepositNote] = useState('')
   const [visibilityHours, setVisibilityHours] = useState<RentWishVisibilityHours>(12)
 
   const [replyTarget, setReplyTarget] = useState<RentWishPost | null>(null)
@@ -95,7 +159,8 @@ export default function FeedPage() {
     setLoading(true)
     try {
       const res = await api.get('/rent-requests/posts?page=0&size=50')
-      setPosts(res.data.content || [])
+      const content = (res.data.content || []) as RawRentWishPost[]
+      setPosts(content.map(normalizeRentWishPost))
     } catch {
       toast.error('Could not load rent requests')
       setPosts([])
@@ -124,6 +189,11 @@ export default function FeedPage() {
         country: country.trim() || undefined,
         budgetText: budgetText.trim() || undefined,
         deliveryPreference: deliveryPreference || undefined,
+        depositPreference: depositPreference || undefined,
+        depositNote:
+          depositNote.trim() && (depositPreference === 'CASH' || depositPreference === 'ITEM')
+            ? depositNote.trim()
+            : undefined,
         visibilityHours,
       })
       toast.success(`Posted — visible for ${visibilityHours} hours`)
@@ -134,6 +204,8 @@ export default function FeedPage() {
       setCountry('')
       setBudgetText('')
       setDeliveryPreference('')
+      setDepositPreference('')
+      setDepositNote('')
       await loadPosts()
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.data) {
@@ -337,7 +409,7 @@ export default function FeedPage() {
               <textarea
                 id="rent-request-budget"
                 name="budgetText"
-                placeholder="Price, currency and total period of time / duration"
+                placeholder="e.g. 25,000 HUF total for 2 days"
                 value={budgetText}
                 onChange={(e) => setBudgetText(e.target.value)}
                 maxLength={BUDGET_MAX_CHARS}
@@ -346,7 +418,77 @@ export default function FeedPage() {
                 aria-describedby="rent-request-budget-hint"
               />
               <p id="rent-request-budget-hint" className="text-xs text-gray-500 dark:text-gray-400">
-                Write your budget in plain words — e.g. &quot;80 USD total for 3 days&quot;. ({budgetText.length}/{BUDGET_MAX_CHARS})
+                Rental price and duration only — use deposit options below for security terms. ({budgetText.length}/
+                {BUDGET_MAX_CHARS})
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <span className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-200">
+                <BanknotesIcon className="h-5 w-5 text-amber-500" aria-hidden />
+                Deposit preference{' '}
+                <span className="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+              </span>
+              <div
+                role="radiogroup"
+                aria-label="Deposit preference"
+                className="flex flex-wrap gap-2"
+              >
+                {DEPOSIT_OPTIONS.map((opt) => {
+                  const Icon = opt.icon
+                  const active = depositPreference === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => {
+                        const next = active ? '' : opt.value
+                        setDepositPreference(next)
+                        if (next !== 'CASH' && next !== 'ITEM') {
+                          setDepositNote('')
+                        }
+                      }}
+                      className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${
+                        active
+                          ? 'bg-amber-600 border-amber-600 text-white shadow'
+                          : 'bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:border-amber-400 hover:text-amber-600 dark:hover:text-amber-300'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" aria-hidden />
+                      {opt.label}
+                    </button>
+                  )
+                })}
+              </div>
+              {(depositPreference === 'CASH' || depositPreference === 'ITEM') && (
+                <div className="space-y-1.5">
+                  <label htmlFor="rent-request-deposit-note" className="sr-only">
+                    Deposit details
+                  </label>
+                  <input
+                    id="rent-request-deposit-note"
+                    name="depositNote"
+                    type="text"
+                    placeholder={
+                      depositPreference === 'CASH'
+                        ? 'e.g. up to 10,000 HUF cash deposit'
+                        : 'e.g. ID or laptop as collateral'
+                    }
+                    value={depositNote}
+                    onChange={(e) => setDepositNote(e.target.value)}
+                    maxLength={DEPOSIT_NOTE_MAX_CHARS}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    aria-describedby="rent-request-deposit-note-hint"
+                  />
+                  <p id="rent-request-deposit-note-hint" className="text-xs text-gray-500 dark:text-gray-400">
+                    Optional detail for owners. ({depositNote.length}/{DEPOSIT_NOTE_MAX_CHARS})
+                  </p>
+                </div>
+              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Tap again to clear. Helps owners know what security you&apos;re OK with before they reply.
               </p>
             </div>
 
@@ -475,22 +617,43 @@ export default function FeedPage() {
                   {post.description && (
                     <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 whitespace-pre-wrap">{post.description}</p>
                   )}
-                  {(post.budgetText || post.deliveryPreference) && (
-                    <div className="flex flex-wrap items-start gap-2 mb-3">
-                      {post.budgetText && (
-                        <span className="inline-flex items-center gap-1.5 max-w-full rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 text-xs font-semibold">
-                          <CurrencyDollarIcon className="h-4 w-4 shrink-0" />
-                          <span className="whitespace-pre-wrap break-words font-normal">{post.budgetText}</span>
+                  {(post.budgetText || post.depositPreference || post.deliveryPreference) && (
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      {(post.budgetText || post.depositPreference) && (
+                        <span className="inline-flex flex-wrap items-center gap-1.5">
+                          {post.budgetText && (
+                            <span
+                              className={`${metaPillClass} max-w-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300`}
+                            >
+                              <CurrencyDollarIcon className="h-3.5 w-3.5 shrink-0" />
+                              <span className="whitespace-pre-wrap break-words font-normal">{post.budgetText}</span>
+                            </span>
+                          )}
+                          {post.depositPreference && (
+                            <span
+                              className={`${metaPillClass} max-w-full bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200`}
+                            >
+                              {(() => {
+                                const DepIcon = depositIcon(post.depositPreference)
+                                return <DepIcon className="h-3.5 w-3.5 shrink-0" />
+                              })()}
+                              <span className="font-normal whitespace-pre-wrap break-words">
+                                {depositBadgeText(post.depositPreference, post.depositNote)}
+                              </span>
+                            </span>
+                          )}
                         </span>
                       )}
                       {post.deliveryPreference && (
-                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 text-xs font-semibold">
+                        <span
+                          className={`${metaPillClass} bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300`}
+                        >
                           {post.deliveryPreference === 'DELIVERY' ? (
-                            <TruckIcon className="h-4 w-4" />
+                            <TruckIcon className="h-3.5 w-3.5 shrink-0" />
                           ) : post.deliveryPreference === 'PICKUP' ? (
-                            <ShoppingBagIcon className="h-4 w-4" />
+                            <ShoppingBagIcon className="h-3.5 w-3.5 shrink-0" />
                           ) : (
-                            <ChatBubbleLeftRightIcon className="h-4 w-4" />
+                            <ChatBubbleLeftRightIcon className="h-3.5 w-3.5 shrink-0" />
                           )}
                           {deliveryLabel(post.deliveryPreference)}
                         </span>

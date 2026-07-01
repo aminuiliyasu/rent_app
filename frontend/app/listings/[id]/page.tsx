@@ -27,6 +27,7 @@ import {
 } from '@/lib/listingCurrency'
 import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
 import { formatListingLocationLine } from '@/lib/listingLocation'
+import { formatAvailableDaysLabel } from '@/lib/availableDays'
 import { galleryImageUrls } from '@/lib/listingImageUrl'
 import { isListingOwner } from '@/lib/listingOwner'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline'
@@ -144,6 +145,7 @@ export default function ListingDetailPage() {
   const cardPrice = formatListingCardPrice(listing, presentation)
   const descriptionDisplay = stripLegacyPricingAppendix(listing.description)
   const locationLine = formatListingLocationLine(listing)
+  const availableDaysLabel = formatAvailableDaysLabel(listing.availableDays)
   const isOwner = isListingOwner(user, listing)
 
   return (
@@ -293,7 +295,18 @@ export default function ListingDetailPage() {
                       Service Area: <span className="font-bold">{listing.serviceArea}</span>
                     </p>
                   )}
+                  {availableDaysLabel && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      Available: <span className="font-bold">{availableDaysLabel}</span>
+                    </p>
+                  )}
                 </div>
+              )}
+
+              {listing.type !== 'WORKER' && availableDaysLabel && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium mb-6">
+                  Available: <span className="font-bold text-gray-800 dark:text-gray-200">{availableDaysLabel}</span>
+                </p>
               )}
 
               {/* Rates */}

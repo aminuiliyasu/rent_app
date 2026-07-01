@@ -5,6 +5,7 @@ import com.rentify.dto.response.RentWishPostResponse;
 import com.rentify.model.RentWishPost;
 import com.rentify.model.User;
 import com.rentify.model.enums.DeliveryPreference;
+import com.rentify.model.enums.DepositPreference;
 import com.rentify.repository.RentWishPostRepository;
 import com.rentify.repository.UserRepository;
 import com.rentify.util.CurrentUser;
@@ -65,6 +66,8 @@ public class RentWishPostService {
 
         post.setBudgetText(trimToNull(request.getBudgetText()));
         post.setDeliveryPreference(parseDeliveryPreference(request.getDeliveryPreference()));
+        post.setDepositPreference(parseDepositPreference(request.getDepositPreference()));
+        post.setDepositNote(trimToNull(request.getDepositNote()));
         post.setVisibilityHours(normalizeVisibilityHours(request.getVisibilityHours()));
 
         RentWishPost saved = rentWishPostRepository.save(post);
@@ -115,6 +118,15 @@ public class RentWishPostService {
         }
     }
 
+    private DepositPreference parseDepositPreference(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return DepositPreference.valueOf(raw.trim().toUpperCase());
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
     private RentWishPostResponse toResponse(RentWishPost post) {
         int hours = resolveVisibilityHours(post);
         return RentWishPostResponse.builder()
@@ -131,6 +143,8 @@ public class RentWishPostService {
                 .expiresAt(post.getCreatedAt().plusHours(hours))
                 .budgetText(post.getBudgetText())
                 .deliveryPreference(post.getDeliveryPreference() != null ? post.getDeliveryPreference().name() : null)
+                .depositPreference(post.getDepositPreference() != null ? post.getDepositPreference().name() : null)
+                .depositNote(post.getDepositNote())
                 .visibilityHours(hours)
                 .build();
     }

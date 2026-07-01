@@ -6,7 +6,7 @@ const CATEGORY_NAMES_EN: Record<string, string> = {
   electronics: 'Electronics',
   'home-living': 'Home & Living',
   apartment: 'Spaces',
-  services: 'Professional Services',
+  services: 'Services',
   vehicles: 'Scooter & Bikes',
   'pet-lovers': 'Pet Lovers',
   socials: 'Socials',
@@ -19,7 +19,7 @@ const CATEGORY_NAMES_HU: Record<string, string> = {
   electronics: 'Elektronika',
   'home-living': 'Otthon és lakás',
   apartment: 'Helyiségek',
-  services: 'Szakmai szolgáltatások',
+  services: 'Szolgáltatások',
   vehicles: 'Rollerek és biciklik',
   'pet-lovers': 'Állatbarát',
   socials: 'Socialok',
@@ -59,6 +59,9 @@ export function localizeCategoryName(name: string | undefined, locale: Locale): 
   }
   if (normalized === 'Parties&Events') {
     return getCategoryDisplayName('socials', locale, name)
+  }
+  if (normalized === 'Professional Services') {
+    return getCategoryDisplayName('services', locale, name)
   }
   return name
 }

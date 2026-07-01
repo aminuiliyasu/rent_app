@@ -30,7 +30,7 @@ const en: Record<string, Omit<AboutCategoryEntry, 'slug'>> = {
     examples: ['Desk or studio space', 'Storage rooms', 'Parking spots', 'Workshop corners', 'Pop-up or short-term use areas'],
   },
   services: {
-    title: 'Professional Services',
+    title: 'Services',
     summary: 'Skilled people you can book by the hour or for a fixed job.',
     examples: ['Photographers and videographers', 'Cleaners and organizers', 'Tutors and coaches', 'Handymen and technicians', 'Musicians and DJs'],
   },
@@ -78,7 +78,7 @@ const hu: Record<string, Omit<AboutCategoryEntry, 'slug'>> = {
     examples: ['Asztal vagy stúdiósarok', 'Tárolók', 'Parkolóhelyek', 'Műhelysarok', 'Rövid távú vagy pop-up terek'],
   },
   services: {
-    title: 'Szakmai szolgáltatások',
+    title: 'Szolgáltatások',
     summary: 'Szakemberek óradíjra vagy meghatározott munkára foglalhatók.',
     examples: ['Fotósok és videósok', 'Takarítók', 'Magántanárok és coachok', 'Szerelők', 'Zenészek és DJ-k'],
   },

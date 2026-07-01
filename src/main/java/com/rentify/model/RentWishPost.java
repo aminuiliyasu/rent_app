@@ -1,6 +1,7 @@
 package com.rentify.model;
 
 import com.rentify.model.enums.DeliveryPreference;
+import com.rentify.model.enums.DepositPreference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -46,6 +47,15 @@ public class RentWishPost extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "delivery_preference", length = 16)
     private DeliveryPreference deliveryPreference;
+
+    /** What kind of deposit the renter is willing to accept. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "deposit_preference", length = 16)
+    private DepositPreference depositPreference;
+
+    /** Optional detail when deposit is cash or item — e.g. amount or collateral item. */
+    @Column(name = "deposit_note", length = 120)
+    private String depositNote;
 
     /** How long the post stays visible in the feed (12 or 24). */
     @Column(name = "visibility_hours", nullable = false, columnDefinition = "integer default 24")

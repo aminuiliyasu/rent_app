@@ -6,7 +6,7 @@ export const SEED_CATEGORY_DEFINITIONS: ReadonlyArray<{ name: string; slug: stri
   { name: 'Electronics', slug: 'electronics' },
   { name: 'Home & Living', slug: 'home-living' },
   { name: 'Spaces', slug: 'apartment' },
-  { name: 'Professional Services', slug: 'services' },
+  { name: 'Services', slug: 'services' },
   { name: 'Scooter & Bikes', slug: 'vehicles' },
   { name: 'Pet Lovers', slug: 'pet-lovers' },
   { name: 'Socials', slug: 'socials' },

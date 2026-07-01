@@ -58,7 +58,7 @@ public class CategorySeedService {
         ensureCategory("Electronics", "electronics");
         ensureCategory("Home & Living", "home-living");
         ensureCategory("Spaces", "apartment");
-        ensureCategory("Professional Services", "services");
+        ensureCategory("Services", "services");
         ensureCategory("Scooter & Bikes", "vehicles");
         ensureCategory("Pet Lovers", "pet-lovers");
         ensureCategory("Socials", "socials");

@@ -141,6 +141,17 @@ export async function buildListingPayload(
     return null
   }
 
+  if (formData.type === ListingType.WORKER) {
+    if (!formData.workerProfession?.trim()) {
+      toast.error('Please enter your profession')
+      return null
+    }
+    if (parsedHour.amount == null) {
+      toast.error('Please enter an hourly rate for your service')
+      return null
+    }
+  }
+
   const catVal = formData.categoryId
   if (!catVal) {
     toast.error('Please select a category')
