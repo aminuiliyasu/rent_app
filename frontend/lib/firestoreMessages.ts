@@ -37,21 +37,6 @@ export function mergeMessageLists(a: MessageResponse[], b: MessageResponse[]): M
   return Array.from(map.values()).sort((x, y) => new Date(x.createdAt).getTime() - new Date(y.createdAt).getTime())
 }
 
-export function isVoiceMessage(message: Pick<MessageResponse, 'content' | 'attachmentUrl' | 'messageType'>): boolean {
-  if (message.messageType === 'VOICE') return true
-  if (!message.attachmentUrl) return false
-  if ((message.content || '').trim().toLowerCase() === 'voice note') return true
-  const url = message.attachmentUrl.toLowerCase()
-  return (
-    url.includes('voice') ||
-    url.includes('.webm') ||
-    url.includes('.wav') ||
-    url.includes('.mp3') ||
-    url.includes('.mpeg') ||
-    url.includes('/upload/')
-  )
-}
-
 async function loadFirestoreMessagesOnly(bookingId: number | string): Promise<MessageResponse[]> {
   const key = normalizeBookingKey(bookingId)
   const variants = collectBookingIdVariants(bookingId)
@@ -93,8 +78,7 @@ export async function sendMessageToFirestore(params: {
 }): Promise<MessageResponse> {
   const bookingKey = normalizeBookingKey(params.bookingId)
   const now = new Date().toISOString()
-  const messageType =
-    params.messageType || (params.attachmentUrl ? 'VOICE' : 'TEXT')
+  const messageType = params.messageType || 'TEXT'
 
   const payload = {
     bookingKey,
@@ -205,9 +189,7 @@ function mapMessageDoc(id: string, data: Record<string, unknown>): MessageRespon
   const messageType =
     data.messageType === 'VOICE' || data.messageType === 'TEXT'
       ? (data.messageType as 'TEXT' | 'VOICE')
-      : data.attachmentUrl
-        ? 'VOICE'
-        : 'TEXT'
+      : 'TEXT'
 
   return {
     id,

@@ -32,7 +32,7 @@ const SECTIONS: PrivacySection[] = [
       'Profile information — such as an avatar photo and account role (renter, owner, or both).',
       'Listing content — descriptions, photos, prices, categories, location details (address, city, and map coordinates where you add them), and availability you publish as an owner.',
       'Booking information — dates, status, messages linked to a booking, and reviews you submit after a rental.',
-      'Communications — text messages, voice-note attachments, and call activity (voice or video) connected to bookings or rent-request conversations.',
+      'Communications — text messages and call activity (voice or video) connected to bookings or rent-request conversations.',
       'Rent-request posts — short descriptions you publish when looking for an item or service.',
       'Sign-in with Google — if you choose Google login, we receive basic profile information from Google (such as your name and email) and store a Google account identifier to link your account.',
       'Support and security data — such as password-reset tokens, server logs, and technical information needed to keep the service secure and reliable.',
@@ -79,7 +79,7 @@ const SECTIONS: PrivacySection[] = [
     ],
     bullets: [
       'With other users — your display name, listings, reviews, and booking-related messages are visible to the people you interact with on Rhentify, as needed for the marketplace to work.',
-      'With service providers — trusted vendors who help us operate the platform, such as hosting providers, email delivery for password resets, and file storage for uploaded photos and voice notes. They may access data only to perform services for us and must protect it.',
+      'With service providers — trusted vendors who help us operate the platform, such as hosting providers, email delivery for password resets, and file storage for uploaded photos. They may access data only to perform services for us and must protect it.',
       'With Google — if you sign in with Google, Google\'s own privacy policy applies to information they collect when you use their sign-in service.',
       'For legal reasons — if required by law, court order, or to protect the rights, safety, and security of Rhentify, our users, or others.',
       'Business transfers — if Rhentify is involved in a merger, acquisition, or asset sale, personal data may transfer as part of that transaction, subject to this policy.',

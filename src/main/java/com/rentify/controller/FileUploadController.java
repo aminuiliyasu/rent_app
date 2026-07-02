@@ -65,20 +65,4 @@ public class FileUploadController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    
-    @PostMapping("/voice")
-    public ResponseEntity<Map<String, String>> uploadVoiceNote(
-            @RequestParam("file") MultipartFile file) {
-        try {
-            String url = fileUploadService.uploadFile(file, "voice");
-            Map<String, String> response = new HashMap<>();
-            response.put("url", url);
-            response.put("message", "Voice note uploaded successfully");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
-    }
 }

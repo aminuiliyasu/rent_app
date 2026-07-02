@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
-import { SparklesIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import BrandLogo from '@/components/BrandLogo'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -57,15 +58,7 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8 animate-slide-down">
-          <Link href="/" className="inline-flex items-center space-x-2 mb-4">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl blur opacity-75"></div>
-              <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-xl">
-                <SparklesIcon className="h-6 w-6 text-white" />
-              </div>
-            </div>
-            <span className="text-2xl font-bold gradient-text">Rhentify</span>
-          </Link>
+          <BrandLogo className="justify-center mb-4 mx-auto" />
           <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
             Welcome back!
           </h2>

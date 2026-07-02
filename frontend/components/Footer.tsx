@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { SparklesIcon } from '@heroicons/react/24/outline'
+import BrandLogo from '@/components/BrandLogo'
 import SocialLinks from '@/components/SocialLinks'
 import { useLanguage } from '@/contexts/LanguageContext'
 
@@ -14,12 +14,7 @@ export default function Footer() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div className="col-span-1 md:col-span-1">
-            <Link href="/" className="inline-flex items-center space-x-3 mb-6 group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-stone-700 bg-stone-900/50">
-                <SparklesIcon className="h-5 w-5 text-accent-light" />
-              </div>
-              <span className="font-serif text-2xl font-semibold text-stone-100">Rhentify</span>
-            </Link>
+            <BrandLogo onDark className="mb-6" />
             <p className="text-stone-400 text-sm leading-relaxed mb-4">{t('footer.tagline')}</p>
             <p className="text-stone-500 text-sm leading-relaxed mb-6">{t('footer.subtitle')}</p>
             <Link

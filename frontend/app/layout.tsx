@@ -25,8 +25,9 @@ export const metadata: Metadata = {
   description:
     'Rent gear, spaces, and skilled people in Budapest. Local listings, secure messaging, and no platform fees.',
   icons: {
-    icon: '/logo/rhentify-icon.png',
-    apple: '/logo/rhentify-icon.png',
+    icon: [{ url: '/logo/rhentify-icon.svg', type: 'image/svg+xml' }],
+    apple: '/logo/rhentify-icon.svg',
+    shortcut: '/logo/rhentify-icon.svg',
   },
   openGraph: {
     title: 'Rhentify — Rent anything. Hire locally.',

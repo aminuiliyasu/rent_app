@@ -13,7 +13,6 @@ import toast from 'react-hot-toast'
 import {
   ChatBubbleLeftRightIcon,
   PaperAirplaneIcon,
-  MicrophoneIcon,
   MagnifyingGlassIcon,
   StarIcon as StarIconOutline,
   ChevronLeftIcon,
@@ -124,12 +123,9 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState('')
   const [bookingsLoading, setBookingsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
-  const [isRecording, setIsRecording] = useState(false)
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const [search, setSearch] = useState('')
 
   const messagesContainerRef = useRef<HTMLDivElement>(null)
-  const audioChunksRef = useRef<Blob[]>([])
   const markedReadForRef = useRef<Set<number>>(new Set())
 
   useEffect(() => {
@@ -324,63 +320,6 @@ export default function MessagesPage() {
       )
     } finally {
       setIsSending(false)
-    }
-  }
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream)
-      audioChunksRef.current = []
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) audioChunksRef.current.push(event.data)
-      }
-      recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        await sendVoiceNote(audioBlob)
-        stream.getTracks().forEach((t) => t.stop())
-      }
-      recorder.start()
-      setMediaRecorder(recorder)
-      setIsRecording(true)
-    } catch (error) {
-      console.error('Error starting recording:', error)
-      toast.error('Failed to start recording. Please allow microphone access.')
-    }
-  }
-
-  const stopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop()
-      setIsRecording(false)
-      setMediaRecorder(null)
-    }
-  }
-
-  const sendVoiceNote = async (audioBlob: Blob) => {
-    if (!selectedBooking) return
-    try {
-      const formData = new FormData()
-      formData.append('file', audioBlob, `voice-note-${Date.now()}.webm`)
-      const uploadResponse = await api.post('/upload/voice', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      if (!uploadResponse.data?.url) throw new Error('Upload failed — no URL returned')
-
-      const messageResponse = await api.post('/messages', {
-        bookingId: selectedBooking.id,
-        content: 'Voice note',
-        attachmentUrl: uploadResponse.data.url,
-      })
-      const created: MessageResponse | undefined = messageResponse.data
-      if (created?.id != null) {
-        setMessages((prev) => dedupeMessagesById([...prev, created]))
-      }
-      toast.success('Voice note sent')
-    } catch (error: unknown) {
-      console.error('Error sending voice note:', error)
-      const err = error as { response?: { data?: { error?: string } }; message?: string }
-      toast.error(err.response?.data?.error || err.message || 'Failed to send voice note')
     }
   }
 
@@ -623,10 +562,6 @@ export default function MessagesPage() {
                           <div className="space-y-2">
                             {group.items.map((message) => {
                               const isMine = message.senderId === user?.id
-                              const isVoice =
-                                !!message.attachmentUrl &&
-                                (message.attachmentUrl.includes('voice') ||
-                                  message.content === 'Voice note')
                               const isLiveReply = message.messageKind === 'LIVE_REQUEST_REPLY'
                               return (
                                 <div
@@ -651,22 +586,9 @@ export default function MessagesPage() {
                                         live request reply
                                       </p>
                                     )}
-                                    {isVoice ? (
-                                      <audio
-                                        controls
-                                        className="max-w-full"
-                                        style={{ maxWidth: '260px' }}
-                                      >
-                                        <source src={message.attachmentUrl} type="audio/webm" />
-                                        <source src={message.attachmentUrl} type="audio/mpeg" />
-                                        <source src={message.attachmentUrl} type="audio/wav" />
-                                        Your browser does not support audio playback.
-                                      </audio>
-                                    ) : (
-                                      <p className="text-base leading-relaxed whitespace-pre-wrap break-words">
-                                        {message.content}
-                                      </p>
-                                    )}
+                                    <p className="text-base leading-relaxed whitespace-pre-wrap break-words">
+                                      {message.content}
+                                    </p>
                                     <p
                                       className={`text-[10px] mt-1 text-right ${
                                         isMine
@@ -701,28 +623,6 @@ export default function MessagesPage() {
                   {/* Composer */}
                   <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shrink-0">
                     <div className="flex items-end gap-2">
-                      <button
-                        type="button"
-                        onMouseDown={startRecording}
-                        onMouseUp={stopRecording}
-                        onMouseLeave={() => isRecording && stopRecording()}
-                        onTouchStart={(e) => {
-                          e.preventDefault()
-                          void startRecording()
-                        }}
-                        onTouchEnd={(e) => {
-                          e.preventDefault()
-                          stopRecording()
-                        }}
-                        title="Hold to record voice note"
-                        className={`shrink-0 inline-flex items-center justify-center h-11 w-11 rounded-full transition-colors ${
-                          isRecording
-                            ? 'bg-red-600 text-white animate-pulse'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        <MicrophoneIcon className="h-5 w-5" />
-                      </button>
                       <textarea
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
@@ -747,12 +647,6 @@ export default function MessagesPage() {
                         <PaperAirplaneIcon className="h-5 w-5" />
                       </button>
                     </div>
-                    {isRecording && (
-                      <p className="text-xs text-red-500 mt-2 flex items-center gap-2 px-1">
-                        <span className="inline-block h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                        Recording… release to send
-                      </p>
-                    )}
                   </div>
               </section>
             )}

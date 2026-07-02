@@ -1,4 +1,4 @@
-import { getApiBaseUrl } from './api'
+import { getUploadBaseUrl } from './api'
 
 /**
  * Upload multipart files using `fetch` so the browser sets
@@ -10,7 +10,7 @@ export async function uploadImage(file: File, type: 'profile' | 'listing' = 'lis
   formData.append('file', file)
 
   const path = type === 'profile' ? '/upload/profile-picture' : '/upload/listing-image'
-  const base = getApiBaseUrl().replace(/\/$/, '')
+  const base = getUploadBaseUrl().replace(/\/$/, '')
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
 
   const res = await fetch(`${base}${path}`, {

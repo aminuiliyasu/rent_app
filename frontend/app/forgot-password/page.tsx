@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import api from '@/lib/api'
 import toast from 'react-hot-toast'
-import { SparklesIcon } from '@heroicons/react/24/outline'
+import BrandLogo from '@/components/BrandLogo'
 import { SUPPORT_EMAIL } from '@/lib/site'
 
 export default function ForgotPasswordPage() {
@@ -32,12 +32,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center py-12 px-4">
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center space-x-2 mb-4">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-xl">
-              <SparklesIcon className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold gradient-text">Rhentify</span>
-          </Link>
+          <BrandLogo className="justify-center mb-4 mx-auto" />
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Forgot password?</h1>
           <p className="text-gray-600 dark:text-gray-400">
             Enter your email and we&apos;ll send you a reset link.

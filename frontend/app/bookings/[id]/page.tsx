@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { toAppListingImageUrl } from '@/lib/listingImageUrl'
 import Link from 'next/link'
@@ -53,9 +53,6 @@ export default function BookingDetailPage() {
   const [newMessage, setNewMessage] = useState('')
   const [sendingMessage, setSendingMessage] = useState(false)
   const [activeCall, setActiveCall] = useState<Call | null>(null)
-  const [isRecording, setIsRecording] = useState(false)
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
-  const audioChunksRef = useRef<Blob[]>([])
 
   useEffect(() => {
     if (authLoading) return
@@ -144,72 +141,6 @@ export default function BookingDetailPage() {
       toast.error('Failed to send message')
     } finally {
       setSendingMessage(false)
-    }
-  }
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream)
-      audioChunksRef.current = []
-      
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data)
-        }
-      }
-      
-      recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        await sendVoiceNote(audioBlob)
-        stream.getTracks().forEach(track => track.stop())
-      }
-      
-      recorder.start()
-      setMediaRecorder(recorder)
-      setIsRecording(true)
-    } catch (error) {
-      console.error('Error starting recording:', error)
-      toast.error('Failed to start recording. Please allow microphone access.')
-    }
-  }
-
-  const stopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop()
-      setIsRecording(false)
-      setMediaRecorder(null)
-    }
-  }
-
-  const sendVoiceNote = async (audioBlob: Blob) => {
-    if (!booking) return
-
-    try {
-      const formData = new FormData()
-      formData.append('file', audioBlob, `voice-note-${Date.now()}.webm`)
-
-      const uploadResponse = await api.post('/upload/voice', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-
-      if (!uploadResponse.data.url) {
-        throw new Error('Upload failed - no URL returned')
-      }
-
-      await api.post('/messages', {
-        bookingId: booking.id,
-        receiverId: user?.id === booking.renterId ? booking.ownerId : booking.renterId,
-        content: 'Voice note',
-        attachmentUrl: uploadResponse.data.url
-      })
-
-      fetchMessages()
-      toast.success('Voice note sent!')
-    } catch (error: any) {
-      console.error('Error sending voice note:', error)
-      const errorMsg = error.response?.data?.error || error.message || 'Failed to send voice note'
-      toast.error(errorMsg)
     }
   }
 
@@ -619,24 +550,7 @@ export default function BookingDetailPage() {
                                 : 'rounded-bl-md border border-gray-200 bg-white text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white'
                             }`}
                           >
-                            {msg.attachmentUrl && (msg.attachmentUrl.includes('voice') || String(msg.content).includes('Voice note')) ? (
-                              <div className="flex items-center gap-2">
-                                <svg className="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                                <audio controls className="max-w-full" style={{ maxWidth: '250px' }}>
-                                  <source src={msg.attachmentUrl} type="audio/webm" />
-                                  <source src={msg.attachmentUrl} type="audio/mpeg" />
-                                  <source src={msg.attachmentUrl} type="audio/wav" />
-                                </audio>
-                              </div>
-                            ) : (
-                              <p className="text-sm leading-relaxed">{msg.content}</p>
-                            )}
+                            <p className="text-sm leading-relaxed">{msg.content}</p>
                             <p className={`mt-2 text-xs ${mine ? 'text-blue-100/90' : 'text-gray-500 dark:text-gray-400'}`}>
                               {new Date(msg.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                             </p>
@@ -649,53 +563,23 @@ export default function BookingDetailPage() {
               </div>
 
               <form onSubmit={sendMessage} className="space-y-3 border-t border-gray-200 bg-gray-50/80 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:border-gray-700 dark:bg-gray-900/40 sm:px-6 sm:py-5">
-                <div className="flex flex-col gap-3">
+                <div className="flex gap-2">
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder={`Message ${partnerDisplay}…`}
-                    className="input-field w-full rounded-2xl border-0 bg-white text-base sm:text-sm dark:bg-gray-800 min-h-[44px]"
+                    className="input-field flex-1 rounded-2xl border-0 bg-white text-base sm:text-sm dark:bg-gray-800 min-h-[44px]"
                     disabled={sendingMessage}
                   />
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onMouseDown={startRecording}
-                      onMouseUp={stopRecording}
-                      onTouchStart={(e) => {
-                        e.preventDefault()
-                        void startRecording()
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault()
-                        stopRecording()
-                      }}
-                      className={`flex-1 sm:flex-none rounded-2xl px-4 py-3 min-h-[44px] transition-colors touch-manipulation ${
-                        isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-violet-500 text-white hover:bg-violet-600'
-                      }`}
-                      title="Hold to record"
-                      aria-label="Record voice note"
-                    >
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                    <button type="submit" disabled={sendingMessage || !newMessage.trim()} className="btn-primary flex-1 sm:flex-none rounded-2xl px-6 sm:px-8 min-h-[44px]">
-                      Send
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    disabled={sendingMessage || !newMessage.trim()}
+                    className="btn-primary rounded-2xl px-6 sm:px-8 min-h-[44px]"
+                  >
+                    Send
+                  </button>
                 </div>
-                {isRecording && (
-                  <p className="flex items-center gap-2 text-sm text-red-500">
-                    <span className="animate-pulse">●</span>
-                    Recording… release to send
-                  </p>
-                )}
               </form>
             </div>
 

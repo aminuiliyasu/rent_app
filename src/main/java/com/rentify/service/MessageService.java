@@ -31,6 +31,9 @@ public class MessageService {
     
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationService notificationService;
     
     @Transactional
     public MessageResponse sendMessage(SendMessageRequest request) {
@@ -62,6 +65,8 @@ public class MessageService {
         message.setMessageKind(MessageKind.STANDARD);
 
         message = messageRepository.save(message);
+
+        notificationService.notifyNewMessage(message);
         
         return mapToResponse(message);
     }

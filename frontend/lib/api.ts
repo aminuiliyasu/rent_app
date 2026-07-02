@@ -31,6 +31,21 @@ export function getApiBaseUrl(): string {
   return 'http://127.0.0.1:8080/api/v1'
 }
 
+/**
+ * Multipart uploads must not go through the Next.js dev rewrite proxy — it can reset
+ * the connection (ECONNRESET / "socket hang up"). Spring CORS allows localhost origins.
+ */
+export function getUploadBaseUrl(): string {
+  const env = process.env.NEXT_PUBLIC_API_URL
+  if (env && /^https?:\/\//i.test(env)) {
+    return env.replace(/\/$/, '')
+  }
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    return 'http://127.0.0.1:8080/api/v1'
+  }
+  return getApiBaseUrl()
+}
+
 export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',

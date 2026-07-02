@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
 import toast from 'react-hot-toast'
-import { SparklesIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import BrandLogo from '@/components/BrandLogo'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
 function ResetPasswordForm() {
   const router = useRouter()
@@ -112,12 +113,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center py-12 px-4">
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center space-x-2 mb-4">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-xl">
-              <SparklesIcon className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold gradient-text">Rhentify</span>
-          </Link>
+          <BrandLogo className="justify-center mb-4 mx-auto" />
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Set a new password</h1>
         </div>
         <div className="card-glass">

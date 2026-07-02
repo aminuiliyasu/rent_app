@@ -9,7 +9,9 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
-@ConditionalOnExpression("!'${app.aws.s3.bucket-name:}'.isBlank()")
+@ConditionalOnExpression(
+    "!'${app.aws.s3.bucket-name:}'.isBlank() && "
+        + "(!'${app.aws.s3.access-key:}'.isBlank() || !'${AWS_ACCESS_KEY_ID:}'.isBlank())")
 public class AwsS3Config {
 
     @Value("${app.aws.s3.region:us-east-1}")

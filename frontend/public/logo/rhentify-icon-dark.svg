@@ -1,12 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-label="Rhentify icon dark">
   <title>Rhentify icon dark</title>
   <rect width="512" height="512" rx="96" fill="#0f172a"/>
-  <rect x="96" y="96" width="320" height="320" rx="64" stroke="#d4bc8a" stroke-width="12" fill="#0f172a"/>
-  <g transform="translate(256 256)" stroke="#d4bc8a" stroke-width="14" stroke-linecap="round">
-    <path d="M0 -72 L0 72"/>
-    <path d="M-72 0 L72 0"/>
-    <path d="M-51 -51 L51 51"/>
-    <path d="M51 -51 L-51 51"/>
-  </g>
-  <circle cx="256" cy="256" r="16" fill="#d4bc8a"/>
+  <rect x="96" y="96" width="320" height="320" rx="64" stroke="#d4bc8a" stroke-width="10" fill="#0f172a"/>
+  <path fill="#d4bc8a" d="M196 292 L208 248 L252 236 L208 224 L196 180 L184 224 L140 236 L184 248 Z"/>
+  <path fill="#d4bc8a" d="M318 168 L326 136 L358 128 L326 120 L318 88 L310 120 L278 128 L310 136 Z"/>
+  <path fill="#d4bc8a" d="M334 332 L340 308 L364 302 L340 296 L334 272 L328 296 L304 302 L328 308 Z"/>
 </svg>

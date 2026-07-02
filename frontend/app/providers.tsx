@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { CurrencyPresentationProvider } from '@/contexts/CurrencyPresentationContext'
 import { LanguageProvider } from '@/contexts/LanguageContext'
+import { NotificationsProvider } from '@/contexts/NotificationsContext'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -23,7 +24,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <CurrencyPresentationProvider>
           <ThemeProvider>
             <AuthProvider>
-              {children}
+              <NotificationsProvider>
+                {children}
+              </NotificationsProvider>
             </AuthProvider>
           </ThemeProvider>
         </CurrencyPresentationProvider>

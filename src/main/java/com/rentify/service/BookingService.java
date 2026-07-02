@@ -63,6 +63,9 @@ public class BookingService {
     @Autowired
     private MessageService messageService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @Transactional
     public BookingResponse createBooking(CreateBookingRequest request) {
         Long userId = CurrentUser.getCurrentUserId();
@@ -123,7 +126,9 @@ public class BookingService {
         booking.setCurrency(Currency.USD);
         
         booking = bookingRepository.save(booking);
-        
+
+        notificationService.notifyNewBooking(booking);
+
         return mapToResponse(booking);
     }
 
@@ -213,6 +218,7 @@ public class BookingService {
 
         booking = bookingRepository.save(booking);
         messageService.createLiveRequestOpeningMessage(booking);
+        notificationService.notifyRentRequestReply(booking);
 
         return mapToResponse(booking);
     }
@@ -274,7 +280,9 @@ public class BookingService {
         booking.setStatus(BookingStatus.CONFIRMED);
         booking.setConfirmedAt(LocalDateTime.now());
         booking = bookingRepository.save(booking);
-        
+
+        notificationService.notifyBookingConfirmed(booking);
+
         return mapToResponse(booking);
     }
     
@@ -298,7 +306,9 @@ public class BookingService {
         booking.setCancelledAt(LocalDateTime.now());
         booking.setCancellationReason(reason);
         booking = bookingRepository.save(booking);
-        
+
+        notificationService.notifyBookingCancelled(booking, userId);
+
         return mapToResponse(booking);
     }
     
@@ -339,7 +349,7 @@ public class BookingService {
         booking.setStatus(BookingStatus.COMPLETED);
         booking.setCompletedAt(LocalDateTime.now());
         booking = bookingRepository.save(booking);
-        
+
         return mapToResponse(booking);
     }
     

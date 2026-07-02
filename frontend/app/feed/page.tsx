@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
@@ -8,7 +8,10 @@ import Footer from '@/components/Footer'
 import api from '@/lib/api'
 import { RentWishPost, Listing, ListingStatus, DeliveryPreference, DepositPreference } from '@/lib/types'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLanguage } from '@/contexts/LanguageContext'
+import type { TranslationKey } from '@/lib/i18n/translations'
 import { formatDistanceToNow } from 'date-fns'
+import { enUS, hu as huLocale } from 'date-fns/locale'
 import {
   MegaphoneIcon,
   ClockIcon,
@@ -30,48 +33,11 @@ const DEPOSIT_NOTE_MAX_CHARS = 120
 
 type RentWishVisibilityHours = 12 | 24
 
-const VISIBILITY_OPTIONS: { value: RentWishVisibilityHours; label: string }[] = [
-  { value: 12, label: '12 hours' },
-  { value: 24, label: '24 hours' },
-]
-
-const DELIVERY_OPTIONS: { value: DeliveryPreference; label: string; icon: typeof TruckIcon }[] = [
-  { value: 'PICKUP', label: 'Pickup', icon: ShoppingBagIcon },
-  { value: 'DELIVERY', label: 'Delivery', icon: TruckIcon },
-  { value: 'EITHER', label: 'Either works', icon: ChatBubbleLeftRightIcon },
-]
-
-const DEPOSIT_OPTIONS: { value: DepositPreference; label: string; icon: typeof BanknotesIcon }[] = [
-  { value: 'NONE', label: 'Prefer no deposit', icon: NoSymbolIcon },
-  { value: 'CASH', label: 'Cash deposit OK', icon: BanknotesIcon },
-  { value: 'ITEM', label: 'Item deposit OK', icon: KeyIcon },
-  { value: 'FLEXIBLE', label: 'Discuss in chat', icon: ChatBubbleLeftRightIcon },
-]
-
-function deliveryLabel(pref: DeliveryPreference | null | undefined): string | null {
-  if (!pref) return null
-  return DELIVERY_OPTIONS.find((d) => d.value === pref)?.label ?? null
-}
-
-const DEPOSIT_BADGE_LABELS: Record<DepositPreference, string> = {
-  NONE: 'No deposit',
-  CASH: 'Cash deposit',
-  ITEM: 'Item deposit',
-  FLEXIBLE: 'Flexible',
-}
-
-function depositBadgeText(pref: DepositPreference, note?: string | null): string {
-  const base = DEPOSIT_BADGE_LABELS[pref]
-  const trimmed = note?.trim()
-  if (trimmed && (pref === 'CASH' || pref === 'ITEM')) {
-    return `${base} · ${trimmed}`
-  }
-  return base
-}
-
-function depositIcon(pref: DepositPreference | null | undefined) {
-  if (!pref) return BanknotesIcon
-  return DEPOSIT_OPTIONS.find((d) => d.value === pref)?.icon ?? BanknotesIcon
+const DEPOSIT_BADGE_KEYS: Record<DepositPreference, TranslationKey> = {
+  NONE: 'feed.depositBadgeNone',
+  CASH: 'feed.depositBadgeCash',
+  ITEM: 'feed.depositBadgeItem',
+  FLEXIBLE: 'feed.depositBadgeFlexible',
 }
 
 const DEPOSIT_VALUES = new Set<DepositPreference>(['NONE', 'CASH', 'ITEM', 'FLEXIBLE'])
@@ -125,15 +91,9 @@ function formatPostLocation(post: RentWishPost): string | null {
   return dedup.join(', ')
 }
 
-function safeExpiresLabel(iso: string | undefined) {
-  if (!iso) return 'soon'
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return 'soon'
-  return formatDistanceToNow(d, { addSuffix: true })
-}
-
 export default function FeedPage() {
   const { isAuthenticated, user } = useAuth()
+  const { t, locale } = useLanguage()
   const router = useRouter()
   const [posts, setPosts] = useState<RentWishPost[]>([])
   const [loading, setLoading] = useState(true)
@@ -155,6 +115,76 @@ export default function FeedPage() {
   const [listingsLoading, setListingsLoading] = useState(false)
   const [replySending, setReplySending] = useState(false)
 
+  const dateFnsLocale = locale === 'hu' ? huLocale : enUS
+
+  const visibilityOptions = useMemo(
+    () =>
+      [
+        { value: 12 as RentWishVisibilityHours, label: t('feed.visibility12') },
+        { value: 24 as RentWishVisibilityHours, label: t('feed.visibility24') },
+      ],
+    [t],
+  )
+
+  const deliveryOptions = useMemo(
+    () =>
+      [
+        { value: 'PICKUP' as DeliveryPreference, label: t('feed.deliveryPickup'), icon: ShoppingBagIcon },
+        { value: 'DELIVERY' as DeliveryPreference, label: t('feed.deliveryDelivery'), icon: TruckIcon },
+        { value: 'EITHER' as DeliveryPreference, label: t('feed.deliveryEither'), icon: ChatBubbleLeftRightIcon },
+      ],
+    [t],
+  )
+
+  const depositOptions = useMemo(
+    () =>
+      [
+        { value: 'NONE' as DepositPreference, label: t('feed.depositNone'), icon: NoSymbolIcon },
+        { value: 'CASH' as DepositPreference, label: t('feed.depositCash'), icon: BanknotesIcon },
+        { value: 'ITEM' as DepositPreference, label: t('feed.depositItem'), icon: KeyIcon },
+        { value: 'FLEXIBLE' as DepositPreference, label: t('feed.depositFlexible'), icon: ChatBubbleLeftRightIcon },
+      ],
+    [t],
+  )
+
+  const deliveryLabel = useCallback(
+    (pref: DeliveryPreference | null | undefined) => {
+      if (!pref) return null
+      return deliveryOptions.find((d) => d.value === pref)?.label ?? null
+    },
+    [deliveryOptions],
+  )
+
+  const depositBadgeText = useCallback(
+    (pref: DepositPreference, note?: string | null) => {
+      const base = t(DEPOSIT_BADGE_KEYS[pref])
+      const trimmed = note?.trim()
+      if (trimmed && (pref === 'CASH' || pref === 'ITEM')) {
+        return `${base} · ${trimmed}`
+      }
+      return base
+    },
+    [t],
+  )
+
+  const depositIcon = useCallback(
+    (pref: DepositPreference | null | undefined) => {
+      if (!pref) return BanknotesIcon
+      return depositOptions.find((d) => d.value === pref)?.icon ?? BanknotesIcon
+    },
+    [depositOptions],
+  )
+
+  const safeExpiresLabel = useCallback(
+    (iso: string | undefined) => {
+      if (!iso) return t('feed.expiresSoon')
+      const d = new Date(iso)
+      if (Number.isNaN(d.getTime())) return t('feed.expiresSoon')
+      return formatDistanceToNow(d, { addSuffix: true, locale: dateFnsLocale })
+    },
+    [dateFnsLocale, t],
+  )
+
   const loadPosts = useCallback(async () => {
     setLoading(true)
     try {
@@ -162,12 +192,12 @@ export default function FeedPage() {
       const content = (res.data.content || []) as RawRentWishPost[]
       setPosts(content.map(normalizeRentWishPost))
     } catch {
-      toast.error('Could not load rent requests')
+      toast.error(t('feed.toast.loadFailed'))
       setPosts([])
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     loadPosts()
@@ -176,7 +206,7 @@ export default function FeedPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) {
-      toast.error('Add a short title for what you want to rent')
+      toast.error(t('feed.toast.titleRequired'))
       return
     }
     setSubmitting(true)
@@ -196,7 +226,7 @@ export default function FeedPage() {
             : undefined,
         visibilityHours,
       })
-      toast.success(`Posted — visible for ${visibilityHours} hours`)
+      toast.success(t('feed.toast.posted', { hours: String(visibilityHours) }))
       setTitle('')
       setDescription('')
       setDistrict('')
@@ -211,9 +241,9 @@ export default function FeedPage() {
       if (axios.isAxiosError(err) && err.response?.data) {
         const data = err.response.data as { message?: string; errors?: Record<string, string> }
         const firstField = data.errors && Object.values(data.errors)[0]
-        toast.error(firstField || data.message || 'Could not post — try signing in again')
+        toast.error(firstField || data.message || t('feed.toast.postFailed'))
       } else {
-        toast.error('Could not post — try signing in again')
+        toast.error(t('feed.toast.postFailed'))
       }
     } finally {
       setSubmitting(false)
@@ -231,7 +261,7 @@ export default function FeedPage() {
       setHostListings(active)
       if (active.length === 1) setPickListingId(String(active[0].id))
     } catch {
-      toast.error('Could not load your listings')
+      toast.error(t('feed.toast.listingsFailed'))
       setHostListings([])
     } finally {
       setListingsLoading(false)
@@ -240,7 +270,7 @@ export default function FeedPage() {
 
   const submitHostReply = async () => {
     if (!replyTarget || !pickListingId) {
-      toast.error('Choose one of your listings to reply with')
+      toast.error(t('feed.toast.pickListing'))
       return
     }
     setReplySending(true)
@@ -248,15 +278,15 @@ export default function FeedPage() {
       const res = await api.post(`/rent-requests/posts/${replyTarget.id}/conversation`, {
         listingId: Number(pickListingId),
       })
-      toast.success('Messages opened — “request posted” was added for the renter')
+      toast.success(t('feed.toast.conversationOpened'))
       setReplyTarget(null)
       router.push(`/messages?booking=${res.data.id}`)
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.data) {
         const data = err.response.data as { message?: string }
-        toast.error(data.message || 'Could not start conversation')
+        toast.error(data.message || t('feed.toast.conversationFailed'))
       } else {
-        toast.error('Could not start conversation')
+        toast.error(t('feed.toast.conversationFailed'))
       }
     } finally {
       setReplySending(false)
@@ -269,12 +299,14 @@ export default function FeedPage() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-10 animate-slide-down">
           <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-3">
-            <span className="gradient-text">Rent requests</span>
+            <span className="gradient-text">{t('feed.pageTitle')}</span>
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl">
-            See what people are looking to rent right now. When you publish, choose how long your post stays live —{' '}
-            <strong className="text-gray-800 dark:text-gray-200">12 hours</strong> or{' '}
-            <strong className="text-gray-800 dark:text-gray-200">24 hours</strong> — then it disappears from rent requests.
+            {t('feed.subtitleBefore12')}{' '}
+            <strong className="text-gray-800 dark:text-gray-200">{t('feed.hours12')}</strong>{' '}
+            {t('feed.subtitleOr')}{' '}
+            <strong className="text-gray-800 dark:text-gray-200">{t('feed.hours24')}</strong>{' '}
+            {t('feed.subtitleAfter24')}
           </p>
         </div>
 
@@ -283,11 +315,11 @@ export default function FeedPage() {
             onSubmit={handleSubmit}
             className="mb-12 p-6 rounded-2xl bg-white/80 dark:bg-gray-900/80 border border-gray-200/80 dark:border-gray-800 shadow-lg backdrop-blur-sm space-y-6"
             noValidate
-            aria-label="Create a rent request"
+            aria-label={t('feed.formAria')}
           >
             <div className="flex items-center gap-2 text-gray-900 dark:text-white font-semibold">
               <MegaphoneIcon className="h-6 w-6 text-blue-500" aria-hidden />
-              Post what you&apos;d like to rent
+              {t('feed.postHeading')}
             </div>
 
             <div className="space-y-2">
@@ -295,7 +327,7 @@ export default function FeedPage() {
                 htmlFor="rent-request-title"
                 className="block text-sm font-semibold text-gray-800 dark:text-gray-200"
               >
-                What do you need? <span className="text-red-500 dark:text-red-400">*</span>
+                {t('feed.titleLabel')} <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 id="rent-request-title"
@@ -303,7 +335,7 @@ export default function FeedPage() {
                 type="text"
                 required
                 autoComplete="off"
-                placeholder="e.g DSlr camera for a weekend shoot or plumber for this evening"
+                placeholder={t('feed.titlePlaceholder')}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={200}
@@ -311,7 +343,7 @@ export default function FeedPage() {
                 aria-describedby="rent-request-title-hint"
               />
               <p id="rent-request-title-hint" className="text-xs text-gray-500 dark:text-gray-400">
-                Short name of the item or service you want to rent ({title.length}/200)
+                {t('feed.titleHint', { count: String(title.length) })}
               </p>
             </div>
 
@@ -320,12 +352,13 @@ export default function FeedPage() {
                 htmlFor="rent-request-details"
                 className="block text-sm font-semibold text-gray-800 dark:text-gray-200"
               >
-                Details <span className="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+                {t('feed.detailsLabel')}{' '}
+                <span className="font-normal text-gray-500 dark:text-gray-400">{t('feed.optional')}</span>
               </label>
               <textarea
                 id="rent-request-details"
                 name="description"
-                placeholder="How long you need it, condition, brand, or any other requirements…"
+                placeholder={t('feed.detailsPlaceholder')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={2000}
@@ -334,26 +367,27 @@ export default function FeedPage() {
                 aria-describedby="rent-request-details-hint"
               />
               <p id="rent-request-details-hint" className="text-xs text-gray-500 dark:text-gray-400">
-                {description.length}/2000 characters
+                {t('feed.charCount', { current: String(description.length), max: '2000' })}
               </p>
             </div>
 
             <div className="space-y-2">
               <span className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-200">
                 <MapPinIcon className="h-5 w-5 text-rose-500" aria-hidden />
-                Area <span className="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+                {t('feed.areaLabel')}{' '}
+                <span className="font-normal text-gray-500 dark:text-gray-400">{t('feed.optional')}</span>
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
                   <label htmlFor="rent-request-district" className="sr-only">
-                    District or neighbourhood
+                    {t('feed.districtSr')}
                   </label>
                   <input
                     id="rent-request-district"
                     name="district"
                     type="text"
                     autoComplete="address-level3"
-                    placeholder="District / neighbourhood"
+                    placeholder={t('feed.districtPlaceholder')}
                     value={district}
                     onChange={(e) => setDistrict(e.target.value)}
                     maxLength={120}
@@ -362,14 +396,14 @@ export default function FeedPage() {
                 </div>
                 <div>
                   <label htmlFor="rent-request-city" className="sr-only">
-                    City
+                    {t('feed.citySr')}
                   </label>
                   <input
                     id="rent-request-city"
                     name="city"
                     type="text"
                     autoComplete="address-level2"
-                    placeholder="City"
+                    placeholder={t('feed.cityPlaceholder')}
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     maxLength={120}
@@ -378,14 +412,14 @@ export default function FeedPage() {
                 </div>
                 <div>
                   <label htmlFor="rent-request-country" className="sr-only">
-                    Country
+                    {t('feed.countrySr')}
                   </label>
                   <input
                     id="rent-request-country"
                     name="country"
                     type="text"
                     autoComplete="country-name"
-                    placeholder="Country"
+                    placeholder={t('feed.countryPlaceholder')}
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
                     maxLength={120}
@@ -393,9 +427,7 @@ export default function FeedPage() {
                   />
                 </div>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Helps nearby hosts notice your request. Fill any combination of district, city or country.
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('feed.areaHint')}</p>
             </div>
 
             <div className="space-y-2">
@@ -404,12 +436,13 @@ export default function FeedPage() {
                 className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-200"
               >
                 <CurrencyDollarIcon className="h-5 w-5 text-emerald-500" aria-hidden />
-                Budget <span className="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+                {t('feed.budgetLabel')}{' '}
+                <span className="font-normal text-gray-500 dark:text-gray-400">{t('feed.optional')}</span>
               </label>
               <textarea
                 id="rent-request-budget"
                 name="budgetText"
-                placeholder="e.g. 25,000 HUF total for 2 days"
+                placeholder={t('feed.budgetPlaceholder')}
                 value={budgetText}
                 onChange={(e) => setBudgetText(e.target.value)}
                 maxLength={BUDGET_MAX_CHARS}
@@ -418,23 +451,25 @@ export default function FeedPage() {
                 aria-describedby="rent-request-budget-hint"
               />
               <p id="rent-request-budget-hint" className="text-xs text-gray-500 dark:text-gray-400">
-                Rental price and duration only — use deposit options below for security terms. ({budgetText.length}/
-                {BUDGET_MAX_CHARS})
+                {t('feed.budgetHint', {
+                  current: String(budgetText.length),
+                  max: String(BUDGET_MAX_CHARS),
+                })}
               </p>
             </div>
 
             <div className="space-y-2">
               <span className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-200">
                 <BanknotesIcon className="h-5 w-5 text-amber-500" aria-hidden />
-                Deposit preference{' '}
-                <span className="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+                {t('feed.depositLabel')}{' '}
+                <span className="font-normal text-gray-500 dark:text-gray-400">{t('feed.optional')}</span>
               </span>
               <div
                 role="radiogroup"
-                aria-label="Deposit preference"
+                aria-label={t('feed.depositAria')}
                 className="flex flex-wrap gap-2"
               >
-                {DEPOSIT_OPTIONS.map((opt) => {
+                {depositOptions.map((opt) => {
                   const Icon = opt.icon
                   const active = depositPreference === opt.value
                   return (
@@ -465,7 +500,7 @@ export default function FeedPage() {
               {(depositPreference === 'CASH' || depositPreference === 'ITEM') && (
                 <div className="space-y-1.5">
                   <label htmlFor="rent-request-deposit-note" className="sr-only">
-                    Deposit details
+                    {t('feed.depositLabel')}
                   </label>
                   <input
                     id="rent-request-deposit-note"
@@ -473,8 +508,8 @@ export default function FeedPage() {
                     type="text"
                     placeholder={
                       depositPreference === 'CASH'
-                        ? 'e.g. up to 10,000 HUF cash deposit'
-                        : 'e.g. ID or laptop as collateral'
+                        ? t('feed.depositCashPlaceholder')
+                        : t('feed.depositItemPlaceholder')
                     }
                     value={depositNote}
                     onChange={(e) => setDepositNote(e.target.value)}
@@ -483,26 +518,28 @@ export default function FeedPage() {
                     aria-describedby="rent-request-deposit-note-hint"
                   />
                   <p id="rent-request-deposit-note-hint" className="text-xs text-gray-500 dark:text-gray-400">
-                    Optional detail for owners. ({depositNote.length}/{DEPOSIT_NOTE_MAX_CHARS})
+                    {t('feed.depositNoteHint', {
+                      current: String(depositNote.length),
+                      max: String(DEPOSIT_NOTE_MAX_CHARS),
+                    })}
                   </p>
                 </div>
               )}
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Tap again to clear. Helps owners know what security you&apos;re OK with before they reply.
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('feed.depositHint')}</p>
             </div>
 
             <div className="space-y-2">
               <span className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-200">
                 <TruckIcon className="h-5 w-5 text-indigo-500" aria-hidden />
-                Delivery or pickup <span className="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+                {t('feed.deliveryLabel')}{' '}
+                <span className="font-normal text-gray-500 dark:text-gray-400">{t('feed.optional')}</span>
               </span>
               <div
                 role="radiogroup"
-                aria-label="Delivery preference"
+                aria-label={t('feed.deliveryAria')}
                 className="flex flex-wrap gap-2"
               >
-                {DELIVERY_OPTIONS.map((opt) => {
+                {deliveryOptions.map((opt) => {
                   const Icon = opt.icon
                   const active = deliveryPreference === opt.value
                   return (
@@ -526,22 +563,20 @@ export default function FeedPage() {
                   )
                 })}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Tap again to clear. Choose &quot;Either works&quot; if you&apos;re flexible.
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('feed.deliveryHint')}</p>
             </div>
 
             <div className="space-y-2">
               <label className="block text-sm font-bold text-gray-800 dark:text-gray-200">
                 <ClockIcon className="inline h-4 w-4 mr-1 text-amber-500" aria-hidden />
-                How long should it stay live?
+                {t('feed.visibilityLabel')}
               </label>
               <div
                 role="radiogroup"
-                aria-label="Post visibility duration"
+                aria-label={t('feed.visibilityAria')}
                 className="flex flex-wrap gap-2"
               >
-                {VISIBILITY_OPTIONS.map((opt) => {
+                {visibilityOptions.map((opt) => {
                   const active = visibilityHours === opt.value
                   return (
                     <button
@@ -562,9 +597,7 @@ export default function FeedPage() {
                   )
                 })}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Shorter posts (12h) for urgent needs; 24h gives owners more time to reply.
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('feed.visibilityHint')}</p>
             </div>
 
             <button
@@ -572,16 +605,16 @@ export default function FeedPage() {
               disabled={submitting}
               className="btn-primary w-full sm:w-auto px-8 py-3 disabled:opacity-60"
             >
-              {submitting ? 'Posting…' : `Publish (${visibilityHours}h)`}
+              {submitting
+                ? t('feed.submitPosting')
+                : t('feed.submitPublish', { hours: String(visibilityHours) })}
             </button>
           </form>
         ) : (
           <div className="mb-12 p-6 rounded-2xl bg-gray-100/80 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 text-center">
-            <p className="text-gray-700 dark:text-gray-300 mb-4">
-              Sign in to post what you&apos;re looking to rent.
-            </p>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">{t('feed.signInPrompt')}</p>
             <Link href="/login" className="btn-primary inline-block px-6 py-2.5">
-              Login
+              {t('nav.login')}
             </Link>
           </div>
         )}
@@ -589,7 +622,7 @@ export default function FeedPage() {
         <section>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
             <ClockIcon className="h-6 w-6 text-indigo-500" />
-            Live requests
+            {t('feed.liveRequests')}
           </h2>
 
           {loading ? (
@@ -597,11 +630,11 @@ export default function FeedPage() {
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 mb-4">
                 <div className="animate-spin rounded-full h-7 w-7 border-4 border-white border-t-transparent" />
               </div>
-              <p className="text-gray-600 dark:text-gray-400 font-medium">Loading rent requests…</p>
+              <p className="text-gray-600 dark:text-gray-400 font-medium">{t('feed.loading')}</p>
             </div>
           ) : posts.length === 0 ? (
             <p className="text-center py-16 text-gray-500 dark:text-gray-400 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
-              No active requests right now. Be the first to post.
+              {t('feed.empty')}
             </p>
           ) : (
             <ul className="space-y-4">
@@ -676,7 +709,10 @@ export default function FeedPage() {
                     })()}
                     <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
                       <ClockIcon className="h-5 w-5 shrink-0" />
-                      {post.visibilityHours ?? 24}h · Expires {safeExpiresLabel(post.expiresAt)}
+                      {t('feed.expires', {
+                        hours: String(post.visibilityHours ?? 24),
+                        when: safeExpiresLabel(post.expiresAt),
+                      })}
                     </span>
                     {isAuthenticated && user && user.id !== post.authorId && (
                       <button
@@ -685,7 +721,7 @@ export default function FeedPage() {
                         className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
                       >
                         <ChatBubbleLeftRightIcon className="h-4 w-4 shrink-0" />
-                        Reply in Messages
+                        {t('feed.replyInMessages')}
                       </button>
                     )}
                   </div>
@@ -705,30 +741,32 @@ export default function FeedPage() {
         >
           <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xl p-6 space-y-4">
             <h2 id="live-reply-title" className="text-lg font-bold text-gray-900 dark:text-white">
-              Reply to live request
+              {t('feed.replyModalTitle')}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              We&apos;ll open your Messages thread with{' '}
-              <strong className="text-gray-900 dark:text-gray-200">request posted</strong> — the fixed prompt the
-              renter sees (tagged <span className="font-semibold">live request reply</span>). You won&apos;t type a
-              message here; you can continue in Messages after.
+              {t('feed.replyModalIntro')}{' '}
+              <strong className="text-gray-900 dark:text-gray-200">{t('feed.replyModalPrompt')}</strong>{' '}
+              {t('feed.replyModalMid')}{' '}
+              <span className="font-semibold">{t('feed.replyModalTag')}</span>
+              {t('feed.replyModalEnd')}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-500 line-clamp-2">
-              Request: <span className="font-medium text-gray-700 dark:text-gray-300">{replyTarget.title}</span>
+              {t('feed.replyRequestLabel')}{' '}
+              <span className="font-medium text-gray-700 dark:text-gray-300">{replyTarget.title}</span>
             </p>
             {listingsLoading ? (
-              <p className="text-sm text-gray-500">Loading your listings…</p>
+              <p className="text-sm text-gray-500">{t('feed.loadingListings')}</p>
             ) : hostListings.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-4 text-center text-sm">
-                <p className="text-gray-600 dark:text-gray-400 mb-3">You need an active listing to reply.</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">{t('feed.noListings')}</p>
                 <Link href="/listings/new" className="btn-primary inline-block px-4 py-2 text-sm">
-                  Create a listing
+                  {t('feed.createListing')}
                 </Link>
               </div>
             ) : (
               <div className="space-y-2">
                 <label htmlFor="live-reply-listing" className="block text-sm font-semibold text-gray-800 dark:text-gray-200">
-                  Your listing
+                  {t('feed.yourListing')}
                 </label>
                 <select
                   id="live-reply-listing"
@@ -736,7 +774,7 @@ export default function FeedPage() {
                   onChange={(e) => setPickListingId(e.target.value)}
                   className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white px-3 py-2.5 text-sm"
                 >
-                  <option value="">Select…</option>
+                  <option value="">{t('feed.selectPlaceholder')}</option>
                   {hostListings.map((l) => (
                     <option key={l.id} value={l.id}>
                       {l.title}
@@ -752,7 +790,7 @@ export default function FeedPage() {
                 className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                 disabled={replySending}
               >
-                Cancel
+                {t('feed.cancel')}
               </button>
               <button
                 type="button"
@@ -760,7 +798,7 @@ export default function FeedPage() {
                 disabled={replySending || listingsLoading || hostListings.length === 0 || !pickListingId}
                 className="btn-primary px-4 py-2 text-sm disabled:opacity-60"
               >
-                {replySending ? 'Opening…' : 'Open Messages'}
+                {replySending ? t('feed.opening') : t('feed.openMessages')}
               </button>
             </div>
           </div>

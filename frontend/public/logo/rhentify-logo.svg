@@ -1,14 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="320" height="80" viewBox="0 0 320 80" fill="none" role="img" aria-label="Rhentify">
   <title>Rhentify</title>
-  <!-- Icon mark -->
   <rect x="4" y="12" width="56" height="56" rx="12" stroke="#054494" stroke-width="2" fill="#ffffff"/>
-  <g transform="translate(32 40)" stroke="#054494" stroke-width="1.75" stroke-linecap="round">
-    <path d="M0 -11 L0 11"/>
-    <path d="M-11 0 L11 0"/>
-    <path d="M-7.8 -7.8 L7.8 7.8"/>
-    <path d="M7.8 -7.8 L-7.8 7.8"/>
-  </g>
-  <circle cx="32" cy="40" r="2.5" fill="#054494"/>
-  <!-- Wordmark -->
-  <text x="78" y="50" font-family="'Cormorant Garamond', Georgia, 'Times New Roman', serif" font-size="42" font-weight="600" fill="#0f172a" letter-spacing="-0.5">Rhentify</text>
+  <path fill="#054494" d="M22 44 L24.5 34 L34.5 31.5 L24.5 29 L22 19 L19.5 29 L9.5 31.5 L19.5 34 Z"/>
+  <path fill="#054494" d="M43 26 L44.5 19.5 L51 18 L44.5 16.5 L43 10 L41.5 16.5 L35 18 L41.5 19.5 Z"/>
+  <path fill="#054494" d="M46.5 47 L47.5 41 L53 40 L47.5 39 L46.5 33 L45.5 39 L40 40 L45.5 41 Z"/>
+  <text x="78" y="50" font-family="'Cormorant Garamond', Georgia, 'Times New Roman', serif" font-size="42" font-weight="600" fill="#054494" letter-spacing="-0.5">Rhentify</text>
 </svg>

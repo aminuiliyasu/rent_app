@@ -99,6 +99,26 @@ export interface RentWishPost {
   visibilityHours?: 12 | 24
 }
 
+export type NotificationType =
+  | 'NEW_BOOKING'
+  | 'BOOKING_CONFIRMED'
+  | 'BOOKING_CANCELLED'
+  | 'NEW_MESSAGE'
+  | 'RENT_REQUEST_REPLY'
+
+export interface AppNotification {
+  id: number
+  type: NotificationType
+  title: string
+  body: string
+  linkPath?: string | null
+  actorName?: string | null
+  bookingId?: number | null
+  messageId?: number | null
+  read: boolean
+  createdAt: string
+}
+
 export interface Review {
   id: number
   bookingId: number

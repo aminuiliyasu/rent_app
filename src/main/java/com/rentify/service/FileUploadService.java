@@ -47,7 +47,6 @@ public class FileUploadService {
             Files.createDirectories(uploadPath.resolve("profiles"));
             Files.createDirectories(uploadPath.resolve("listings"));
             Files.createDirectories(uploadPath.resolve("general"));
-            Files.createDirectories(uploadPath.resolve("voice"));
         } catch (Exception e) {
             System.err.println("Warning: Could not create upload directories: " + e.getMessage());
         }
@@ -62,14 +61,17 @@ public class FileUploadService {
             throw new RuntimeException("File is empty");
         }
 
+        String originalFilename = file.getOriginalFilename();
         String contentType = file.getContentType();
+        if (contentType == null || contentType.isBlank()) {
+            contentType = inferContentType(originalFilename);
+        }
         if (contentType == null) {
             throw new RuntimeException("File type cannot be determined");
         }
 
-        validateFile(file, subdirectory, contentType);
+        validateFile(file, contentType);
 
-        String originalFilename = file.getOriginalFilename();
         String extension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
@@ -96,22 +98,25 @@ public class FileUploadService {
         return "/uploads/" + objectKey;
     }
 
-    private void validateFile(MultipartFile file, String subdirectory, String contentType) {
-        if ("voice".equals(subdirectory)) {
-            if (!contentType.startsWith("audio/") && !contentType.equals("application/octet-stream")) {
-                throw new RuntimeException("Only audio files are allowed for voice notes");
-            }
-            if (file.getSize() > 10 * 1024 * 1024) {
-                throw new RuntimeException("Voice note size exceeds 10MB limit");
-            }
-        } else {
-            if (!contentType.startsWith("image/")) {
-                throw new RuntimeException("Only image files are allowed");
-            }
-            if (file.getSize() > 5 * 1024 * 1024) {
-                throw new RuntimeException("File size exceeds 5MB limit");
-            }
+    private void validateFile(MultipartFile file, String contentType) {
+        if (!contentType.startsWith("image/")) {
+            throw new RuntimeException("Only image files are allowed");
         }
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new RuntimeException("File size exceeds 5MB limit");
+        }
+    }
+
+    private String inferContentType(String originalFilename) {
+        if (originalFilename == null) {
+            return null;
+        }
+        String lower = originalFilename.toLowerCase();
+        if (lower.endsWith(".png")) return "image/png";
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+        if (lower.endsWith(".webp")) return "image/webp";
+        if (lower.endsWith(".gif")) return "image/gif";
+        return null;
     }
 
     private String buildPublicUrl(String objectKey) {
