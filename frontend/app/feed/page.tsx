@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import api from '@/lib/api'
-import { RentWishPost, Listing, ListingStatus, DeliveryPreference, DepositPreference } from '@/lib/types'
+import { RentWishPost, Listing, ListingStatus, ListingType, DeliveryPreference, DepositPreference, RentWishRequestType } from '@/lib/types'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import type { TranslationKey } from '@/lib/i18n/translations'
@@ -24,14 +24,20 @@ import {
   BanknotesIcon,
   KeyIcon,
   NoSymbolIcon,
+  WrenchScrewdriverIcon,
+  CubeIcon,
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 
 const BUDGET_MAX_CHARS = 280
 const DEPOSIT_NOTE_MAX_CHARS = 120
+const TIMING_MAX_CHARS = 120
 
 type RentWishVisibilityHours = 12 | 24
+type RequestTypeFilter = 'ALL' | RentWishRequestType
+
+const REQUEST_TYPES = new Set<RentWishRequestType>(['ITEM', 'WORKER'])
 
 const DEPOSIT_BADGE_KEYS: Record<DepositPreference, TranslationKey> = {
   NONE: 'feed.depositBadgeNone',
@@ -49,15 +55,25 @@ function asDepositPreference(raw: unknown): DepositPreference | null {
 }
 
 type RawRentWishPost = RentWishPost & {
+  request_type?: string | null
+  timing_note?: string | null
   deposit_preference?: string | null
   deposit_note?: string | null
   delivery_preference?: string | null
   budget_text?: string | null
 }
 
+function asRequestType(raw: unknown): RentWishRequestType {
+  if (typeof raw !== 'string' || !raw.trim()) return 'ITEM'
+  const upper = raw.trim().toUpperCase()
+  return REQUEST_TYPES.has(upper as RentWishRequestType) ? (upper as RentWishRequestType) : 'ITEM'
+}
+
 function normalizeRentWishPost(raw: RawRentWishPost): RentWishPost {
   return {
     ...raw,
+    requestType: asRequestType(raw.requestType ?? raw.request_type),
+    timingNote: raw.timingNote ?? raw.timing_note ?? null,
     budgetText: raw.budgetText ?? raw.budget_text ?? null,
     deliveryPreference: (raw.deliveryPreference ?? raw.delivery_preference ?? null) as
       | DeliveryPreference
@@ -96,9 +112,12 @@ export default function FeedPage() {
   const { t, locale } = useLanguage()
   const router = useRouter()
   const [posts, setPosts] = useState<RentWishPost[]>([])
+  const [typeFilter, setTypeFilter] = useState<RequestTypeFilter>('ALL')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [requestType, setRequestType] = useState<RentWishRequestType>('ITEM')
   const [title, setTitle] = useState('')
+  const [timingNote, setTimingNote] = useState('')
   const [description, setDescription] = useState('')
   const [district, setDistrict] = useState('')
   const [city, setCity] = useState('')
@@ -116,6 +135,32 @@ export default function FeedPage() {
   const [replySending, setReplySending] = useState(false)
 
   const dateFnsLocale = locale === 'hu' ? huLocale : enUS
+
+  const isWorkerRequest = requestType === 'WORKER'
+
+  const filteredPosts = useMemo(() => {
+    if (typeFilter === 'ALL') return posts
+    return posts.filter((p) => (p.requestType ?? 'ITEM') === typeFilter)
+  }, [posts, typeFilter])
+
+  const typeFilterOptions = useMemo(
+    () =>
+      [
+        { value: 'ALL' as RequestTypeFilter, label: t('feed.filterAll') },
+        { value: 'ITEM' as RequestTypeFilter, label: t('feed.filterItems') },
+        { value: 'WORKER' as RequestTypeFilter, label: t('feed.filterServices') },
+      ],
+    [t],
+  )
+
+  const requestTypeOptions = useMemo(
+    () =>
+      [
+        { value: 'ITEM' as RentWishRequestType, label: t('feed.typeItem'), icon: CubeIcon },
+        { value: 'WORKER' as RentWishRequestType, label: t('feed.typeWorker'), icon: WrenchScrewdriverIcon },
+      ],
+    [t],
+  )
 
   const visibilityOptions = useMemo(
     () =>
@@ -212,22 +257,27 @@ export default function FeedPage() {
     setSubmitting(true)
     try {
       await api.post('/rent-requests/posts', {
+        requestType,
         title: title.trim(),
+        timingNote: isWorkerRequest && timingNote.trim() ? timingNote.trim() : undefined,
         description: description.trim() || undefined,
         district: district.trim() || undefined,
         city: city.trim() || undefined,
         country: country.trim() || undefined,
         budgetText: budgetText.trim() || undefined,
-        deliveryPreference: deliveryPreference || undefined,
-        depositPreference: depositPreference || undefined,
+        deliveryPreference: !isWorkerRequest && deliveryPreference ? deliveryPreference : undefined,
+        depositPreference: !isWorkerRequest && depositPreference ? depositPreference : undefined,
         depositNote:
-          depositNote.trim() && (depositPreference === 'CASH' || depositPreference === 'ITEM')
+          !isWorkerRequest &&
+          depositNote.trim() &&
+          (depositPreference === 'CASH' || depositPreference === 'ITEM')
             ? depositNote.trim()
             : undefined,
         visibilityHours,
       })
       toast.success(t('feed.toast.posted', { hours: String(visibilityHours) }))
       setTitle('')
+      setTimingNote('')
       setDescription('')
       setDistrict('')
       setCity('')
@@ -258,8 +308,12 @@ export default function FeedPage() {
       const res = await api.get('/listings/my?page=0&size=100')
       const content: Listing[] = res.data?.content || []
       const active = content.filter((l) => l.status === ListingStatus.ACTIVE)
-      setHostListings(active)
-      if (active.length === 1) setPickListingId(String(active[0].id))
+      const preferredType =
+        post.requestType === 'WORKER' ? ListingType.WORKER : ListingType.ITEM
+      const matching = active.filter((l) => l.type === preferredType)
+      const listings = matching.length > 0 ? matching : active
+      setHostListings(listings)
+      if (listings.length === 1) setPickListingId(String(listings[0].id))
     } catch {
       toast.error(t('feed.toast.listingsFailed'))
       setHostListings([])
@@ -319,7 +373,46 @@ export default function FeedPage() {
           >
             <div className="flex items-center gap-2 text-gray-900 dark:text-white font-semibold">
               <MegaphoneIcon className="h-6 w-6 text-blue-500" aria-hidden />
-              {t('feed.postHeading')}
+              {isWorkerRequest ? t('feed.postHeadingWorker') : t('feed.postHeadingItem')}
+            </div>
+
+            <div className="space-y-2">
+              <span className="block text-sm font-semibold text-gray-800 dark:text-gray-200">
+                {t('feed.typeLabel')} <span className="text-red-500 dark:text-red-400">*</span>
+              </span>
+              <div role="radiogroup" aria-label={t('feed.typeAria')} className="flex flex-wrap gap-2">
+                {requestTypeOptions.map((opt) => {
+                  const Icon = opt.icon
+                  const active = requestType === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => {
+                        setRequestType(opt.value)
+                        if (opt.value === 'WORKER') {
+                          setDeliveryPreference('')
+                          setDepositPreference('')
+                          setDepositNote('')
+                        } else {
+                          setTimingNote('')
+                        }
+                      }}
+                      className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${
+                        active
+                          ? 'bg-blue-600 border-blue-600 text-white shadow'
+                          : 'bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-300'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" aria-hidden />
+                      {opt.label}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('feed.typeHint')}</p>
             </div>
 
             <div className="space-y-2">
@@ -327,7 +420,8 @@ export default function FeedPage() {
                 htmlFor="rent-request-title"
                 className="block text-sm font-semibold text-gray-800 dark:text-gray-200"
               >
-                {t('feed.titleLabel')} <span className="text-red-500 dark:text-red-400">*</span>
+                {isWorkerRequest ? t('feed.titleLabelWorker') : t('feed.titleLabelItem')}{' '}
+                <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 id="rent-request-title"
@@ -335,7 +429,9 @@ export default function FeedPage() {
                 type="text"
                 required
                 autoComplete="off"
-                placeholder={t('feed.titlePlaceholder')}
+                placeholder={
+                  isWorkerRequest ? t('feed.titlePlaceholderWorker') : t('feed.titlePlaceholderItem')
+                }
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={200}
@@ -343,9 +439,41 @@ export default function FeedPage() {
                 aria-describedby="rent-request-title-hint"
               />
               <p id="rent-request-title-hint" className="text-xs text-gray-500 dark:text-gray-400">
-                {t('feed.titleHint', { count: String(title.length) })}
+                {t(isWorkerRequest ? 'feed.titleHintWorker' : 'feed.titleHintItem', {
+                  count: String(title.length),
+                })}
               </p>
             </div>
+
+            {isWorkerRequest && (
+              <div className="space-y-2">
+                <label
+                  htmlFor="rent-request-timing"
+                  className="block text-sm font-semibold text-gray-800 dark:text-gray-200"
+                >
+                  {t('feed.timingLabel')}{' '}
+                  <span className="font-normal text-gray-500 dark:text-gray-400">{t('feed.optional')}</span>
+                </label>
+                <input
+                  id="rent-request-timing"
+                  name="timingNote"
+                  type="text"
+                  autoComplete="off"
+                  placeholder={t('feed.timingPlaceholder')}
+                  value={timingNote}
+                  onChange={(e) => setTimingNote(e.target.value)}
+                  maxLength={TIMING_MAX_CHARS}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  aria-describedby="rent-request-timing-hint"
+                />
+                <p id="rent-request-timing-hint" className="text-xs text-gray-500 dark:text-gray-400">
+                  {t('feed.timingHint', {
+                    current: String(timingNote.length),
+                    max: String(TIMING_MAX_CHARS),
+                  })}
+                </p>
+              </div>
+            )}
 
             <div className="space-y-2">
               <label
@@ -358,7 +486,9 @@ export default function FeedPage() {
               <textarea
                 id="rent-request-details"
                 name="description"
-                placeholder={t('feed.detailsPlaceholder')}
+                placeholder={
+                  isWorkerRequest ? t('feed.detailsPlaceholderWorker') : t('feed.detailsPlaceholderItem')
+                }
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={2000}
@@ -427,7 +557,9 @@ export default function FeedPage() {
                   />
                 </div>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{t('feed.areaHint')}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {isWorkerRequest ? t('feed.areaHintWorker') : t('feed.areaHint')}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -442,7 +574,9 @@ export default function FeedPage() {
               <textarea
                 id="rent-request-budget"
                 name="budgetText"
-                placeholder={t('feed.budgetPlaceholder')}
+                placeholder={
+                  isWorkerRequest ? t('feed.budgetPlaceholderWorker') : t('feed.budgetPlaceholder')
+                }
                 value={budgetText}
                 onChange={(e) => setBudgetText(e.target.value)}
                 maxLength={BUDGET_MAX_CHARS}
@@ -451,13 +585,15 @@ export default function FeedPage() {
                 aria-describedby="rent-request-budget-hint"
               />
               <p id="rent-request-budget-hint" className="text-xs text-gray-500 dark:text-gray-400">
-                {t('feed.budgetHint', {
+                {t(isWorkerRequest ? 'feed.budgetHintWorker' : 'feed.budgetHint', {
                   current: String(budgetText.length),
                   max: String(BUDGET_MAX_CHARS),
                 })}
               </p>
             </div>
 
+            {!isWorkerRequest && (
+            <>
             <div className="space-y-2">
               <span className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-200">
                 <BanknotesIcon className="h-5 w-5 text-amber-500" aria-hidden />
@@ -565,6 +701,8 @@ export default function FeedPage() {
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">{t('feed.deliveryHint')}</p>
             </div>
+            </>
+            )}
 
             <div className="space-y-2">
               <label className="block text-sm font-bold text-gray-800 dark:text-gray-200">
@@ -620,10 +758,33 @@ export default function FeedPage() {
         )}
 
         <section>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <ClockIcon className="h-6 w-6 text-indigo-500" />
-            {t('feed.liveRequests')}
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <ClockIcon className="h-6 w-6 text-indigo-500" />
+              {t('feed.liveRequests')}
+            </h2>
+            <div className="flex flex-wrap gap-2" role="tablist" aria-label={t('feed.typeAria')}>
+              {typeFilterOptions.map((opt) => {
+                const active = typeFilter === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setTypeFilter(opt.value)}
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+                      active
+                        ? 'bg-indigo-600 text-white shadow'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
           {loading ? (
             <div className="text-center py-16">
@@ -636,21 +797,60 @@ export default function FeedPage() {
             <p className="text-center py-16 text-gray-500 dark:text-gray-400 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
               {t('feed.empty')}
             </p>
+          ) : filteredPosts.length === 0 ? (
+            <p className="text-center py-16 text-gray-500 dark:text-gray-400 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
+              {t('feed.emptyFiltered')}
+            </p>
           ) : (
             <ul className="space-y-4">
-              {posts.map((post, idx) => (
+              {filteredPosts.map((post, idx) => (
                 <li
                   key={post.id}
                   className="animate-slide-up p-5 rounded-2xl bg-white dark:bg-gray-900/90 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow"
                   style={{ animationDelay: `${idx * 0.04}s` }}
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-snug">{post.title}</h3>
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <span
+                        className={`${metaPillClass} shrink-0 ${
+                          (post.requestType ?? 'ITEM') === 'WORKER'
+                            ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-800 dark:text-violet-200'
+                            : 'bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-200'
+                        }`}
+                      >
+                        {(post.requestType ?? 'ITEM') === 'WORKER' ? (
+                          <WrenchScrewdriverIcon className="h-3.5 w-3.5 shrink-0" />
+                        ) : (
+                          <CubeIcon className="h-3.5 w-3.5 shrink-0" />
+                        )}
+                        {(post.requestType ?? 'ITEM') === 'WORKER'
+                          ? t('feed.badgeWorker')
+                          : t('feed.badgeItem')}
+                      </span>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-snug">{post.title}</h3>
+                    </div>
                   </div>
+                  {post.timingNote && (
+                    <p className="text-sm text-violet-700 dark:text-violet-300 mb-2 flex items-center gap-1.5">
+                      <ClockIcon className="h-4 w-4 shrink-0" />
+                      {post.timingNote}
+                    </p>
+                  )}
                   {post.description && (
                     <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 whitespace-pre-wrap">{post.description}</p>
                   )}
-                  {(post.budgetText || post.depositPreference || post.deliveryPreference) && (
+                  {post.budgetText && (post.requestType ?? 'ITEM') === 'WORKER' && (
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <span
+                        className={`${metaPillClass} max-w-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300`}
+                      >
+                        <CurrencyDollarIcon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="whitespace-pre-wrap break-words font-normal">{post.budgetText}</span>
+                      </span>
+                    </div>
+                  )}
+                  {(post.budgetText || post.depositPreference || post.deliveryPreference) &&
+                    (post.requestType ?? 'ITEM') === 'ITEM' && (
                     <div className="flex flex-wrap items-center gap-2 mb-3">
                       {(post.budgetText || post.depositPreference) && (
                         <span className="inline-flex flex-wrap items-center gap-1.5">

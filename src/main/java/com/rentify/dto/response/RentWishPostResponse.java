@@ -1,15 +1,20 @@
 package com.rentify.dto.response;
 
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RentWishPostResponse {
     private Long id;
+    /** ITEM or WORKER */
+    private String requestType;
     private String title;
+    private String timingNote;
     private String description;
     private String location;
     private String district;

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
@@ -9,7 +8,6 @@ import BrandLogo from '@/components/BrandLogo'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
 export default function LoginPage() {
-  const router = useRouter()
   const { login } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
@@ -25,7 +23,7 @@ export default function LoginPage() {
     try {
       await login(formData.email, formData.password)
       toast.success('Welcome back!')
-      router.push('/dashboard')
+      window.location.href = '/dashboard'
     } catch (error: any) {
       console.error('Login error:', error)
       let errorMessage = 'Login failed. Please try again.'

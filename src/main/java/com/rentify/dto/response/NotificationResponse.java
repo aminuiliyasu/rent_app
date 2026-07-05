@@ -3,8 +3,6 @@ package com.rentify.dto.response;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 public class NotificationResponse {
@@ -17,5 +15,6 @@ public class NotificationResponse {
     private Long bookingId;
     private Long messageId;
     private boolean read;
-    private LocalDateTime createdAt;
+    /** ISO-8601 instant in UTC */
+    private String createdAt;
 }

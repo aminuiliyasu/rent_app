@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { User } from '@/lib/types'
 import api from '@/lib/api'
 
@@ -18,53 +18,95 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const profileAbortRef = useRef<AbortController | null>(null)
+  const sessionEpochRef = useRef(0)
+
+  const cancelProfileFetch = () => {
+    profileAbortRef.current?.abort()
+    profileAbortRef.current = null
+  }
 
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem('accessToken')
-    if (token) {
-      // Fetch user profile
-      api.get('/auth/me')
-        .then((response) => setUser(response.data))
-        .catch(() => {
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
-        })
-        .finally(() => setLoading(false))
-    } else {
+    if (!token) {
       setLoading(false)
+      return
+    }
+
+    cancelProfileFetch()
+    const controller = new AbortController()
+    profileAbortRef.current = controller
+    const epoch = sessionEpochRef.current
+    const tokenAtStart = token
+
+    api
+      .get('/auth/me', { signal: controller.signal })
+      .then((response) => {
+        if (controller.signal.aborted || epoch !== sessionEpochRef.current) return
+        setUser(response.data)
+      })
+      .catch(() => {
+        if (controller.signal.aborted || epoch !== sessionEpochRef.current) return
+        if (localStorage.getItem('accessToken') !== tokenAtStart) return
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        setUser(null)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
+      })
+
+    return () => {
+      controller.abort()
     }
   }, [])
 
+  const persistSession = (accessToken: string, refreshToken: string, nextUser: User) => {
+    localStorage.setItem('accessToken', accessToken)
+    localStorage.setItem('refreshToken', refreshToken)
+    setUser(nextUser)
+    setLoading(false)
+  }
+
   const login = async (email: string, password: string) => {
-    try {
-      const response = await api.post('/auth/login', { email, password })
-      const { accessToken, refreshToken, user } = response.data
-      
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('refreshToken', refreshToken)
-      setUser(user)
-    } catch (error: any) {
-      // Re-throw to let the component handle it
-      throw error
+    sessionEpochRef.current += 1
+    cancelProfileFetch()
+    const response = await api.post('/auth/login', {
+      email: email.trim(),
+      password,
+    })
+    const { accessToken, refreshToken, user: nextUser } = response.data
+
+    if (!accessToken || !refreshToken || !nextUser) {
+      throw new Error('Login response was incomplete. Please try again.')
     }
+
+    persistSession(accessToken, refreshToken, nextUser)
   }
 
   const register = async (name: string, email: string, password: string, phone?: string) => {
-    try {
-      const response = await api.post('/auth/register', { name, email, password, phone })
-      const { accessToken, refreshToken, user } = response.data
-      
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('refreshToken', refreshToken)
-      setUser(user)
-    } catch (error: any) {
-      // Re-throw to let the component handle it
-      throw error
+    sessionEpochRef.current += 1
+    cancelProfileFetch()
+    const response = await api.post('/auth/register', {
+      name: name.trim(),
+      email: email.trim(),
+      password,
+      phone: phone?.trim() || undefined,
+    })
+    const { accessToken, refreshToken, user: nextUser } = response.data
+
+    if (!accessToken || !refreshToken || !nextUser) {
+      throw new Error('Registration response was incomplete. Please try again.')
     }
+
+    persistSession(accessToken, refreshToken, nextUser)
   }
 
   const logout = () => {
+    sessionEpochRef.current += 1
+    cancelProfileFetch()
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
     setUser(null)

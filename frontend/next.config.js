@@ -35,6 +35,15 @@ const nextConfig = {
       },
     ]
   },
+  async redirects() {
+    return [
+      {
+        source: '/favicon.ico',
+        destination: '/logo/rhentify-icon.png',
+        permanent: false,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig

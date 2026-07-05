@@ -21,12 +21,12 @@ import java.util.Set;
 public class CategorySeedService {
 
     private static final List<String> ACTIVE_SLUGS = List.of(
-            "tools-equipment",
-            "electronics",
-            "home-living",
-            "apartment",
             "services",
             "vehicles",
+            "tools-equipment",
+            "electronics",
+            "apartment",
+            "home-living",
             "pet-lovers",
             "socials",
             "other"
@@ -54,12 +54,12 @@ public class CategorySeedService {
 
     @Transactional
     public void ensureDefaultCategories() {
-        ensureCategory("Tools & DIY", "tools-equipment");
-        ensureCategory("Electronics", "electronics");
-        ensureCategory("Home & Living", "home-living");
-        ensureCategory("Spaces", "apartment");
         ensureCategory("Services", "services");
         ensureCategory("Scooter & Bikes", "vehicles");
+        ensureCategory("Tools & DIY", "tools-equipment");
+        ensureCategory("Electronics", "electronics");
+        ensureCategory("Spaces", "apartment");
+        ensureCategory("Home & Living", "home-living");
         ensureCategory("Pet Lovers", "pet-lovers");
         ensureCategory("Socials", "socials");
         ensureCategory("Other", "other");

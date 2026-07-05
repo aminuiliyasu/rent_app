@@ -11,6 +11,7 @@ import {
 import { MessageResponse, User } from '@/lib/types'
 import { requireDb } from '@/lib/firebase'
 import api from '@/lib/api'
+import { compareApiDateTime } from '@/lib/dateTime'
 
 const MESSAGES_COLLECTION = 'messages'
 
@@ -34,7 +35,7 @@ export function mergeMessageLists(a: MessageResponse[], b: MessageResponse[]): M
   for (const m of [...a, ...b]) {
     map.set(String(m.id), m)
   }
-  return Array.from(map.values()).sort((x, y) => new Date(x.createdAt).getTime() - new Date(y.createdAt).getTime())
+  return Array.from(map.values()).sort((x, y) => compareApiDateTime(x.createdAt, y.createdAt))
 }
 
 async function loadFirestoreMessagesOnly(bookingId: number | string): Promise<MessageResponse[]> {
@@ -50,7 +51,7 @@ async function loadFirestoreMessagesOnly(bookingId: number | string): Promise<Me
 
   const merged = snapshots.flatMap((snap) => snap.docs.map((entry) => mapMessageDoc(entry.id, entry.data())))
   const unique = merged.filter((message, index, self) => index === self.findIndex((m) => m.id === message.id))
-  return unique.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+  return unique.sort((a, b) => compareApiDateTime(a.createdAt, b.createdAt))
 }
 
 /** Firestore thread + optional Spring `/messages/booking/{id}` when booking id is numeric. */

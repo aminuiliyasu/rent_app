@@ -36,6 +36,16 @@ public class RentWishPostSchemaMigration implements CommandLineRunner {
             jdbcTemplate.execute(
                     "ALTER TABLE rent_wish_posts ADD COLUMN deposit_note VARCHAR(120)");
         }
+        if (!columnExists("RENT_WISH_POSTS", "REQUEST_TYPE")) {
+            jdbcTemplate.execute(
+                    "ALTER TABLE rent_wish_posts ADD COLUMN request_type VARCHAR(16) DEFAULT 'ITEM'");
+        }
+        jdbcTemplate.update(
+                "UPDATE rent_wish_posts SET request_type = 'ITEM' WHERE request_type IS NULL");
+        if (!columnExists("RENT_WISH_POSTS", "TIMING_NOTE")) {
+            jdbcTemplate.execute(
+                    "ALTER TABLE rent_wish_posts ADD COLUMN timing_note VARCHAR(120)");
+        }
     }
 
     private boolean tableExists(String tableName) {

@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.rentify.util.CurrentUser;
+import com.rentify.util.UtcDateTimes;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,6 +65,7 @@ public class MessageService {
         message.setContent(request.getContent());
         message.setAttachmentUrl(request.getAttachmentUrl());
         message.setMessageKind(MessageKind.STANDARD);
+        message.setCreatedAt(UtcDateTimes.nowUtc());
 
         message = messageRepository.save(message);
 
@@ -79,6 +82,7 @@ public class MessageService {
         message.setReceiver(booking.getListing().getOwner());
         message.setContent("request posted");
         message.setMessageKind(MessageKind.LIVE_REQUEST_REPLY);
+        message.setCreatedAt(UtcDateTimes.nowUtc());
         message = messageRepository.save(message);
         return mapToResponse(message);
     }
@@ -121,7 +125,7 @@ public class MessageService {
         }
         
         if (message.getReadAt() == null) {
-            message.setReadAt(LocalDateTime.now());
+            message.setReadAt(UtcDateTimes.nowUtc());
             messageRepository.save(message);
         }
     }
@@ -139,7 +143,7 @@ public class MessageService {
                 .filter(m -> m.getReceiver().getId().equals(userId) && m.getReadAt() == null)
                 .collect(Collectors.toList());
         
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = UtcDateTimes.nowUtc();
         unreadMessages.forEach(m -> m.setReadAt(now));
         if (!unreadMessages.isEmpty()) {
             messageRepository.saveAll(unreadMessages);
@@ -160,8 +164,8 @@ public class MessageService {
         response.setReceiverId(message.getReceiver().getId());
         response.setContent(message.getContent());
         response.setAttachmentUrl(message.getAttachmentUrl());
-        response.setReadAt(message.getReadAt());
-        response.setCreatedAt(message.getCreatedAt());
+        response.setReadAt(UtcDateTimes.toInstantString(message.getReadAt()));
+        response.setCreatedAt(UtcDateTimes.toInstantString(message.getCreatedAt()));
         response.setMessageKind(
                 message.getMessageKind() != null ? message.getMessageKind().name() : MessageKind.STANDARD.name());
 

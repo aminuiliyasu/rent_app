@@ -76,13 +76,17 @@ export interface Listing {
   reviewCount?: number
 }
 
+export type RentWishRequestType = 'ITEM' | 'WORKER'
+
 export type DeliveryPreference = 'PICKUP' | 'DELIVERY' | 'EITHER'
 
 export type DepositPreference = 'NONE' | 'CASH' | 'ITEM' | 'FLEXIBLE'
 
 export interface RentWishPost {
   id: number
+  requestType?: RentWishRequestType
   title: string
+  timingNote?: string | null
   description?: string
   location?: string
   district?: string

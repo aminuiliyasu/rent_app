@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,8 +16,10 @@ public class MessageResponse {
     private UserResponse receiver;
     private String content;
     private String attachmentUrl;
-    private LocalDateTime readAt;
-    private LocalDateTime createdAt;
+    /** ISO-8601 instant in UTC, e.g. {@code 2026-07-04T22:41:00Z} */
+    private String readAt;
+    /** ISO-8601 instant in UTC, e.g. {@code 2026-07-04T22:41:00Z} */
+    private String createdAt;
     /** STANDARD | LIVE_REQUEST_REPLY */
     private String messageKind;
 }

@@ -9,6 +9,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import BookingFlowTimeline from '@/components/BookingFlowTimeline'
 import api from '@/lib/api'
+import { parseApiDateTime } from '@/lib/dateTime'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
 import {
@@ -552,7 +553,7 @@ export default function BookingDetailPage() {
                           >
                             <p className="text-sm leading-relaxed">{msg.content}</p>
                             <p className={`mt-2 text-xs ${mine ? 'text-blue-100/90' : 'text-gray-500 dark:text-gray-400'}`}>
-                              {new Date(msg.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
+                              {parseApiDateTime(msg.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                             </p>
                           </div>
                         </div>

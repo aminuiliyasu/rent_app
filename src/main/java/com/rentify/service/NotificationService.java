@@ -9,6 +9,7 @@ import com.rentify.model.enums.MessageKind;
 import com.rentify.model.enums.NotificationType;
 import com.rentify.repository.NotificationRepository;
 import com.rentify.util.CurrentUser;
+import com.rentify.util.UtcDateTimes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -205,7 +206,7 @@ public class NotificationService {
                 .bookingId(notification.getBookingId())
                 .messageId(notification.getMessageId())
                 .read(notification.getReadAt() != null)
-                .createdAt(notification.getCreatedAt())
+                .createdAt(UtcDateTimes.toInstantString(notification.getCreatedAt()))
                 .build();
     }
 

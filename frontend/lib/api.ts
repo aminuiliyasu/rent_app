@@ -52,6 +52,63 @@ export const api = axios.create({
   },
 })
 
+let refreshPromise: Promise<string | null> | null = null
+
+function isAuthPagePath(pathname: string): boolean {
+  return (
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname.startsWith('/auth/callback') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/reset-password')
+  )
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) {
+    return refreshPromise
+  }
+
+  const refreshToken = localStorage.getItem('refreshToken')
+  if (!refreshToken) {
+    return null
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const response = await axios.post(`${getApiBaseUrl()}/auth/refresh`, {
+        refreshToken,
+      })
+      const { accessToken, refreshToken: newRefreshToken } = response.data as {
+        accessToken?: string
+        refreshToken?: string
+      }
+      if (!accessToken) {
+        return null
+      }
+      localStorage.setItem('accessToken', accessToken)
+      if (newRefreshToken) {
+        localStorage.setItem('refreshToken', newRefreshToken)
+      }
+      return accessToken
+    } catch {
+      return null
+    } finally {
+      refreshPromise = null
+    }
+  })()
+
+  return refreshPromise
+}
+
+function clearSessionAndRedirectToLogin() {
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  if (typeof window !== 'undefined' && !isAuthPagePath(window.location.pathname)) {
+    window.location.href = '/login'
+  }
+}
+
 api.interceptors.request.use((config) => {
   config.baseURL = getApiBaseUrl()
   return config
@@ -85,46 +142,21 @@ api.interceptors.response.use(
     }
 
     // Don't retry refresh for auth endpoints to avoid infinite loops
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !originalRequest.url?.includes('/auth/')) {
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes('/auth/')
+    ) {
       originalRequest._retry = true
-      
-      const refreshToken = localStorage.getItem('refreshToken')
-      if (refreshToken) {
-        try {
-          // Attempt to refresh the token
-          const response = await axios.post(`${getApiBaseUrl()}/auth/refresh`, {
-            refreshToken: refreshToken
-          })
-          
-          const { accessToken, refreshToken: newRefreshToken } = response.data
-          
-          // Update tokens in localStorage
-          localStorage.setItem('accessToken', accessToken)
-          if (newRefreshToken) {
-            localStorage.setItem('refreshToken', newRefreshToken)
-          }
-          
-          // Update the original request with new token
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`
-          
-          // Retry the original request
-          return api(originalRequest)
-        } catch (refreshError) {
-          // Refresh failed, clear tokens and redirect to login
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
-          
-          // Only redirect if we're not already on the login page
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login'
-          }
-        }
-      } else {
-        // No refresh token, redirect to login
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login'
-        }
+
+      const newAccessToken = await refreshAccessToken()
+      if (newAccessToken) {
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+        return api(originalRequest)
       }
+
+      clearSessionAndRedirectToLogin()
     }
     
     return Promise.reject(error)

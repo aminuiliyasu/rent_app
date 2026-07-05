@@ -2,6 +2,7 @@ package com.rentify.model;
 
 import com.rentify.model.enums.DeliveryPreference;
 import com.rentify.model.enums.DepositPreference;
+import com.rentify.model.enums.RentWishRequestType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,6 +23,14 @@ public class RentWishPost extends BaseEntity {
 
     @Column(nullable = false, length = 200)
     private String title;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "request_type", nullable = false, length = 16)
+    private RentWishRequestType requestType = RentWishRequestType.ITEM;
+
+    /** When the service is needed — for WORKER requests (e.g. "Tonight from 6pm"). */
+    @Column(name = "timing_note", length = 120)
+    private String timingNote;
 
     @Column(length = 2000)
     private String description;

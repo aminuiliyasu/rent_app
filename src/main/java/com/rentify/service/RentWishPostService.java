@@ -6,6 +6,7 @@ import com.rentify.model.RentWishPost;
 import com.rentify.model.User;
 import com.rentify.model.enums.DeliveryPreference;
 import com.rentify.model.enums.DepositPreference;
+import com.rentify.model.enums.RentWishRequestType;
 import com.rentify.repository.RentWishPostRepository;
 import com.rentify.repository.UserRepository;
 import com.rentify.util.CurrentUser;
@@ -50,8 +51,11 @@ public class RentWishPostService {
 
         RentWishPost post = new RentWishPost();
         post.setAuthor(author);
+        RentWishRequestType requestType = parseRequestType(request.getRequestType());
+        post.setRequestType(requestType);
         post.setTitle(request.getTitle().trim());
         post.setDescription(request.getDescription() != null ? request.getDescription().trim() : null);
+        post.setTimingNote(requestType == RentWishRequestType.WORKER ? trimToNull(request.getTimingNote()) : null);
 
         String district = trimToNull(request.getDistrict());
         String city = trimToNull(request.getCity());
@@ -65,9 +69,15 @@ public class RentWishPostService {
         post.setLocation(composedLocation != null ? composedLocation : legacyLocation);
 
         post.setBudgetText(trimToNull(request.getBudgetText()));
-        post.setDeliveryPreference(parseDeliveryPreference(request.getDeliveryPreference()));
-        post.setDepositPreference(parseDepositPreference(request.getDepositPreference()));
-        post.setDepositNote(trimToNull(request.getDepositNote()));
+        if (requestType == RentWishRequestType.ITEM) {
+            post.setDeliveryPreference(parseDeliveryPreference(request.getDeliveryPreference()));
+            post.setDepositPreference(parseDepositPreference(request.getDepositPreference()));
+            post.setDepositNote(trimToNull(request.getDepositNote()));
+        } else {
+            post.setDeliveryPreference(null);
+            post.setDepositPreference(null);
+            post.setDepositNote(null);
+        }
         post.setVisibilityHours(normalizeVisibilityHours(request.getVisibilityHours()));
 
         RentWishPost saved = rentWishPostRepository.save(post);
@@ -109,6 +119,17 @@ public class RentWishPostService {
         return out.length() == 0 ? null : out.toString();
     }
 
+    private RentWishRequestType parseRequestType(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return RentWishRequestType.ITEM;
+        }
+        try {
+            return RentWishRequestType.valueOf(raw.trim().toUpperCase());
+        } catch (IllegalArgumentException ignored) {
+            return RentWishRequestType.ITEM;
+        }
+    }
+
     private DeliveryPreference parseDeliveryPreference(String raw) {
         if (raw == null || raw.isBlank()) return null;
         try {
@@ -129,23 +150,28 @@ public class RentWishPostService {
 
     private RentWishPostResponse toResponse(RentWishPost post) {
         int hours = resolveVisibilityHours(post);
-        return RentWishPostResponse.builder()
-                .id(post.getId())
-                .title(post.getTitle())
-                .description(post.getDescription())
-                .location(post.getLocation())
-                .district(post.getDistrict())
-                .city(post.getCity())
-                .country(post.getCountry())
-                .authorId(post.getAuthor().getId())
-                .authorName(post.getAuthor().getName())
-                .createdAt(post.getCreatedAt())
-                .expiresAt(post.getCreatedAt().plusHours(hours))
-                .budgetText(post.getBudgetText())
-                .deliveryPreference(post.getDeliveryPreference() != null ? post.getDeliveryPreference().name() : null)
-                .depositPreference(post.getDepositPreference() != null ? post.getDepositPreference().name() : null)
-                .depositNote(post.getDepositNote())
-                .visibilityHours(hours)
-                .build();
+        RentWishPostResponse response = new RentWishPostResponse();
+        response.setId(post.getId());
+        response.setRequestType(
+                post.getRequestType() != null ? post.getRequestType().name() : RentWishRequestType.ITEM.name());
+        response.setTitle(post.getTitle());
+        response.setTimingNote(post.getTimingNote());
+        response.setDescription(post.getDescription());
+        response.setLocation(post.getLocation());
+        response.setDistrict(post.getDistrict());
+        response.setCity(post.getCity());
+        response.setCountry(post.getCountry());
+        response.setAuthorId(post.getAuthor().getId());
+        response.setAuthorName(post.getAuthor().getName());
+        response.setCreatedAt(post.getCreatedAt());
+        response.setExpiresAt(post.getCreatedAt().plusHours(hours));
+        response.setBudgetText(post.getBudgetText());
+        response.setDeliveryPreference(
+                post.getDeliveryPreference() != null ? post.getDeliveryPreference().name() : null);
+        response.setDepositPreference(
+                post.getDepositPreference() != null ? post.getDepositPreference().name() : null);
+        response.setDepositNote(post.getDepositNote());
+        response.setVisibilityHours(hours);
+        return response;
     }
 }

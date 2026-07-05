@@ -8,6 +8,12 @@ import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
 import api from '@/lib/api'
 import { MessageResponse, Booking } from '@/lib/types'
+import {
+  compareApiDateTime,
+  formatMessageDateSeparator,
+  formatMessageTime,
+  parseApiDateTime,
+} from '@/lib/dateTime'
 import { normalizeReviewSummary, reviewAttentionForInbox } from '@/lib/bookingUi'
 import toast from 'react-hot-toast'
 import {
@@ -28,7 +34,7 @@ function dedupeMessagesById(list: MessageResponse[]): MessageResponse[] {
     if (m && typeof m.id === 'number') byId.set(m.id, m)
   }
   return Array.from(byId.values()).sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    (a, b) => compareApiDateTime(a.createdAt, b.createdAt)
   )
 }
 
@@ -65,11 +71,6 @@ function formatBookingRange(start?: string, end?: string): string {
   return `${s.toLocaleDateString(undefined, opts)} – ${e.toLocaleDateString(undefined, opts)}`
 }
 
-function timeLabel(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-}
-
 function inboxStatusLabel(status: string): ReactNode {
   const normalized = status.toUpperCase()
   if (normalized === 'PENDING') {
@@ -98,17 +99,6 @@ function inboxStatusLabel(status: string): ReactNode {
       {normalized.toLowerCase()}
     </span>
   )
-}
-
-function dateSeparatorLabel(iso: string): string {
-  const d = new Date(iso)
-  const now = new Date()
-  const startOf = (dt: Date) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime()
-  const diffDays = Math.round((startOf(now) - startOf(d)) / (24 * 60 * 60 * 1000))
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return d.toLocaleDateString(undefined, { weekday: 'long' })
-  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 export default function MessagesPage() {
@@ -285,13 +275,13 @@ export default function MessagesPage() {
   const messageGroups = useMemo(() => {
     const groups: { dateKey: string; label: string; items: MessageResponse[] }[] = []
     for (const m of messages) {
-      const d = new Date(m.createdAt)
+      const d = parseApiDateTime(m.createdAt)
       const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
       const last = groups[groups.length - 1]
       if (last && last.dateKey === key) {
         last.items.push(m)
       } else {
-        groups.push({ dateKey: key, label: dateSeparatorLabel(m.createdAt), items: [m] })
+        groups.push({ dateKey: key, label: formatMessageDateSeparator(m.createdAt), items: [m] })
       }
     }
     return groups
@@ -596,7 +586,7 @@ export default function MessagesPage() {
                                           : 'text-gray-400 dark:text-gray-500'
                                       }`}
                                     >
-                                      {timeLabel(message.createdAt)}
+                                      {formatMessageTime(message.createdAt)}
                                     </p>
                                   </div>
                                 </div>

@@ -5,10 +5,11 @@ import { BellIcon } from '@heroicons/react/24/outline'
 import { formatDistanceToNow } from 'date-fns'
 import { useNotifications } from '@/contexts/NotificationsContext'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { parseApiDateTime } from '@/lib/dateTime'
 import type { AppNotification } from '@/lib/types'
 
 function timeAgo(iso: string) {
-  const d = new Date(iso)
+  const d = parseApiDateTime(iso)
   if (Number.isNaN(d.getTime())) return ''
   return formatDistanceToNow(d, { addSuffix: true })
 }

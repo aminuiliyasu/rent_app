@@ -2,12 +2,12 @@ import type { Category } from '@/lib/types'
 
 /** Budapest-focused categories — keep in sync with CategorySeedService. */
 export const SEED_CATEGORY_DEFINITIONS: ReadonlyArray<{ name: string; slug: string }> = [
-  { name: 'Tools & DIY', slug: 'tools-equipment' },
-  { name: 'Electronics', slug: 'electronics' },
-  { name: 'Home & Living', slug: 'home-living' },
-  { name: 'Spaces', slug: 'apartment' },
   { name: 'Services', slug: 'services' },
   { name: 'Scooter & Bikes', slug: 'vehicles' },
+  { name: 'Tools & DIY', slug: 'tools-equipment' },
+  { name: 'Electronics', slug: 'electronics' },
+  { name: 'Spaces', slug: 'apartment' },
+  { name: 'Home & Living', slug: 'home-living' },
   { name: 'Pet Lovers', slug: 'pet-lovers' },
   { name: 'Socials', slug: 'socials' },
   { name: 'Other', slug: 'other' },

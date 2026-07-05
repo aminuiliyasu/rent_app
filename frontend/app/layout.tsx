@@ -25,9 +25,12 @@ export const metadata: Metadata = {
   description:
     'Rent gear, spaces, and skilled people in Budapest. Local listings, secure messaging, and no platform fees.',
   icons: {
-    icon: [{ url: '/logo/rhentify-icon.svg', type: 'image/svg+xml' }],
-    apple: '/logo/rhentify-icon.svg',
-    shortcut: '/logo/rhentify-icon.svg',
+    icon: [
+      { url: '/logo/rhentify-icon.svg', type: 'image/svg+xml' },
+      { url: '/logo/rhentify-icon.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/logo/rhentify-icon.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: '/logo/rhentify-icon.png',
   },
   openGraph: {
     title: 'Rhentify — Rent anything. Hire locally.',
@@ -44,7 +47,18 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
+    <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`} suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/logo/rhentify-icon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/logo/rhentify-icon.png" type="image/png" sizes="512x512" />
+        <link rel="apple-touch-icon" href="/logo/rhentify-icon.png" />
+        <link rel="shortcut icon" href="/logo/rhentify-icon.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className={`${dmSans.className} font-sans antialiased`}>
         <Providers>
           {children}

@@ -48,7 +48,8 @@ public class AuthService {
     
     @Transactional
     public JwtAuthenticationResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        String email = normalizeEmail(request.getEmail());
+        if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("Email already exists");
         }
 
@@ -57,8 +58,8 @@ public class AuthService {
         }
 
         User user = new User();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
+        user.setName(request.getName().trim());
+        user.setEmail(email);
         user.setPhone(request.getPhone());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(UserRole.RENTER);
@@ -71,12 +72,12 @@ public class AuthService {
         user = userRepository.save(user);
 
         Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            new UsernamePasswordAuthenticationToken(email, request.getPassword())
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String accessToken = tokenProvider.generateToken(authentication);
-        String refreshToken = tokenProvider.generateRefreshToken(request.getEmail());
+        String refreshToken = tokenProvider.generateRefreshToken(email);
 
         UserResponse userResponse = mapToUserResponse(user);
 
@@ -85,28 +86,34 @@ public class AuthService {
     
     public JwtAuthenticationResponse login(LoginRequest request) {
         try {
+            String email = normalizeEmail(request.getEmail());
+
             // First check if user exists
-            User user = userRepository.findByEmail(request.getEmail())
+            User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
+            if (user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
+                throw new RuntimeException("This account uses Google sign-in. Please click Continue with Google.");
+            }
             
             // Check if user is active
-            if (user.getIsActive() == null || !user.getIsActive()) {
+            if (Boolean.FALSE.equals(user.getIsActive())) {
                 throw new RuntimeException("Account is not active. Please contact support.");
             }
             
             // Check if user is banned
-            if (user.getIsBanned() != null && user.getIsBanned()) {
+            if (Boolean.TRUE.equals(user.getIsBanned())) {
                 throw new RuntimeException("Account has been banned. Please contact support.");
             }
             
             // Authenticate
             Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(email, request.getPassword())
             );
             
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String accessToken = tokenProvider.generateToken(authentication);
-            String refreshToken = tokenProvider.generateRefreshToken(request.getEmail());
+            String refreshToken = tokenProvider.generateRefreshToken(email);
             
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             User authenticatedUser = userRepository.findById(userPrincipal.getId())
@@ -175,7 +182,7 @@ public class AuthService {
             "If an account exists for that email, we sent password reset instructions."
         );
 
-        userRepository.findByEmail(email.trim()).ifPresent(user -> {
+        userRepository.findByEmail(normalizeEmail(email)).ifPresent(user -> {
             if (user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
                 return;
             }
@@ -227,5 +234,12 @@ public class AuthService {
             user.getEmailVerified(),
             user.getPhoneVerified()
         );
+    }
+
+    private static String normalizeEmail(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        return raw.trim().toLowerCase();
     }
 }

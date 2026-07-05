@@ -8,9 +8,16 @@ import lombok.Data;
 @Data
 public class CreateRentWishPostRequest {
 
+    /** ITEM (gear/space) or WORKER (person/service). Defaults to ITEM when omitted. */
+    @Pattern(regexp = "^(ITEM|WORKER)$", message = "requestType must be ITEM or WORKER")
+    private String requestType;
+
     @NotBlank
     @Size(max = 200)
     private String title;
+
+    @Size(max = 120, message = "Timing note can be at most 120 characters")
+    private String timingNote;
 
     @Size(max = 2000)
     private String description;
