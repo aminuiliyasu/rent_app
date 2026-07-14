@@ -1,8 +1,9 @@
+import { extendedEn, extendedHu } from '@/lib/i18n/extendedTranslations'
+import { listingFormEn, listingFormHu } from '@/lib/i18n/listingFormTranslations'
+
 export type Locale = 'en' | 'hu'
 
-export type TranslationKey = keyof typeof en
-
-const en = {
+const baseEn = {
   // Navbar
   'nav.browse': 'Browse',
   'nav.rentRequests': 'Request',
@@ -101,11 +102,11 @@ const en = {
   'profile.myProfile': 'My Profile',
   'profile.languageTitle': 'Platform language',
   'profile.languageDesc':
-    'Choose how navigation, footer, home, categories, and resource guides are shown. More pages will follow in Hungarian over time.',
+    'Choose how the platform is shown. Navigation, bookings, messages, listings, and guides are available in Hungarian and English.',
   'profile.english': 'English',
-  'profile.englishHint': 'Default — full coverage in Phase 1',
+  'profile.englishHint': 'English — full UI, guides, and listing flows',
   'profile.hungarian': 'Magyar',
-  'profile.hungarianHint': 'Hungarian — navigation, footer, home, categories & resources',
+  'profile.hungarianHint': 'Magyar — teljes felület, útmutatók és hirdetési folyamatok',
   'profile.languageChanged': 'Language updated',
 
   // Profile — existing (partial Phase 1)
@@ -284,7 +285,11 @@ const en = {
   'resources.followRhentify': 'Follow Rhentify',
 } as const
 
-const hu: Record<TranslationKey, string> = {
+const en = { ...baseEn, ...extendedEn, ...listingFormEn } as const
+
+export type TranslationKey = keyof typeof en
+
+const baseHu: Record<keyof typeof baseEn, string> = {
   'nav.browse': 'Böngészés',
   'nav.rentRequests': 'Kérés',
   'nav.postListing': 'Hirdetés feladása',
@@ -379,11 +384,11 @@ const hu: Record<TranslationKey, string> = {
   'profile.myProfile': 'Profilom',
   'profile.languageTitle': 'Platform nyelve',
   'profile.languageDesc':
-    'Válaszd ki a navigáció, lábléc, kezdőlap, kategóriák és útmutatók nyelvét. További oldalak magyarul hamarosan.',
+    'Válaszd ki a platform nyelvét. A navigáció, foglalások, üzenetek, hirdetések és útmutatók magyarul és angolul is elérhetők.',
   'profile.english': 'English',
-  'profile.englishHint': 'Alapértelmezett — teljes Phase 1 lefedettség',
+  'profile.englishHint': 'English — full UI, guides, and listing flows',
   'profile.hungarian': 'Magyar',
-  'profile.hungarianHint': 'Magyar — navigáció, lábléc, kezdőlap, kategóriák és útmutatók',
+  'profile.hungarianHint': 'Magyar — teljes felület, útmutatók és hirdetési folyamatok',
   'profile.languageChanged': 'Nyelv frissítve',
 
   'profile.saveChanges': 'Mentés',
@@ -558,6 +563,8 @@ const hu: Record<TranslationKey, string> = {
   'resources.contactSupport': 'Ügyfélszolgálat',
   'resources.followRhentify': 'Kövess minket',
 }
+
+const hu: Record<TranslationKey, string> = { ...baseHu, ...extendedHu, ...listingFormHu }
 
 export const translations = { en, hu } as const
 

@@ -9,9 +9,10 @@ import { useAuth } from '@/contexts/AuthContext'
 import api from '@/lib/api'
 import { Booking } from '@/lib/types'
 import toast from 'react-hot-toast'
-import { bookedListingTitle, formatBookingDateRange } from '@/lib/bookingUi'
+import { bookedListingTitle, formatBookingDateRange, friendlyBookingStatus } from '@/lib/bookingUi'
 import DashboardOnboarding from '@/components/DashboardOnboarding'
 import DashboardMyListings from '@/components/DashboardMyListings'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { 
   CalendarDaysIcon, 
   ChatBubbleLeftRightIcon,
@@ -30,6 +31,7 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { isAuthenticated, user, loading: authLoading } = useAuth()
+  const { locale, t } = useLanguage()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [recentBookings, setRecentBookings] = useState<Booking[]>([])
@@ -96,7 +98,7 @@ export default function DashboardPage() {
       setRecentBookings(recent)
     } catch (error: any) {
       console.error('Error fetching dashboard data:', error)
-      toast.error('Failed to load dashboard data')
+      toast.error(t('dashboard.loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -136,21 +138,21 @@ export default function DashboardPage() {
 
   const statCards = [
     {
-      title: 'Active Bookings',
+      title: t('dashboard.activeBookings'),
       value: stats?.activeBookings || 0,
       icon: CalendarDaysIcon,
       gradient: 'from-blue-500 to-blue-600',
       bgGradient: 'from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30',
     },
     {
-      title: 'Unread Messages',
+      title: t('dashboard.unreadMessages'),
       value: stats?.unreadMessages || 0,
       icon: ChatBubbleLeftRightIcon,
       gradient: 'from-purple-500 to-pink-500',
       bgGradient: 'from-purple-100 to-pink-200 dark:from-purple-900/30 dark:to-pink-800/30',
     },
     {
-      title: 'My Listings',
+      title: t('dashboard.myListings'),
       value: stats?.myListings || 0,
       icon: RectangleStackIcon,
       gradient: 'from-green-500 to-emerald-600',
@@ -173,11 +175,11 @@ export default function DashboardPage() {
             </div>
             <div>
               <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white">
-                Welcome back,{' '}
+                {t('dashboard.welcome')}{' '}
                 <span className="gradient-text">{user?.name}!</span>
               </h1>
               <p className="text-gray-600 dark:text-gray-400 text-lg mt-2">
-                Here&apos;s what&apos;s happening with your account
+                {t('dashboard.subtitle')}
               </p>
             </div>
           </div>
@@ -220,20 +222,20 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <CalendarDaysIcon className="h-6 w-6 text-blue-500" />
-                Recent Bookings
+                {t('dashboard.recentBookings')}
               </h2>
               <div className="flex gap-3">
                 <Link 
                   href="/bookings/my-listings" 
                   className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 group"
                 >
-                  My Listing Bookings
+                  {t('dashboard.myListingBookings')}
                   <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
-              Open a booking — the <strong className="text-gray-700 dark:text-gray-300">Reviews</strong> section explains mutual ratings (after the host marks the rental complete).
+              {t('dashboard.reviewsHint')}
             </p>
             {recentBookings.length > 0 ? (
               <div className="space-y-4">
@@ -257,7 +259,7 @@ export default function DashboardPage() {
                         booking.status === 'PENDING' ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white' :
                         'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
                       }`}>
-                        {booking.status}
+                        {friendlyBookingStatus(booking.status, locale)}
                       </span>
                     </div>
                   </Link>
@@ -266,8 +268,8 @@ export default function DashboardPage() {
             ) : (
               <div className="text-center py-12">
                 <CalendarDaysIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400 font-medium">No bookings yet</p>
-                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Start browsing to make your first booking!</p>
+                <p className="text-gray-600 dark:text-gray-400 font-medium">{t('dashboard.noBookings')}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">{t('dashboard.noBookingsHint')}</p>
               </div>
             )}
           </div>

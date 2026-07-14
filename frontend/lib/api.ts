@@ -14,19 +14,20 @@ function sleep(ms: number) {
 }
 
 /**
- * Browser: relative `/api/v1` → Next.js rewrites → Spring (same origin, avoids CORS).
- * Set NEXT_PUBLIC_API_URL only if the API must be called directly (e.g. unusual hosting).
+ * Browser dev: call Spring directly (CORS is configured) — the Next.js rewrite proxy
+ * can reset slow auth responses (ECONNRESET / ClientAbortException).
+ * Production / SSR: relative `/api/v1` or NEXT_PUBLIC_API_URL when set.
  */
 export function getApiBaseUrl(): string {
   const env = process.env.NEXT_PUBLIC_API_URL
-  if (typeof window !== 'undefined') {
-    if (env && /^https?:\/\//i.test(env)) {
-      return env.replace(/\/$/, '')
-    }
-    return '/api/v1'
-  }
   if (env && /^https?:\/\//i.test(env)) {
     return env.replace(/\/$/, '')
+  }
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    return 'http://127.0.0.1:8080/api/v1'
+  }
+  if (typeof window !== 'undefined') {
+    return '/api/v1'
   }
   return 'http://127.0.0.1:8080/api/v1'
 }
@@ -50,6 +51,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 90_000,
 })
 
 let refreshPromise: Promise<string | null> | null = null

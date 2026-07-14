@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import api from '@/lib/api'
+import { useLanguage } from '@/contexts/LanguageContext'
 import toast from 'react-hot-toast'
 import BrandLogo from '@/components/BrandLogo'
 import { SUPPORT_EMAIL } from '@/lib/site'
 
 export default function ForgotPasswordPage() {
+  const { t } = useLanguage()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -18,10 +20,10 @@ export default function ForgotPasswordPage() {
     try {
       await api.post('/auth/forgot-password', { email: email.trim() })
       setSubmitted(true)
-      toast.success('Check your inbox for reset instructions.')
+      toast.success(t('auth.resetEmailSent'))
     } catch (error: any) {
       const message =
-        error.response?.data?.message || error.response?.data?.error || 'Something went wrong. Try again.'
+        error.response?.data?.message || error.response?.data?.error || t('auth.somethingWrong')
       toast.error(message)
     } finally {
       setLoading(false)
@@ -33,9 +35,9 @@ export default function ForgotPasswordPage() {
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
           <BrandLogo className="justify-center mb-4 mx-auto" />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Forgot password?</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('auth.forgotTitle')}</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Enter your email and we&apos;ll send you a reset link.
+            {t('auth.forgotSubtitle')}
           </p>
         </div>
 
@@ -43,24 +45,23 @@ export default function ForgotPasswordPage() {
           {submitted ? (
             <div className="text-center space-y-4">
               <p className="text-gray-700 dark:text-gray-300">
-                If an account exists for <strong>{email}</strong>, you&apos;ll receive an email with a reset link
-                shortly.
+                {t('auth.forgotSuccess', { email })}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Didn&apos;t get it? Check spam or contact{' '}
+                {t('auth.forgotSpam')}{' '}
                 <a href={`mailto:${SUPPORT_EMAIL}`} className="text-blue-600 dark:text-blue-400 font-semibold">
                   {SUPPORT_EMAIL}
                 </a>
               </p>
               <Link href="/login" className="btn-primary inline-block w-full py-3 text-center">
-                Back to sign in
+                {t('auth.backToSignIn')}
               </Link>
             </div>
           ) : (
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Email address
+                  {t('common.email')}
                 </label>
                 <input
                   id="email"
@@ -74,11 +75,11 @@ export default function ForgotPasswordPage() {
                 />
               </div>
               <button type="submit" disabled={loading} className="w-full btn-primary py-4 font-bold">
-                {loading ? 'Sending…' : 'Send reset link'}
+                {loading ? t('auth.sending') : t('auth.sendReset')}
               </button>
               <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                 <Link href="/login" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                  Back to sign in
+                  {t('auth.backToSignIn')}
                 </Link>
               </p>
             </form>

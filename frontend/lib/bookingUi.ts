@@ -1,6 +1,8 @@
 /** Human-readable copy for booking + review UI */
 
 import type { BookingReviewSummary } from '@/lib/types'
+import type { Locale } from '@/lib/i18n/translations'
+import { translate } from '@/lib/i18n/translations'
 
 export function normalizeReviewSummary(raw: unknown): BookingReviewSummary | undefined {
   if (raw == null || typeof raw !== 'object' || Array.isArray(raw)) return undefined
@@ -30,31 +32,31 @@ export function reviewAttentionForInbox(
   return { needsMyReview, waitingOnPartnerReview }
 }
 
-export function friendlyBookingStatus(status: string): string {
+export function friendlyBookingStatus(status: string, locale: Locale = 'en'): string {
   switch (status) {
     case 'PENDING':
-      return 'Waiting for host'
+      return translate(locale, 'booking.status.pending')
     case 'CONFIRMED':
-      return 'Confirmed'
+      return translate(locale, 'booking.status.confirmed')
     case 'IN_PROGRESS':
-      return 'Rental in progress'
+      return translate(locale, 'booking.status.inProgress')
     case 'COMPLETED':
-      return 'Completed'
+      return translate(locale, 'booking.status.completed')
     case 'CANCELLED':
-      return 'Cancelled'
+      return translate(locale, 'booking.status.cancelled')
     case 'DISPUTED':
-      return 'Under review'
+      return translate(locale, 'booking.status.disputed')
     default:
       return status
   }
 }
 
-export function ratingWords(stars: number): string {
-  if (stars <= 1) return 'Poor'
-  if (stars === 2) return 'Fair'
-  if (stars === 3) return 'Good'
-  if (stars === 4) return 'Great'
-  return 'Excellent'
+export function ratingWords(stars: number, locale: Locale = 'en'): string {
+  if (stars <= 1) return translate(locale, 'booking.rating.poor')
+  if (stars === 2) return translate(locale, 'booking.rating.fair')
+  if (stars === 3) return translate(locale, 'booking.rating.good')
+  if (stars === 4) return translate(locale, 'booking.rating.great')
+  return translate(locale, 'booking.rating.excellent')
 }
 
 export function timelineStepFromStatus(status: string): number {

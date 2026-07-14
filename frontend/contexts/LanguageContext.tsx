@@ -17,16 +17,16 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 function detectInitialLocale(): Locale {
-  if (typeof window === 'undefined') return 'en'
+  if (typeof window === 'undefined') return 'hu'
   const saved = localStorage.getItem(LOCALE_STORAGE_KEY)
   if (saved === 'en' || saved === 'hu') return saved
   const browser = navigator.language.toLowerCase()
   if (browser.startsWith('hu')) return 'hu'
-  return 'en'
+  return 'hu'
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>('en')
+  const [locale, setLocaleState] = useState<Locale>('hu')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -60,9 +60,9 @@ export function useLanguage() {
   const context = useContext(LanguageContext)
   if (context === undefined) {
     return {
-      locale: 'en' as Locale,
+      locale: 'hu' as Locale,
       setLocale: () => {},
-      t: (key: TranslationKey, vars?: Record<string, string>) => translate('en', key, vars),
+      t: (key: TranslationKey, vars?: Record<string, string>) => translate('hu', key, vars),
     }
   }
   return context

@@ -1,6 +1,7 @@
 'use client'
 
 import AvailableDaysPicker from '@/components/AvailableDaysPicker'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { UserIcon } from '@heroicons/react/24/outline'
 
 export type WorkerListingFields = {
@@ -17,40 +18,40 @@ type WorkerListingSectionProps = {
 }
 
 export default function WorkerListingSection({ values, onChange }: WorkerListingSectionProps) {
+  const { t } = useLanguage()
+
   return (
     <div className="card-glass animate-slide-up" style={{ animationDelay: '0.4s' }}>
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
         <UserIcon className="h-7 w-7 text-purple-600 dark:text-purple-400 shrink-0" aria-hidden />
-        Your service profile
+        {t('listingForm.workerProfile')}
       </h2>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-        Tell renters who you are, where you work, and when you&apos;re available.
-      </p>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">{t('listingForm.workerProfileHint')}</p>
 
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              Display name
+              {t('listingForm.displayName')}
             </label>
             <input
               type="text"
               value={values.workerName}
               onChange={(e) => onChange({ workerName: e.target.value })}
               className="input-field"
-              placeholder="Your name or business name"
+              placeholder={t('listingForm.displayNamePlaceholder')}
             />
           </div>
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              Profession *
+              {t('listingForm.profession')} *
             </label>
             <input
               type="text"
               value={values.workerProfession}
               onChange={(e) => onChange({ workerProfession: e.target.value })}
               className="input-field"
-              placeholder="e.g., Photographer, cleaner, tutor"
+              placeholder={t('listingForm.professionPlaceholder')}
               required
             />
           </div>
@@ -58,36 +59,34 @@ export default function WorkerListingSection({ values, onChange }: WorkerListing
 
         <div>
           <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-            Service area
+            {t('listingForm.serviceArea')}
           </label>
           <input
             type="text"
             value={values.serviceArea}
             onChange={(e) => onChange({ serviceArea: e.target.value })}
             className="input-field"
-            placeholder="e.g., Budapest V–IX, or city-wide"
+            placeholder={t('listingForm.serviceAreaPlaceholder')}
           />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            Districts or neighbourhoods where you usually take jobs.
-          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{t('listingForm.serviceAreaHint')}</p>
         </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-            About your service
+            {t('listingForm.aboutService')}
           </label>
           <textarea
             value={values.workerBio}
             onChange={(e) => onChange({ workerBio: e.target.value })}
             className="input-field"
             rows={4}
-            placeholder="Skills, experience, languages, and what makes your service a good fit..."
+            placeholder={t('listingForm.aboutServicePlaceholder')}
           />
         </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-            When you&apos;re available
+            {t('listingForm.whenAvailable')}
           </label>
           <AvailableDaysPicker
             value={values.availableDays}

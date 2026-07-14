@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import toast from 'react-hot-toast'
 import BrandLogo from '@/components/BrandLogo'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
 export default function LoginPage() {
   const { login } = useAuth()
+  const { t } = useLanguage()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,11 +24,11 @@ export default function LoginPage() {
 
     try {
       await login(formData.email, formData.password)
-      toast.success('Welcome back!')
+      toast.success(t('auth.welcomeBackToast'))
       window.location.href = '/dashboard'
     } catch (error: any) {
       console.error('Login error:', error)
-      let errorMessage = 'Login failed. Please try again.'
+      let errorMessage = t('auth.loginFailed')
       
       if (error.response?.data) {
         if (error.response.data.errors) {
@@ -35,6 +37,10 @@ export default function LoginPage() {
         } else {
           errorMessage = error.response.data.error || error.response.data.message || errorMessage
         }
+      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMessage = t('auth.backendTimeout')
+      } else if (!error.response && (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error'))) {
+        errorMessage = t('auth.backendUnavailable')
       } else if (error.message) {
         errorMessage = error.message
       }
@@ -58,10 +64,10 @@ export default function LoginPage() {
         <div className="text-center mb-8 animate-slide-down">
           <BrandLogo className="justify-center mb-4 mx-auto" />
           <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Welcome back!
+            {t('auth.loginTitle')}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Sign in to continue your journey
+            {t('auth.loginSubtitle')}
           </p>
         </div>
 
@@ -70,7 +76,7 @@ export default function LoginPage() {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Email address
+                {t('common.email')}
               </label>
               <input
                 id="email"
@@ -87,7 +93,7 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Password
+                {t('common.password')}
               </label>
               <div className="relative">
                 <input
@@ -124,13 +130,13 @@ export default function LoginPage() {
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                  Remember me
+                  {t('auth.rememberMe')}
                 </label>
               </div>
 
               <div className="text-sm">
                 <Link href="/forgot-password" className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">
-                  Forgot password?
+                  {t('auth.forgotPassword')}
                 </Link>
               </div>
             </div>
@@ -147,10 +153,10 @@ export default function LoginPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Signing in...
+                    {t('auth.signingIn')}
                   </span>
                 ) : (
-                  'Sign in'
+                  t('auth.signIn')
                 )}
               </button>
             </div>
@@ -162,7 +168,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300 dark:border-gray-700" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 font-medium">Or continue with</span>
+                <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 font-medium">{t('auth.orContinueWith')}</span>
               </div>
             </div>
 
@@ -177,15 +183,15 @@ export default function LoginPage() {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                Continue with Google
+                {t('auth.continueGoogle')}
               </a>
             </div>
           </div>
 
           <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-            Don&apos;t have an account?{' '}
+            {t('auth.noAccount')}{' '}
             <Link href="/register" className="font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline">
-              Sign up for free
+              {t('auth.signUpFree')}
             </Link>
           </p>
         </div>

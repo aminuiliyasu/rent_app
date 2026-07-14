@@ -247,11 +247,13 @@ function SearchPageContent() {
           <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-3">
             {headlineQuery ? (
               <>
-                Search results for <span className="gradient-text">&quot;{headlineQuery}&quot;</span>
+                {t('search.resultsFor')}{' '}
+                <span className="gradient-text">&quot;{headlineQuery}&quot;</span>
               </>
             ) : (
               <>
-                Discover <span className="gradient-text">Amazing Listings</span>
+                {t('search.discover')}{' '}
+                <span className="gradient-text">{t('search.amazingListings')}</span>
               </>
             )}
           </h1>
@@ -259,7 +261,7 @@ function SearchPageContent() {
             <div className="flex items-center gap-2">
               <SparklesIcon className="h-5 w-5 text-blue-500" />
               <span className="font-semibold">{listings.length}</span>
-              <span>listings found</span>
+              <span>{t('search.listingsFound')}</span>
             </div>
           </div>
         </div>
@@ -272,7 +274,7 @@ function SearchPageContent() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 mb-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent" />
               </div>
-              <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">Loading amazing listings...</p>
+              <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">{t('search.loading')}</p>
             </div>
           ) : listings.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -287,13 +289,13 @@ function SearchPageContent() {
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 mb-6">
                 <MagnifyingGlassIcon className="h-10 w-10 text-gray-400" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No listings found</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">Try another item name, district, or category</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('search.noResults')}</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">{t('search.noResultsHint')}</p>
               <button
                 onClick={() => setFilters(emptySearchFilters())}
                 className="btn-outline"
               >
-                Clear Filters
+                {t('search.clearFilters')}
               </button>
             </div>
           )}

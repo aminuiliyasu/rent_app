@@ -8,7 +8,7 @@ import { getAboutCategoryGuide, aboutCategoryGuideIntro } from '@/lib/i18n/about
 import { ArrowRightIcon } from '@heroicons/react/24/outline'
 
 export default function AboutPage() {
-  const { locale } = useLanguage()
+  const { locale, t } = useLanguage()
   const intro = aboutCategoryGuideIntro[locale]
   const categories = getAboutCategoryGuide(locale)
 
@@ -18,22 +18,18 @@ export default function AboutPage() {
       <div className="pt-20 section-container pb-16">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white mb-8 text-center">
-            About <span className="gradient-text">Rhentify</span>
+            {t('about.title')} <span className="gradient-text">Rhentify</span>
           </h1>
 
           <div className="card-glass space-y-6 mb-12">
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-              Rhentify is a marketplace that connects people who need to rent items, spaces, or skilled help with
-              neighbors who have something to offer.
+              {t('about.p1')}
             </p>
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-              Our mission is to make renting and hiring accessible, safe, and convenient. Whether you need a camera for
-              a weekend, furniture for a new place, a desk for a month, or a photographer for an event, Rhentify helps
-              you find it locally.
+              {t('about.p2')}
             </p>
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-              We&apos;re starting in Budapest and growing neighborhood by neighborhood — clear listings, in-app chat,
-              mutual reviews, and no platform fees while we launch.
+              {t('about.p3')}
             </p>
           </div>
 
@@ -50,7 +46,7 @@ export default function AboutPage() {
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{category.title}</h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{category.summary}</p>
                   <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    {locale === 'hu' ? 'Példák:' : 'Examples:'}
+                    {t('common.examples')}
                   </p>
                   <ul className="flex flex-wrap gap-2">
                     {category.examples.map((example) => (

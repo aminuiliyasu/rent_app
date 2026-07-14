@@ -6,6 +6,7 @@ import { formatListingCardPrice, stripLegacyPricingAppendix } from '@/lib/listin
 import { firstListingImageUrl } from '@/lib/listingImageUrl'
 import { formatListingLocationLine } from '@/lib/listingLocation'
 import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { StarIcon, CubeIcon } from '@heroicons/react/24/solid'
 import { StarIcon as StarOutlineIcon, MapPinIcon, SparklesIcon } from '@heroicons/react/24/outline'
 
@@ -15,6 +16,7 @@ interface ListingCardProps {
 
 export default function ListingCard({ listing }: ListingCardProps) {
   const { presentation } = useCurrencyPresentation()
+  const { t } = useLanguage()
   const cardImageSrc = firstListingImageUrl(listing)
   const cardPrice = formatListingCardPrice(listing, presentation)
   const desc = stripLegacyPricingAppendix(listing.description)
@@ -43,7 +45,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
         {listing.isFeatured && (
           <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-xl flex items-center gap-1">
             <SparklesIcon className="h-3 w-3" />
-            Featured
+            {t('listings.featured')}
           </div>
         )}
         
@@ -78,7 +80,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
 
         {listing.ownerName && (
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-1">
-            Listed by <span className="font-semibold text-gray-700 dark:text-gray-200">{listing.ownerName}</span>
+            {t('listings.listedBy', { owner: listing.ownerName })}
           </p>
         )}
         

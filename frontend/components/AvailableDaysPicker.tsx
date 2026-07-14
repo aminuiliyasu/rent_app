@@ -2,7 +2,6 @@
 
 import {
   DAY_CODES,
-  DAY_LABELS,
   PRESET_EVERYDAY,
   PRESET_WEEKDAYS,
   PRESET_WEEKENDS,
@@ -10,20 +9,33 @@ import {
   parseAvailableDays,
   serializeAvailableDays,
 } from '@/lib/availableDays'
+import { useLanguage } from '@/contexts/LanguageContext'
+import type { TranslationKey } from '@/lib/i18n/translations'
 
 type AvailableDaysPickerProps = {
   value: string
   onChange: (value: string) => void
 }
 
-const PRESETS = [
-  { value: PRESET_EVERYDAY, label: 'Every day' },
-  { value: PRESET_WEEKDAYS, label: 'Weekdays' },
-  { value: PRESET_WEEKENDS, label: 'Weekends' },
-] as const
+const DAY_LABEL_KEYS: Record<DayCode, TranslationKey> = {
+  MON: 'listingForm.dayMon',
+  TUE: 'listingForm.dayTue',
+  WED: 'listingForm.dayWed',
+  THU: 'listingForm.dayThu',
+  FRI: 'listingForm.dayFri',
+  SAT: 'listingForm.daySat',
+  SUN: 'listingForm.daySun',
+}
 
 export default function AvailableDaysPicker({ value, onChange }: AvailableDaysPickerProps) {
+  const { t } = useLanguage()
   const selected = parseAvailableDays(value)
+
+  const presets = [
+    { value: PRESET_EVERYDAY, label: t('listingForm.daysEveryDay') },
+    { value: PRESET_WEEKDAYS, label: t('listingForm.daysWeekdays') },
+    { value: PRESET_WEEKENDS, label: t('listingForm.daysWeekends') },
+  ] as const
 
   const applySelection = (next: Set<DayCode>) => {
     onChange(serializeAvailableDays(next))
@@ -43,7 +55,7 @@ export default function AvailableDaysPicker({ value, onChange }: AvailableDaysPi
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {PRESETS.map((preset) => (
+        {presets.map((preset) => (
           <button
             key={preset.value}
             type="button"
@@ -63,7 +75,7 @@ export default function AvailableDaysPicker({ value, onChange }: AvailableDaysPi
             onClick={() => onChange('')}
             className="px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            Clear
+            {t('listingForm.daysClear')}
           </button>
         ) : null}
       </div>
@@ -83,15 +95,13 @@ export default function AvailableDaysPicker({ value, onChange }: AvailableDaysPi
                   : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-600'
               }`}
             >
-              {DAY_LABELS[day]}
+              {t(DAY_LABEL_KEYS[day])}
             </button>
           )
         })}
       </div>
 
-      <p className="text-xs text-gray-500 dark:text-gray-400">
-        Pick quick presets or tap individual days — e.g. Wed only, or Thu and Sat.
-      </p>
+      <p className="text-xs text-gray-500 dark:text-gray-400">{t('listingForm.daysHint')}</p>
     </div>
   )
 }

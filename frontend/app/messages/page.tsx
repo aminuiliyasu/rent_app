@@ -15,6 +15,8 @@ import {
   parseApiDateTime,
 } from '@/lib/dateTime'
 import { normalizeReviewSummary, reviewAttentionForInbox } from '@/lib/bookingUi'
+import { useLanguage } from '@/contexts/LanguageContext'
+import type { TranslationKey } from '@/lib/i18n/translations'
 import toast from 'react-hot-toast'
 import {
   ChatBubbleLeftRightIcon,
@@ -71,26 +73,29 @@ function formatBookingRange(start?: string, end?: string): string {
   return `${s.toLocaleDateString(undefined, opts)} – ${e.toLocaleDateString(undefined, opts)}`
 }
 
-function inboxStatusLabel(status: string): ReactNode {
+function inboxStatusLabel(
+  status: string,
+  t: (key: TranslationKey, vars?: Record<string, string>) => string,
+): ReactNode {
   const normalized = status.toUpperCase()
   if (normalized === 'PENDING') {
     return (
       <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-gray-700 dark:text-amber-300">
-        pending
+        {t('messages.statusPending')}
       </span>
     )
   }
   if (normalized === 'CONFIRMED') {
     return (
       <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-gray-700 dark:text-emerald-300">
-        confirmed
+        {t('messages.statusConfirmed')}
       </span>
     )
   }
   if (normalized === 'CANCELLED') {
     return (
       <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:px-2 dark:py-0.5 dark:rounded-full dark:bg-gray-700 dark:text-gray-200">
-        cancelled
+        {t('messages.statusCancelled')}
       </span>
     )
   }
@@ -103,6 +108,7 @@ function inboxStatusLabel(status: string): ReactNode {
 
 export default function MessagesPage() {
   const { isAuthenticated, user, loading: authLoading } = useAuth()
+  const { t } = useLanguage()
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -167,11 +173,11 @@ export default function MessagesPage() {
       setShowChat(Boolean(urlBooking))
     } catch (error) {
       console.error('Error fetching bookings:', error)
-      toast.error('Failed to load bookings')
+      toast.error(t('messages.loadBookingsFailed'))
     } finally {
       setBookingsLoading(false)
     }
-  }, [searchParams])
+  }, [searchParams, t])
 
   const selectBooking = useCallback((booking: Booking) => {
     setSelectedBooking(booking)
@@ -205,7 +211,7 @@ export default function MessagesPage() {
       } catch (error) {
         if (!opts?.quiet) {
           console.error('Error fetching messages:', error)
-          toast.error('Failed to load messages')
+          toast.error(t('messages.loadMessagesFailed'))
         }
         return
       }
@@ -218,7 +224,7 @@ export default function MessagesPage() {
         }
       }
     },
-    []
+    [t],
   )
 
   useEffect(() => {
@@ -244,15 +250,15 @@ export default function MessagesPage() {
 
   const partnerOf = useCallback(
     (booking: Booking | null) => {
-      if (!booking || !user) return { name: 'Conversation', id: 0 as number | undefined }
+      if (!booking || !user) return { name: t('messages.conversation'), id: 0 as number | undefined }
       const isRenter = user.id === booking.renterId
       const name = isRenter
-        ? booking.owner?.name || 'Owner'
-        : booking.renter?.name || 'Renter'
+        ? booking.owner?.name || t('messages.owner')
+        : booking.renter?.name || t('messages.renter')
       const id = isRenter ? booking.ownerId : booking.renterId
       return { name, id }
     },
-    [user]
+    [user, t],
   )
 
   const filteredBookings = useMemo(() => {
@@ -306,7 +312,7 @@ export default function MessagesPage() {
       console.error('Error sending message:', error)
       const err = error as { response?: { data?: { message?: string; error?: string } } }
       toast.error(
-        err.response?.data?.message || err.response?.data?.error || 'Failed to send message'
+        err.response?.data?.message || err.response?.data?.error || t('messages.sendFailed')
       )
     } finally {
       setIsSending(false)
@@ -338,15 +344,17 @@ export default function MessagesPage() {
           {!showChat && (
             <div className="mb-4">
               <h1 className="font-serif text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-                Messages
+                {t('messages.title')}
               </h1>
               <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
-                Pick a name from your bookings, then chat.
+                {t('messages.subtitle')}
               </p>
               {pendingReviewCount > 0 && (
                 <div className="inline-flex items-center gap-2 mt-3 rounded-full bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1.5 text-xs font-semibold dark:bg-amber-500/10 dark:border-amber-400/30 dark:text-amber-200">
                   <StarIconSolid className="h-4 w-4 shrink-0" />
-                  {pendingReviewCount} review{pendingReviewCount === 1 ? '' : 's'} needed
+                  {pendingReviewCount === 1
+                    ? t('messages.reviewsNeeded', { count: String(pendingReviewCount) })
+                    : t('messages.reviewsNeededPlural', { count: String(pendingReviewCount) })}
                 </div>
               )}
             </div>
@@ -365,7 +373,9 @@ export default function MessagesPage() {
               <>
                 <div className="px-4 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
                   <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">
-                    Inbox · {filteredBookings.length} booking{filteredBookings.length === 1 ? '' : 's'}
+                    {filteredBookings.length === 1
+                      ? t('messages.inbox', { count: String(filteredBookings.length) })
+                      : t('messages.inboxPlural', { count: String(filteredBookings.length) })}
                   </p>
                   <div className="relative">
                     <MagnifyingGlassIcon className="h-5 w-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -373,7 +383,7 @@ export default function MessagesPage() {
                       type="search"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Search name or listing"
+                      placeholder={t('messages.searchPlaceholder')}
                       className="w-full pl-11 pr-4 py-3 text-base rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 border-0 focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
                     />
                   </div>
@@ -384,7 +394,7 @@ export default function MessagesPage() {
                     <ul>
                       {filteredBookings.map((booking) => {
                         const partner = partnerOf(booking)
-                        const title = booking.listing?.title || `Booking #${booking.id}`
+                        const title = booking.listing?.title || t('messages.bookingNumber', { id: String(booking.id) })
                         const { needsMyReview } = reviewAttentionForInbox(
                           booking.status,
                           booking.reviewSummary,
@@ -419,7 +429,7 @@ export default function MessagesPage() {
                                   <span className="text-xs text-gray-500 dark:text-gray-400">
                                     {formatBookingRange(booking.startDate, booking.endDate)}
                                   </span>
-                                  {inboxStatusLabel(booking.status)}
+                                  {inboxStatusLabel(booking.status, t)}
                                 </div>
                               </div>
                             </button>
@@ -431,12 +441,12 @@ export default function MessagesPage() {
                     <div className="px-6 py-16 text-center">
                       <ChatBubbleLeftRightIcon className="h-12 w-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
                       <p className="text-base font-medium text-gray-700 dark:text-gray-300">
-                        {bookings.length === 0 ? 'No bookings yet' : 'No matches'}
+                        {bookings.length === 0 ? t('messages.noBookings') : t('messages.noMatches')}
                       </p>
                       <p className="text-sm text-gray-500 mt-2">
                         {bookings.length === 0
-                          ? 'When someone books with you, they appear here.'
-                          : 'Try another search.'}
+                          ? t('messages.noBookingsHint')
+                          : t('messages.noMatchesHint')}
                       </p>
                     </div>
                   )}
@@ -454,7 +464,7 @@ export default function MessagesPage() {
                         type="button"
                         onClick={backToInbox}
                         className="inline-flex items-center justify-center h-11 w-11 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 shrink-0"
-                        aria-label="Back to inbox"
+                        aria-label={t('messages.backInbox')}
                       >
                         <ChevronLeftIcon className="h-6 w-6" />
                       </button>
@@ -468,7 +478,7 @@ export default function MessagesPage() {
                           {selectedPartner.name}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                          {selectedBooking.listing?.title || `Booking #${selectedBooking.id}`}
+                          {selectedBooking.listing?.title || t('messages.bookingNumber', { id: String(selectedBooking.id) })}
                         </p>
                       </div>
                       <Link
@@ -480,7 +490,7 @@ export default function MessagesPage() {
                       </Link>
                     </div>
                     <div className="px-3 pb-2 md:px-4 flex flex-wrap items-center gap-2">
-                      {inboxStatusLabel(selectedBooking.status)}
+                      {inboxStatusLabel(selectedBooking.status, t)}
                       <span className="text-xs text-gray-500 dark:text-gray-400">
                         {formatBookingRange(selectedBooking.startDate, selectedBooking.endDate)}
                       </span>
@@ -497,13 +507,12 @@ export default function MessagesPage() {
                               <StarIconSolid className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                               <div className="min-w-0">
                                 <p className="font-semibold leading-tight">
-                                  You haven&apos;t reviewed this booking yet
+                                  {t('messages.noReviewYet')}
                                 </p>
                                 <p className="text-xs text-amber-800/80 dark:text-amber-100/80 mt-0.5">
-                                  Rate your experience with {selectedPartner.name}. {''}
                                   {selectedBooking.reviewSummary?.awaitingPartnerReview
-                                    ? 'They\u2019re waiting on you.'
-                                    : 'Reviews unlock for both of you after you submit.'}
+                                    ? t('messages.waitingOnYou')
+                                    : t('messages.reviewsUnlock')}
                                 </p>
                               </div>
                             </div>
@@ -512,7 +521,7 @@ export default function MessagesPage() {
                               className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 transition-colors"
                             >
                               <StarIconSolid className="h-4 w-4" />
-                              Leave review
+                              {t('messages.leaveReview')}
                             </Link>
                           </div>
                         )
@@ -523,10 +532,10 @@ export default function MessagesPage() {
                             <StarIconOutline className="h-5 w-5 text-violet-500 shrink-0 mt-0.5" />
                             <div className="min-w-0">
                               <p className="font-semibold leading-tight">
-                                Waiting on {selectedPartner.name}&apos;s review
+                                {t('messages.waitingPartner', { name: selectedPartner.name })}
                               </p>
                               <p className="text-xs text-violet-800/80 dark:text-violet-100/80 mt-0.5">
-                                Your review is in. Both reviews appear after they submit theirs.
+                                {t('messages.yourReviewIn')}
                               </p>
                             </div>
                           </div>
@@ -573,7 +582,7 @@ export default function MessagesPage() {
                                             : 'text-amber-600 dark:text-amber-400'
                                         }`}
                                       >
-                                        live request reply
+                                        {t('messages.liveRequestReply')}
                                       </p>
                                     )}
                                     <p className="text-base leading-relaxed whitespace-pre-wrap break-words">
@@ -600,10 +609,10 @@ export default function MessagesPage() {
                         <div className="text-center">
                           <ChatBubbleLeftRightIcon className="h-12 w-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
                           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            No messages yet
+                            {t('messages.noMessages')}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                            Say hi to start the conversation.
+                            {t('messages.sayHi')}
                           </p>
                         </div>
                       </div>
@@ -622,7 +631,7 @@ export default function MessagesPage() {
                             void sendMessage()
                           }
                         }}
-                        placeholder="Type a message"
+                        placeholder={t('messages.typePlaceholder')}
                         rows={1}
                         disabled={isSending}
                         className="flex-1 resize-none max-h-32 min-h-[44px] px-4 py-2.5 rounded-2xl bg-gray-100 dark:bg-gray-800 text-base sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 border border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-blue-500 focus:outline-none transition-colors"
@@ -632,7 +641,7 @@ export default function MessagesPage() {
                         onClick={() => void sendMessage()}
                         disabled={!newMessage.trim() || isSending}
                         className="shrink-0 inline-flex items-center justify-center h-11 w-11 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        aria-label="Send message"
+                        aria-label={t('messages.sendAria')}
                       >
                         <PaperAirplaneIcon className="h-5 w-5" />
                       </button>

@@ -51,11 +51,11 @@ export default function ProfilePage() {
 
     // Validate file
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
+      toast.error(t('profile.imageTypeError'))
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB')
+      toast.error(t('profile.imageSizeError'))
       return
     }
 
@@ -64,10 +64,10 @@ export default function ProfilePage() {
       const url = await uploadImage(file, 'profile')
       setFormData(prev => ({ ...prev, avatarUrl: url }))
       setAvatarPreview(url)
-      toast.success('Profile picture uploaded successfully')
+      toast.success(t('profile.imageUploaded'))
     } catch (error: any) {
       console.error('Error uploading image:', error)
-      toast.error(error.response?.data?.error || 'Failed to upload image')
+      toast.error(error.response?.data?.error || t('profile.imageUploadFailed'))
     } finally {
       setUploadingImage(false)
       if (fileInputRef.current) {
@@ -82,14 +82,14 @@ export default function ProfilePage() {
 
     try {
       const response = await api.put('/users/me', formData)
-      toast.success('Profile updated successfully!')
+      toast.success(t('profile.updated'))
       // Reload to update auth context
       window.location.reload()
     } catch (error: any) {
       console.error('Error updating profile:', error)
       const errorMessage = error.response?.data?.error || 
                           error.response?.data?.message || 
-                          'Failed to update profile'
+                          t('profile.updateFailed')
       toast.error(errorMessage)
     } finally {
       setLoading(false)
@@ -143,7 +143,7 @@ export default function ProfilePage() {
                 <label
                   htmlFor="avatar-upload"
                   className="absolute bottom-0 right-0 p-2 bg-primary-600 text-white rounded-full cursor-pointer hover:bg-primary-700 transition-colors"
-                  title="Change profile picture"
+                  title={t('profile.changeAvatar')}
                 >
                   <PhotoIcon className="w-4 h-4" />
                 </label>
@@ -155,13 +155,13 @@ export default function ProfilePage() {
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Profile Picture
+                  {t('profile.avatar')}
                 </label>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Click the camera icon to upload a new profile picture
+                  {t('profile.avatarHint')}
                 </p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                  PNG, JPG up to 5MB
+                  {t('profile.avatarFormats')}
                 </p>
               </div>
             </div>
@@ -169,7 +169,7 @@ export default function ProfilePage() {
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Full Name *
+                {t('profile.fullName')} *
               </label>
               <input
                 type="text"
@@ -183,7 +183,7 @@ export default function ProfilePage() {
             {/* Email (read-only) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email
+                {t('common.email')}
               </label>
               <input
                 type="email"
@@ -192,14 +192,14 @@ export default function ProfilePage() {
                 disabled
               />
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Email cannot be changed
+                {t('profile.emailReadonly')}
               </p>
             </div>
 
             {/* Phone */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Phone Number
+                {t('profile.phone')}
               </label>
               <input
                 type="tel"
@@ -213,27 +213,27 @@ export default function ProfilePage() {
             {/* Account Info */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Account Information
+                {t('profile.accountInfo')}
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Role:</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('profile.role')}:</span>
                   <span className="font-medium text-gray-900 dark:text-gray-100">{user?.role}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">KYC Status:</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('profile.kycStatus')}:</span>
                   <span className="font-medium text-gray-900 dark:text-gray-100">{user?.kycStatus}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Email Verified:</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('profile.emailVerified')}:</span>
                   <span className={`font-medium ${user?.emailVerified ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {user?.emailVerified ? 'Yes' : 'No'}
+                    {user?.emailVerified ? t('common.yes') : t('common.no')}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Phone Verified:</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('profile.phoneVerified')}:</span>
                   <span className={`font-medium ${user?.phoneVerified ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {user?.phoneVerified ? 'Yes' : 'No'}
+                    {user?.phoneVerified ? t('common.yes') : t('common.no')}
                   </span>
                 </div>
               </div>
@@ -308,10 +308,9 @@ export default function ProfilePage() {
               <BanknotesIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" aria-hidden />
             </div>
             <div className="min-w-0">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">How prices look</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('profile.currencyDisplay')}</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
-                Applies across browse, listings, and bookings. Amounts stay in each listing&apos;s currency—this only changes labels (e.g.{' '}
-                <span className="font-mono text-xs">HUF 5,000</span> vs <span className="font-mono text-xs">Ft5,000</span>).
+                {t('profile.currencyDesc')}
               </p>
             </div>
           </div>
@@ -325,8 +324,8 @@ export default function ProfilePage() {
                   : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-600 dark:bg-gray-800/50 dark:hover:border-gray-500'
               }`}
             >
-              <span className="block font-semibold text-gray-900 dark:text-white">ISO codes</span>
-              <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">HUF, USD, EUR — clearest</span>
+              <span className="block font-semibold text-gray-900 dark:text-white">{t('profile.currencyIsoTitle')}</span>
+              <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">{t('profile.currencyIsoHint')}</span>
             </button>
             <button
               type="button"
@@ -337,8 +336,8 @@ export default function ProfilePage() {
                   : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-600 dark:bg-gray-800/50 dark:hover:border-gray-500'
               }`}
             >
-              <span className="block font-semibold text-gray-900 dark:text-white">Local symbols</span>
-              <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">Ft, $, € — compact</span>
+              <span className="block font-semibold text-gray-900 dark:text-white">{t('profile.currencySymbolTitle')}</span>
+              <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">{t('profile.currencySymbolHint')}</span>
             </button>
           </div>
         </div>

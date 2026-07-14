@@ -7,8 +7,10 @@ import { Listing } from '@/lib/types'
 import ListingCard from '@/components/ListingCard'
 import { SparklesIcon } from '@heroicons/react/24/solid'
 import { LAUNCH_REGION_LABEL } from '@/lib/site'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function FeaturedListings() {
+  const { t } = useLanguage()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -55,14 +57,14 @@ export default function FeaturedListings() {
         <div className="text-center mb-12 animate-slide-up">
           <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mb-4">
             <SparklesIcon className="h-5 w-5 mr-2" />
-            <span className="text-base md:text-lg font-semibold">Featured near you</span>
+            <span className="text-base md:text-lg font-semibold">{t('featured.badge')}</span>
           </div>
           <h2 className="heading-display text-5xl md:text-6xl mb-4">
-            Listings people are{' '}
-            <span className="gradient-text">booking now</span>
+            {t('featured.title')}{' '}
+            <span className="gradient-text">{t('featured.titleHighlight')}</span>
           </h2>
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Real inventory from local owners in {LAUNCH_REGION_LABEL} — updated as the community grows.
+            {t('featured.subtitle', { region: LAUNCH_REGION_LABEL })}
           </p>
         </div>
 
@@ -71,8 +73,8 @@ export default function FeaturedListings() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 mb-4">
               <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent" />
             </div>
-            <p className="text-xl md:text-2xl font-semibold text-gray-600 dark:text-gray-400">Loading listings…</p>
-            <p className="text-base md:text-lg text-gray-500 dark:text-gray-500 mt-2">Waiting for the server if it just started</p>
+            <p className="text-xl md:text-2xl font-semibold text-gray-600 dark:text-gray-400">{t('featured.loading')}</p>
+            <p className="text-base md:text-lg text-gray-500 dark:text-gray-500 mt-2">{t('featured.loadingHint')}</p>
           </div>
         ) : listings.length > 0 ? (
           <>
@@ -88,7 +90,7 @@ export default function FeaturedListings() {
                 href="/search?location=Budapest"
                 className="btn-outline inline-flex items-center gap-2 px-8 py-4 text-xl font-semibold hover:scale-105 transition-transform"
               >
-                View all listings in {LAUNCH_REGION_LABEL.split(',')[0]}
+                {t('featured.viewAll', { city: LAUNCH_REGION_LABEL.split(',')[0] })}
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -101,17 +103,17 @@ export default function FeaturedListings() {
               <SparklesIcon className="h-10 w-10 text-gray-400" />
             </div>
             <p className="text-2xl text-gray-600 dark:text-gray-400 font-medium">
-              {error ? 'Could not load listings right now' : 'No listings in this area yet'}
+              {error ? t('featured.error') : t('featured.empty')}
             </p>
             <p className="text-lg md:text-xl text-gray-500 dark:text-gray-500 mt-2 mb-6">
-              Be the first to post — or browse all categories while the community grows.
+              {t('featured.emptyHint')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/listings/new" className="btn-primary px-8 py-4 text-lg">
-                Post the first listing
+                {t('featured.postFirst')}
               </Link>
               <Link href="/search" className="btn-outline px-8 py-4 text-lg">
-                Browse all listings
+                {t('featured.browseAll')}
               </Link>
             </div>
           </div>

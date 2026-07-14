@@ -24,7 +24,7 @@ type DashboardMyListingsProps = {
 
 export default function DashboardMyListings({ onCountChange }: DashboardMyListingsProps) {
   const { presentation } = useCurrencyPresentation()
-  const { locale } = useLanguage()
+  const { locale, t } = useLanguage()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<Listing['id'] | null>(null)
@@ -37,24 +37,24 @@ export default function DashboardMyListings({ onCountChange }: DashboardMyListin
       setListings(items)
       onCountChange?.(items.length)
     } catch {
-      toast.error('Failed to load your listings')
+      toast.error(t('listings.loadFailed'))
       setListings([])
       onCountChange?.(0)
     } finally {
       setLoading(false)
     }
-  }, [onCountChange])
+  }, [onCountChange, t])
 
   useEffect(() => {
     void fetchListings()
   }, [fetchListings])
 
   const handleDelete = async (listing: Listing) => {
-    if (!confirm(`Delete "${listing.title}"? This cannot be undone.`)) return
+    if (!confirm(t('listings.deleteConfirm', { title: listing.title }))) return
     try {
       setDeletingId(listing.id)
       await api.delete(`/listings/${listing.id}`)
-      toast.success('Listing deleted')
+      toast.success(t('listings.deleted'))
       setListings((prev) => {
         const next = prev.filter((l) => l.id !== listing.id)
         onCountChange?.(next.length)
@@ -62,7 +62,7 @@ export default function DashboardMyListings({ onCountChange }: DashboardMyListin
       })
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string; error?: string } } }
-      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to delete listing')
+      toast.error(err.response?.data?.message || err.response?.data?.error || t('listings.deleteFailed'))
     } finally {
       setDeletingId(null)
     }
@@ -78,19 +78,25 @@ export default function DashboardMyListings({ onCountChange }: DashboardMyListin
     return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'
   }
 
+  const statusLabel = (status: string) => {
+    if (status === 'ACTIVE') return t('listings.statusActive')
+    if (status === 'DRAFT') return t('listings.statusDraft')
+    return status
+  }
+
   return (
     <div className="card-glass animate-slide-up h-full" style={{ animationDelay: '0.5s' }}>
       <div className="flex items-center justify-between mb-3 gap-3">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <RectangleStackIcon className="h-6 w-6 text-green-500" />
-          My Listings
+          {t('listings.myListings')}
         </h2>
         <Link
           href="/listings/new"
           className="text-sm font-semibold text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 flex items-center gap-1 group shrink-0"
         >
           <PlusIcon className="h-4 w-4" />
-          New listing
+          {t('listings.newListing')}
         </Link>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
@@ -104,13 +110,13 @@ export default function DashboardMyListings({ onCountChange }: DashboardMyListin
       ) : listings.length === 0 ? (
         <div className="text-center py-12">
           <RectangleStackIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400 font-medium">No listings yet</p>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">{t('listings.noListings')}</p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-2 mb-6">
             Post gear, a space, or a service to start getting bookings.
           </p>
           <Link href="/listings/new" className="btn-primary inline-flex items-center gap-2">
             <PlusIcon className="h-5 w-5" />
-            Create your first listing
+            {t('listings.createFirst')}
           </Link>
         </div>
       ) : (
@@ -128,7 +134,7 @@ export default function DashboardMyListings({ onCountChange }: DashboardMyListin
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <p className="font-bold text-gray-900 dark:text-white truncate">{listing.title}</p>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusClass(listing.status)}`}>
-                          {listing.status}
+                          {statusLabel(listing.status)}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -143,14 +149,14 @@ export default function DashboardMyListings({ onCountChange }: DashboardMyListin
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-800"
                       >
                         <EyeIcon className="h-4 w-4" />
-                        View
+                        {t('common.view')}
                       </Link>
                       <Link
                         href={`/listings/${listing.id}/edit`}
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                       >
                         <PencilSquareIcon className="h-4 w-4" />
-                        Edit
+                        {t('common.edit')}
                       </Link>
                       <button
                         type="button"
@@ -159,7 +165,7 @@ export default function DashboardMyListings({ onCountChange }: DashboardMyListin
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
                       >
                         <TrashIcon className="h-4 w-4" />
-                        {deletingId === listing.id ? 'Deleting…' : 'Delete'}
+                        {deletingId === listing.id ? t('common.loading') : t('common.delete')}
                       </button>
                     </div>
                   </div>
@@ -173,7 +179,7 @@ export default function DashboardMyListings({ onCountChange }: DashboardMyListin
                 href="/listings/mine"
                 className="text-sm font-semibold text-green-600 dark:text-green-400 hover:underline inline-flex items-center gap-1"
               >
-                View all {listings.length} listings
+                {t('listings.viewAll', { count: String(listings.length) })}
                 <ArrowRightIcon className="h-4 w-4" />
               </Link>
             </div>

@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
+import { useLanguage } from '@/contexts/LanguageContext'
 import toast from 'react-hot-toast'
 import BrandLogo from '@/components/BrandLogo'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
@@ -11,6 +12,7 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useLanguage()
   const token = searchParams.get('token') || ''
 
   const [password, setPassword] = useState('')
@@ -21,26 +23,26 @@ function ResetPasswordForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!token) {
-      toast.error('Invalid reset link. Request a new one.')
+      toast.error(t('auth.invalidResetToast'))
       return
     }
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match')
+      toast.error(t('auth.passwordMismatch'))
       return
     }
     if (password.length < 8) {
-      toast.error('Password must be at least 8 characters')
+      toast.error(t('auth.passwordMin8'))
       return
     }
 
     setLoading(true)
     try {
       await api.post('/auth/reset-password', { token, password })
-      toast.success('Password updated!')
+      toast.success(t('auth.passwordUpdated'))
       router.push('/login')
     } catch (error: any) {
       const message =
-        error.response?.data?.message || error.response?.data?.error || 'Could not reset password.'
+        error.response?.data?.message || error.response?.data?.error || t('auth.resetFailed')
       toast.error(message)
     } finally {
       setLoading(false)
@@ -50,9 +52,9 @@ function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="text-center space-y-4">
-        <p className="text-gray-700 dark:text-gray-300">This reset link is invalid or has expired.</p>
+        <p className="text-gray-700 dark:text-gray-300">{t('auth.invalidResetLink')}</p>
         <Link href="/forgot-password" className="btn-primary inline-block w-full py-3 text-center">
-          Request a new link
+          {t('auth.requestNewLink')}
         </Link>
       </div>
     )
@@ -62,7 +64,7 @@ function ResetPasswordForm() {
     <form className="space-y-5" onSubmit={handleSubmit}>
       <div>
         <label htmlFor="password" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          New password
+          {t('auth.newPassword')}
         </label>
         <div className="relative">
           <input
@@ -87,7 +89,7 @@ function ResetPasswordForm() {
       </div>
       <div>
         <label htmlFor="confirm" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          Confirm password
+          {t('auth.confirmPasswordLabel')}
         </label>
         <input
           id="confirm"
@@ -102,22 +104,24 @@ function ResetPasswordForm() {
         />
       </div>
       <button type="submit" disabled={loading} className="w-full btn-primary py-4 font-bold">
-        {loading ? 'Updating…' : 'Update password'}
+        {loading ? t('auth.updating') : t('auth.updatePassword')}
       </button>
     </form>
   )
 }
 
 export default function ResetPasswordPage() {
+  const { t } = useLanguage()
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center py-12 px-4">
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
           <BrandLogo className="justify-center mb-4 mx-auto" />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Set a new password</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('auth.resetTitle')}</h1>
         </div>
         <div className="card-glass">
-          <Suspense fallback={<p className="text-center text-gray-500">Loading…</p>}>
+          <Suspense fallback={<p className="text-center text-gray-500">{t('common.loading')}</p>}>
             <ResetPasswordForm />
           </Suspense>
         </div>
