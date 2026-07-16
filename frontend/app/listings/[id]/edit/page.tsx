@@ -13,13 +13,9 @@ import { DEFAULT_LISTING_CURRENCY, LISTING_CURRENCY_OPTIONS } from '@/lib/listin
 import AvailableDaysPicker from '@/components/AvailableDaysPicker'
 import WorkerListingSection from '@/components/WorkerListingSection'
 import {
-  ITEM_DESCRIPTION_PLACEHOLDER,
-  ITEM_TITLE_PLACEHOLDER,
   servicesCategoryValue,
   upgradeCategoryIdIfSeeded,
   workerCategoriesForSelect,
-  WORKER_DESCRIPTION_PLACEHOLDER,
-  WORKER_TITLE_PLACEHOLDER,
 } from '@/lib/listingFormWorker'
 import toast from 'react-hot-toast'
 import { ListingType } from '@/lib/types'
@@ -44,7 +40,7 @@ interface Category {
 
 export default function EditListingPage() {
   const { isAuthenticated, user, loading: authLoading } = useAuth()
-  const { locale } = useLanguage()
+  const { locale, t } = useLanguage()
   const router = useRouter()
   const params = useParams()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -101,7 +97,7 @@ export default function EditListingPage() {
 
         const listing = listingRes.data
         if (!isListingOwner(user, listing)) {
-          toast.error('You can only edit your own listings')
+          toast.error(t('listingForm.ownListingOnly'))
           router.push('/dashboard')
           return
         }
@@ -112,7 +108,7 @@ export default function EditListingPage() {
       } catch (error) {
         console.error('Error loading listing for edit:', error)
         if (!cancelled) {
-          toast.error('Failed to load listing')
+          toast.error(t('listingForm.loadListingFailed'))
           router.push('/dashboard')
         }
       } finally {
@@ -123,7 +119,7 @@ export default function EditListingPage() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, isAuthenticated, params.id, router, user])
+  }, [authLoading, isAuthenticated, params.id, router, user, t])
 
   const displayCategories = useMemo(
     () => localizeCategories(categories, locale),
@@ -156,11 +152,11 @@ export default function EditListingPage() {
 
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} is not an image file`)
+        toast.error(t('listingForm.notImageFile', { name: file.name }))
         return false
       }
       if (file.size > 5 * 1024 * 1024) {
-        toast.error(`${file.name} is too large (max 5MB)`)
+        toast.error(t('listingForm.fileTooLarge', { name: file.name }))
         return false
       }
       return true
@@ -173,14 +169,14 @@ export default function EditListingPage() {
       const urls = await uploadMultipleImages(validFiles)
       setSelectedImages(prev => [...prev, ...urls])
       setImageFiles(prev => [...prev, ...validFiles])
-      toast.success(`${validFiles.length} image(s) uploaded successfully!`)
+      toast.success(t('listingForm.imagesUploaded', { count: String(validFiles.length) }))
     } catch (error: unknown) {
       console.error('Error uploading images:', error)
       const msg =
         error instanceof Error
           ? error.message
           : (error as { response?: { data?: { error?: string } } })?.response?.data?.error
-      toast.error(msg || 'Failed to upload images')
+      toast.error(msg || t('listingForm.uploadFailed'))
     } finally {
       setUploadingImages(false)
       if (fileInputRef.current) {
@@ -204,7 +200,7 @@ export default function EditListingPage() {
     try {
       const listingId = typeof params.id === 'string' ? params.id : params.id?.[0]
       if (!listingId) {
-        toast.error('Invalid listing')
+        toast.error(t('listingForm.invalidListing'))
         setLoading(false)
         return
       }
@@ -216,13 +212,13 @@ export default function EditListingPage() {
       }
 
       await api.put(`/listings/${listingId}`, payload)
-      toast.success('Listing updated successfully!')
+      toast.success(t('listingForm.updatedSuccess'))
       router.push(`/listings/${listingId}`)
     } catch (error: any) {
       console.error('Error updating listing:', error)
       const errorMessage = error.response?.data?.error ||
                           error.response?.data?.message ||
-                          'Failed to update listing'
+                          t('listingForm.updateFailed')
       toast.error(errorMessage)
     } finally {
       setLoading(false)
@@ -258,11 +254,11 @@ export default function EditListingPage() {
             </div>
             <div>
               <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white">
-                Edit{' '}
-                <span className="gradient-text">Listing</span>
+                {t('listingForm.editTitle')}{' '}
+                <span className="gradient-text">{t('listingForm.editTitleHighlight')}</span>
               </h1>
               <p className="text-gray-600 dark:text-gray-400 text-lg mt-2">
-                Update your listing details and photos
+                {t('listingForm.editSubtitle')}
               </p>
             </div>
           </div>
@@ -273,14 +269,14 @@ export default function EditListingPage() {
           <div className="card-glass animate-slide-up">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <SparklesIcon className="h-6 w-6 text-blue-500" />
-              Basic Information
+              {t('listingForm.basicInfo')}
             </h2>
             
             <div className="space-y-6">
               {/* Type */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Listing Type *
+                  {t('listingForm.listingType')} *
                 </label>
                 <select
                   value={formData.type}
@@ -289,18 +285,18 @@ export default function EditListingPage() {
                   required
                   disabled
                 >
-                  <option value={ListingType.ITEM}>Item — rent gear, tools, or things</option>
-                  <option value={ListingType.WORKER}>Service — offer your skills or time</option>
+                  <option value={ListingType.ITEM}>{t('listingForm.typeItem')}</option>
+                  <option value={ListingType.WORKER}>{t('listingForm.typeService')}</option>
                 </select>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Listing type cannot be changed after publishing.
+                  {t('listingForm.typeLockedHint')}
                 </p>
               </div>
 
               {/* Title */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Title *
+                  {t('listingForm.title')} *
                 </label>
                 <input
                   type="text"
@@ -308,28 +304,36 @@ export default function EditListingPage() {
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="input-field"
                   required
-                  placeholder={isWorker ? WORKER_TITLE_PLACEHOLDER : ITEM_TITLE_PLACEHOLDER}
+                  placeholder={
+                    isWorker
+                      ? t('listingForm.titlePlaceholderService')
+                      : t('listingForm.titlePlaceholderItem')
+                  }
                 />
               </div>
 
               {/* Description */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Description
+                  {t('listingForm.description')}
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="input-field"
                   rows={5}
-                  placeholder={isWorker ? WORKER_DESCRIPTION_PLACEHOLDER : ITEM_DESCRIPTION_PLACEHOLDER}
+                  placeholder={
+                    isWorker
+                      ? t('listingForm.descPlaceholderService')
+                      : t('listingForm.descPlaceholderItem')
+                  }
                 />
               </div>
 
               {/* Category */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Category *
+                  {t('listingForm.category')} *
                 </label>
                 <select
                   value={formData.categoryId}
@@ -338,7 +342,7 @@ export default function EditListingPage() {
                   required
                   disabled={isWorker}
                 >
-                  {!isWorker && <option value="">Select a category</option>}
+                  {!isWorker && <option value="">{t('listingForm.selectCategory')}</option>}
                   {categoriesForSelect.map((category) => (
                     <option
                       key={category.slug || category.id}
@@ -354,7 +358,7 @@ export default function EditListingPage() {
                 </select>
                 {isWorker && (
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    Service listings stay under Services.
+                    {t('listingForm.serviceCategoryStayHint')}
                   </p>
                 )}
               </div>
@@ -362,7 +366,7 @@ export default function EditListingPage() {
               {!isWorker && (
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    Available Days
+                    {t('listingForm.availableDays')}
                   </label>
                   <AvailableDaysPicker
                     value={formData.availableDays}
@@ -377,12 +381,10 @@ export default function EditListingPage() {
           <div className="card-glass animate-slide-up" style={{ animationDelay: '0.1s' }}>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <PhotoIcon className="h-6 w-6 text-purple-500" />
-              Images
+              {t('listingForm.images')}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              {isWorker
-                ? 'Add a clear profile photo or examples of your work — first image is the cover.'
-                : 'Add photos of your item — first image is the cover.'}
+              {isWorker ? t('listingForm.imagesHintService') : t('listingForm.imagesHintItem')}
             </p>
             
             <div className="space-y-6">
@@ -391,12 +393,12 @@ export default function EditListingPage() {
                 <div className="relative overflow-hidden rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-gray-900/10 aspect-[21/9] md:aspect-[2/1] max-h-[min(52vh,28rem)]">
                   <img
                     src={previewSrc(selectedImages[0])}
-                    alt="Primary listing photo preview"
+                    alt={t('listingForm.primaryPhotoAlt')}
                     className="h-full w-full object-cover"
                   />
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 pt-16">
                     <p className="text-sm font-bold text-white drop-shadow-md">
-                      Primary photo — this is what people see first when browsing
+                      {t('listingForm.primaryPhotoCaption')}
                     </p>
                   </div>
                 </div>
@@ -410,7 +412,7 @@ export default function EditListingPage() {
                       <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700">
                         <img
                           src={previewSrc(url)}
-                          alt={`Upload ${index + 1}`}
+                          alt={t('listingForm.uploadAlt', { n: String(index + 1) })}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />
                         <button
@@ -422,7 +424,7 @@ export default function EditListingPage() {
                         </button>
                         {index === 0 && (
                           <span className="absolute bottom-2 left-2 px-2 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold rounded-lg shadow-lg">
-                            Primary
+                            {t('listingForm.primaryBadge')}
                           </span>
                         )}
                       </div>
@@ -453,7 +455,7 @@ export default function EditListingPage() {
                   {uploadingImages ? (
                     <div className="flex flex-col items-center">
                       <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent mb-3"></div>
-                      <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">Uploading...</span>
+                      <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">{t('listingForm.uploading')}</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
@@ -461,10 +463,10 @@ export default function EditListingPage() {
                         <PhotoIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                       </div>
                       <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                        Click to upload images
+                        {t('listingForm.clickUpload')}
                       </span>
                       <span className="text-xs text-gray-500 dark:text-gray-500">
-                        PNG, JPG up to 5MB each
+                        {t('listingForm.uploadFormats')}
                       </span>
                     </div>
                   )}
@@ -477,12 +479,12 @@ export default function EditListingPage() {
           <div className="card-glass animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <CurrencyDollarIcon className="h-7 w-7 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden />
-              Pricing
+              {t('listingForm.pricing')}
             </h2>
 
             <div className="mb-6">
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                Listing currency
+                {t('listingForm.listingCurrency')}
               </label>
               <select
                 value={formData.pricingCurrency}
@@ -496,19 +498,17 @@ export default function EditListingPage() {
                 ))}
               </select>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                All rates and the cash deposit (if numeric) are stored and shown in this currency.
+                {t('listingForm.currencyHint')}
               </p>
             </div>
             
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              {isWorker
-                ? 'Most services use an hourly rate. Add a daily rate too if you offer full-day bookings.'
-                : "Enter amounts as numbers (decimals allowed). Leave a field blank if you don't use that period."}
+              {isWorker ? t('listingForm.pricingHintService') : t('listingForm.pricingHintItem')}
             </p>
             <div className={`grid grid-cols-1 gap-6 ${isWorker ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4'}`}>
               <div className={isWorker ? 'sm:col-span-2 lg:col-span-1' : ''}>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Hourly rate{isWorker ? ' *' : ''}
+                  {t('listingForm.hourlyRate')}{isWorker ? ' *' : ''}
                 </label>
                 <input
                   type="text"
@@ -517,12 +517,12 @@ export default function EditListingPage() {
                   value={formData.priceHour}
                   onChange={(e) => setFormData({ ...formData, priceHour: e.target.value })}
                   className="input-field"
-                  placeholder="e.g. 25"
+                  placeholder={t('listingForm.ratePlaceholder', { amount: '25' })}
                 />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Daily rate
+                  {t('listingForm.dailyRate')}
                 </label>
                 <input
                   type="text"
@@ -531,14 +531,14 @@ export default function EditListingPage() {
                   value={formData.priceDay}
                   onChange={(e) => setFormData({ ...formData, priceDay: e.target.value })}
                   className="input-field"
-                  placeholder="e.g. 150"
+                  placeholder={t('listingForm.ratePlaceholder', { amount: '150' })}
                 />
               </div>
               {!isWorker && (
                 <>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Weekly rate
+                  {t('listingForm.weeklyRate')}
                 </label>
                 <input
                   type="text"
@@ -547,12 +547,12 @@ export default function EditListingPage() {
                   value={formData.priceWeek}
                   onChange={(e) => setFormData({ ...formData, priceWeek: e.target.value })}
                   className="input-field"
-                  placeholder="e.g. 900"
+                  placeholder={t('listingForm.ratePlaceholder', { amount: '900' })}
                 />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Monthly rate
+                  {t('listingForm.monthlyRate')}
                 </label>
                 <input
                   type="text"
@@ -561,7 +561,7 @@ export default function EditListingPage() {
                   value={formData.priceMonth}
                   onChange={(e) => setFormData({ ...formData, priceMonth: e.target.value })}
                   className="input-field"
-                  placeholder="e.g. 3200"
+                  placeholder={t('listingForm.ratePlaceholder', { amount: '3200' })}
                 />
               </div>
                 </>
@@ -570,32 +570,36 @@ export default function EditListingPage() {
 
             <div className="mt-6">
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                Security Deposit
+                {t('listingForm.securityDeposit')}
               </label>
               <div className={`grid grid-cols-1 gap-4 ${isWorker ? '' : 'md:grid-cols-2'}`}>
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                    Cash Deposit
+                    {t('listingForm.cashDeposit')}
                   </label>
                   <input
                     type="text"
                     value={formData.cashDeposit}
                     onChange={(e) => setFormData({ ...formData, cashDeposit: e.target.value })}
                     className="input-field"
-                    placeholder={isWorker ? 'Optional — e.g. 5000' : 'e.g., 100'}
+                    placeholder={
+                      isWorker
+                        ? t('listingForm.cashDepositPlaceholderService')
+                        : t('listingForm.cashDepositPlaceholderItem')
+                    }
                   />
                 </div>
                 {!isWorker && (
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                    Item Deposit
+                    {t('listingForm.itemDeposit')}
                   </label>
                   <input
                     type="text"
                     value={formData.itemDeposit}
                     onChange={(e) => setFormData({ ...formData, itemDeposit: e.target.value })}
                     className="input-field"
-                    placeholder="e.g., National ID card"
+                    placeholder={t('listingForm.itemDepositPlaceholder')}
                   />
                 </div>
                 )}
@@ -607,44 +611,44 @@ export default function EditListingPage() {
           <div className="card-glass animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <MapPinIcon className="h-7 w-7 text-blue-600 dark:text-blue-400 shrink-0" aria-hidden />
-              Location
+              {t('listingForm.location')}
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  District
+                  {t('listingForm.district')}
                 </label>
                 <input
                   type="text"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="input-field"
-                  placeholder="District"
+                  placeholder={t('listingForm.district')}
                 />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  City
+                  {t('listingForm.city')}
                 </label>
                 <input
                   type="text"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   className="input-field"
-                  placeholder="City"
+                  placeholder={t('listingForm.city')}
                 />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Country
+                  {t('listingForm.country')}
                 </label>
                 <input
                   type="text"
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                   className="input-field"
-                  placeholder="Country"
+                  placeholder={t('listingForm.country')}
                 />
               </div>
             </div>
@@ -676,10 +680,10 @@ export default function EditListingPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Saving...
+                  {t('listingForm.saving')}
                 </span>
               ) : (
-                'Save changes'
+                t('listingForm.saveButton')
               )}
             </button>
             <button
@@ -687,7 +691,7 @@ export default function EditListingPage() {
               onClick={() => router.back()}
               className="btn-secondary px-8 py-4 text-lg font-bold"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
           </div>
         </form>

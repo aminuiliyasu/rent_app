@@ -1,3 +1,6 @@
+import type { Locale, TranslationKey } from '@/lib/i18n/translations'
+import { translate } from '@/lib/i18n/translations'
+
 export const DAY_CODES = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'] as const
 export type DayCode = (typeof DAY_CODES)[number]
 
@@ -65,20 +68,35 @@ export function serializeAvailableDays(selected: Iterable<DayCode>): string {
   return ordered.join(',')
 }
 
-export function formatAvailableDaysLabel(raw: string | null | undefined): string | null {
+export function formatAvailableDaysLabel(
+  raw: string | null | undefined,
+  locale: Locale = 'hu',
+): string | null {
   if (!raw?.trim()) return null
 
   const value = raw.trim().toUpperCase()
-  if (value === PRESET_EVERYDAY) return 'Every day'
-  if (value === PRESET_WEEKDAYS) return 'Weekdays (Mon–Fri)'
-  if (value === PRESET_WEEKENDS) return 'Weekends (Sat–Sun)'
+  if (value === PRESET_EVERYDAY) return translate(locale, 'daysLabel.everyDay')
+  if (value === PRESET_WEEKDAYS) return translate(locale, 'daysLabel.weekdays')
+  if (value === PRESET_WEEKENDS) return translate(locale, 'daysLabel.weekends')
 
-  const labels = DAY_CODES.filter((day) => parseAvailableDays(raw).has(day)).map(
-    (day) => DAY_LABELS_LONG[day],
+  const dayKey: Record<DayCode, TranslationKey> = {
+    MON: 'daysLabel.monday',
+    TUE: 'daysLabel.tuesday',
+    WED: 'daysLabel.wednesday',
+    THU: 'daysLabel.thursday',
+    FRI: 'daysLabel.friday',
+    SAT: 'daysLabel.saturday',
+    SUN: 'daysLabel.sunday',
+  }
+
+  const labels = DAY_CODES.filter((day) => parseAvailableDays(raw).has(day)).map((day) =>
+    translate(locale, dayKey[day]),
   )
   if (labels.length === 0) return null
   if (labels.length === 1) return labels[0]
-  if (labels.length === 2) return `${labels[0]} and ${labels[1]}`
+  if (labels.length === 2) {
+    return `${labels[0]} ${translate(locale, 'daysLabel.and')} ${labels[1]}`
+  }
 
-  return `${labels.slice(0, -1).join(', ')}, and ${labels[labels.length - 1]}`
+  return `${labels.slice(0, -1).join(', ')}, ${translate(locale, 'daysLabel.and')} ${labels[labels.length - 1]}`
 }

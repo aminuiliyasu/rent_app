@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLanguage } from '@/contexts/LanguageContext'
 import api from '@/lib/api'
 import { Review, UserTrust } from '@/lib/types'
 import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline'
@@ -46,6 +47,8 @@ function ReviewSnippet({
   emptyLabel: string
   mode: 'about-them' | 'by-them'
 }) {
+  const { t } = useLanguage()
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800/60">
       <p className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">{title}</p>
@@ -55,8 +58,10 @@ function ReviewSnippet({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-semibold text-gray-900 dark:text-white">
               {mode === 'about-them'
-                ? review.reviewer?.name ?? 'Member'
-                : `Rated ${review.reviewee?.name ?? 'member'}`}
+                ? review.reviewer?.name ?? t('trustReviews.member')
+                : t('trustReviews.ratedMember', {
+                    name: review.reviewee?.name ?? t('trustReviews.member'),
+                  })}
             </span>
             <StarRow rating={review.rating} />
           </div>
@@ -85,6 +90,7 @@ export default function TrustReviewsSection({
   const [received, setReceived] = useState<Review[]>([])
   const [given, setGiven] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (!userId) return
@@ -112,14 +118,11 @@ export default function TrustReviewsSection({
     }
   }, [userId])
 
-  const intro =
-    variant === 'self'
-      ? 'After a rental, you and the other person each leave a review. When both are in, they go public — here’s what others see on your profile.'
-      : 'Reviews publish only after both sides submit on a completed rental — that keeps things fair and builds trust.'
+  const intro = variant === 'self' ? t('trustReviews.introSelf') : t('trustReviews.introPublic')
 
   if (loading) {
     return (
-      <div className="card mt-10 py-16 text-center text-gray-500 dark:text-gray-400">Loading reputation…</div>
+      <div className="card mt-10 py-16 text-center text-gray-500 dark:text-gray-400">{t('trustReviews.loading')}</div>
     )
   }
 
@@ -128,7 +131,7 @@ export default function TrustReviewsSection({
 
   return (
     <div className="card mt-10">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Reputation &amp; reviews</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('trustReviews.title')}</h2>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-8">{intro}</p>
 
       {(avg != null || count > 0) && (
@@ -147,38 +150,38 @@ export default function TrustReviewsSection({
               {avg != null ? `${avg.toFixed(1)} / 5` : '—'}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              From {count} verified peer review{count !== 1 ? 's' : ''}
+              {count === 1
+                ? t('trustReviews.fromReviews', { count: String(count) })
+                : t('trustReviews.fromReviewsPlural', { count: String(count) })}
             </p>
           </div>
         </div>
       )}
 
-      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Latest activity</p>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-        Most recent published feedback in each direction — useful for a quick trust check.
-      </p>
+      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">{t('trustReviews.latestActivity')}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">{t('trustReviews.latestHint')}</p>
       <div className="grid gap-4 md:grid-cols-2 mb-10">
         <ReviewSnippet
           mode="about-them"
-          title="About them"
-          subtitle="What renters or hosts said about this person."
+          title={t('trustReviews.aboutThem')}
+          subtitle={t('trustReviews.aboutThemSub')}
           review={trust?.latestReceived ?? null}
-          emptyLabel="Nothing published yet, or waiting for both reviews on a booking."
+          emptyLabel={t('trustReviews.emptyAbout')}
         />
         <ReviewSnippet
           mode="by-them"
-          title="Their feedback"
-          subtitle="What they recently shared about others after completed rentals."
+          title={t('trustReviews.theirFeedback')}
+          subtitle={t('trustReviews.theirFeedbackSub')}
           review={trust?.latestGiven ?? null}
-          emptyLabel="They haven’t posted a published review yet."
+          emptyLabel={t('trustReviews.emptyByThem')}
         />
       </div>
 
       <div className="border-t border-gray-200 pt-8 dark:border-gray-700">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">All reviews about them</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('trustReviews.allAbout')}</h3>
         {received.length === 0 ? (
           <p className="text-gray-600 dark:text-gray-400 py-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-center text-sm">
-            No public reviews yet.
+            {t('trustReviews.noPublicYet')}
           </p>
         ) : (
           <ul className="space-y-4">
@@ -188,7 +191,9 @@ export default function TrustReviewsSection({
                 className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-4"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <span className="font-semibold text-gray-900 dark:text-white">{rev.reviewer?.name ?? 'Member'}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {rev.reviewer?.name ?? t('trustReviews.member')}
+                  </span>
                   <StarRow rating={rev.rating} />
                 </div>
                 {rev.comment && <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{rev.comment}</p>}
@@ -202,13 +207,11 @@ export default function TrustReviewsSection({
       </div>
 
       <div className="border-t border-gray-200 pt-8 mt-8 dark:border-gray-700">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Reviews they&apos;ve shared</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Shows how they rate others — visible once both sides have submitted on each booking.
-        </p>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('trustReviews.allShared')}</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{t('trustReviews.allSharedHint')}</p>
         {given.length === 0 ? (
           <p className="text-gray-600 dark:text-gray-400 py-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-center text-sm">
-            No published reviews written yet.
+            {t('trustReviews.noWrittenYet')}
           </p>
         ) : (
           <ul className="space-y-4">
@@ -219,7 +222,9 @@ export default function TrustReviewsSection({
               >
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    For <span className="font-semibold text-gray-900 dark:text-white">{rev.reviewee?.name ?? 'member'}</span>
+                    {t('trustReviews.forMember', {
+                      name: rev.reviewee?.name ?? t('trustReviews.member'),
+                    })}
                   </span>
                   <StarRow rating={rev.rating} />
                 </div>

@@ -17,6 +17,7 @@ import {
 } from '@heroicons/react/24/solid'
 import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import {
@@ -35,6 +36,7 @@ import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline'
 export default function ListingDetailPage() {
   const params = useParams()
   const { isAuthenticated, user } = useAuth()
+  const { locale, t } = useLanguage()
   const { presentation } = useCurrencyPresentation()
   const router = useRouter()
   const [listing, setListing] = useState<Listing | null>(null)
@@ -69,7 +71,7 @@ export default function ListingDetailPage() {
         }
       } catch (error) {
         console.error('Error fetching listing:', error)
-        if (!cancelled) toast.error('Failed to load listing')
+        if (!cancelled) toast.error(t('listingDetail.loadFailed'))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -86,7 +88,7 @@ export default function ListingDetailPage() {
       return
     }
     if (!selectedDates.start || !selectedDates.end) {
-      toast.error('Please select start and end dates')
+      toast.error(t('listingDetail.selectDates'))
       return
     }
     router.push(`/bookings/new?listingId=${params.id}&start=${selectedDates.start}&end=${selectedDates.end}`)
@@ -94,15 +96,15 @@ export default function ListingDetailPage() {
 
   const handleDeleteListing = async () => {
     if (!listing) return
-    if (!confirm(`Delete "${listing.title}"? This cannot be undone.`)) return
+    if (!confirm(t('listingDetail.deleteConfirm', { title: listing.title }))) return
 
     try {
       setDeleting(true)
       await api.delete(`/listings/${listing.id}`)
-      toast.success('Listing deleted')
+      toast.success(t('listingDetail.deleted'))
       router.push('/dashboard')
     } catch (error: any) {
-      toast.error(error.response?.data?.message || error.response?.data?.error || 'Failed to delete listing')
+      toast.error(error.response?.data?.message || error.response?.data?.error || t('listingDetail.deleteFailed'))
     } finally {
       setDeleting(false)
     }
@@ -130,8 +132,8 @@ export default function ListingDetailPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
             <SparklesIcon className="h-10 w-10 text-gray-400" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Listing not found</h3>
-          <p className="text-gray-600 dark:text-gray-400">The listing you&apos;re looking for doesn&apos;t exist</p>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('listingDetail.notFoundTitle')}</h3>
+          <p className="text-gray-600 dark:text-gray-400">{t('listingDetail.notFoundBody')}</p>
         </div>
         <Footer />
       </div>
@@ -145,7 +147,7 @@ export default function ListingDetailPage() {
   const cardPrice = formatListingCardPrice(listing, presentation)
   const descriptionDisplay = stripLegacyPricingAppendix(listing.description)
   const locationLine = formatListingLocationLine(listing)
-  const availableDaysLabel = formatAvailableDaysLabel(listing.availableDays)
+  const availableDaysLabel = formatAvailableDaysLabel(listing.availableDays, locale)
   const isOwner = isListingOwner(user, listing)
 
   return (
@@ -155,7 +157,7 @@ export default function ListingDetailPage() {
         {isOwner && (
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
             <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
-              You own this listing — edit details or remove it anytime.
+              {t('listingDetail.ownerBanner')}
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <Link
@@ -163,7 +165,7 @@ export default function ListingDetailPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700"
               >
                 <PencilSquareIcon className="h-4 w-4" />
-                Edit listing
+                {t('listingDetail.editListing')}
               </Link>
               <button
                 type="button"
@@ -172,7 +174,7 @@ export default function ListingDetailPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
               >
                 <TrashIcon className="h-4 w-4" />
-                {deleting ? 'Deleting...' : 'Delete'}
+                {deleting ? t('listingDetail.deleting') : t('common.delete')}
               </button>
             </div>
           </div>
@@ -200,7 +202,7 @@ export default function ListingDetailPage() {
                 {listing.isFeatured && (
                   <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-2xl flex items-center gap-2">
                     <SparklesIcon className="h-4 w-4" />
-                    Featured
+                    {t('listingDetail.featured')}
                   </div>
                 )}
               </div>
@@ -254,7 +256,9 @@ export default function ListingDetailPage() {
                         </div>
                         <span className="font-bold text-gray-900 dark:text-white">{listing.averageRating.toFixed(1)}</span>
                         {listing.reviewCount && (
-                          <span className="text-gray-500 dark:text-gray-400 text-sm">({listing.reviewCount} reviews)</span>
+                          <span className="text-gray-500 dark:text-gray-400 text-sm">
+                            {t('listingDetail.reviewCount', { count: String(listing.reviewCount) })}
+                          </span>
                         )}
                       </div>
                     )}
@@ -271,7 +275,7 @@ export default function ListingDetailPage() {
               
               {descriptionDisplay && (
                 <div className="prose max-w-none mb-8">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Description</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{t('listingDetail.description')}</h3>
                   <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed text-lg">
                     {descriptionDisplay}
                   </p>
@@ -292,12 +296,12 @@ export default function ListingDetailPage() {
                   )}
                   {listing.serviceArea && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      Service Area: <span className="font-bold">{listing.serviceArea}</span>
+                      {t('listingDetail.serviceArea')}: <span className="font-bold">{listing.serviceArea}</span>
                     </p>
                   )}
                   {availableDaysLabel && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      Available: <span className="font-bold">{availableDaysLabel}</span>
+                      {t('listingDetail.available')}: <span className="font-bold">{availableDaysLabel}</span>
                     </p>
                   )}
                 </div>
@@ -305,45 +309,45 @@ export default function ListingDetailPage() {
 
               {listing.type !== 'WORKER' && availableDaysLabel && (
                 <p className="text-sm text-gray-600 dark:text-gray-400 font-medium mb-6">
-                  Available: <span className="font-bold text-gray-800 dark:text-gray-200">{availableDaysLabel}</span>
+                  {t('listingDetail.available')}: <span className="font-bold text-gray-800 dark:text-gray-200">{availableDaysLabel}</span>
                 </p>
               )}
 
               {/* Rates */}
               <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  <span className="font-semibold text-gray-800 dark:text-gray-200">Pricing</span>
-                  <span className="text-gray-500 dark:text-gray-500"> · all amounts in </span>
+                  <span className="font-semibold text-gray-800 dark:text-gray-200">{t('listingDetail.pricing')}</span>
+                  <span className="text-gray-500 dark:text-gray-500"> · {t('listingDetail.pricingIn')} </span>
                   <span className="font-bold tabular-nums text-blue-600 dark:text-blue-400">{currencyCode}</span>
                 </p>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {listing.priceHour != null && listing.priceHour > 0 && (
                   <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 min-w-0 border border-gray-100 dark:border-gray-700/80">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Hourly</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{t('listingDetail.rateHourly')}</p>
                     <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white break-words leading-snug">{fmt(listing.priceHour)}</p>
                   </div>
                 )}
                 {listing.priceDay != null && listing.priceDay > 0 && (
                   <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 min-w-0 border border-gray-100 dark:border-gray-700/80">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Daily</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{t('listingDetail.rateDaily')}</p>
                     <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white break-words leading-snug">{fmt(listing.priceDay)}</p>
                   </div>
                 )}
                 {listing.priceWeek != null && listing.priceWeek > 0 && (
                   <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 min-w-0 border border-gray-100 dark:border-gray-700/80">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Weekly</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{t('listingDetail.rateWeekly')}</p>
                     <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white break-words leading-snug">{fmt(listing.priceWeek)}</p>
                   </div>
                 )}
                 {listing.priceMonth != null && listing.priceMonth > 0 && (
                   <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 min-w-0 border border-gray-100 dark:border-gray-700/80">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Monthly</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{t('listingDetail.rateMonthly')}</p>
                     <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white break-words leading-snug">{fmt(listing.priceMonth)}</p>
                   </div>
                 )}
                 {listing.deposit != null && listing.deposit > 0 && (
                   <div className="text-center p-3 sm:p-4 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 min-w-0 border border-amber-200/80 dark:border-amber-800/60">
-                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Deposit</p>
+                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">{t('listingDetail.deposit')}</p>
                     <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white break-words leading-snug">{fmt(listing.deposit)}</p>
                   </div>
                 )}
@@ -353,13 +357,13 @@ export default function ListingDetailPage() {
 
             {/* Reviews Section */}
             <div className="card-glass">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Reviews</h2>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">{t('listingDetail.reviews')}</h2>
               {listingReviews.length === 0 ? (
                 <div className="text-center py-12">
                   <StarIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400 font-medium">No reviews yet</p>
+                  <p className="text-gray-600 dark:text-gray-400 font-medium">{t('listingDetail.noReviews')}</p>
                   <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                    Completed rentals unlock mutual reviews between renter and owner.
+                    {t('listingDetail.noReviewsHint')}
                   </p>
                 </div>
               ) : (
@@ -371,7 +375,7 @@ export default function ListingDetailPage() {
                     >
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div>
-                          <p className="font-bold text-gray-900 dark:text-white">{rev.reviewer?.name || 'Renter'}</p>
+                          <p className="font-bold text-gray-900 dark:text-white">{rev.reviewer?.name || t('listingDetail.reviewerFallback')}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {new Date(rev.createdAt).toLocaleDateString()}
                           </p>
@@ -407,26 +411,26 @@ export default function ListingDetailPage() {
                     <span className="text-xl text-gray-600 dark:text-gray-400 font-medium">{cardPrice.suffix}</span>
                   </div>
                 ) : (
-                  <p className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-4">Contact for pricing</p>
+                  <p className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-4">{t('listingDetail.contactPricing')}</p>
                 )}
                 {listing.priceHour != null && listing.priceHour > 0 && cardPrice?.suffix !== '/hr' && (
                   <div className="text-gray-600 dark:text-gray-400 mb-1 text-sm">
-                    <span className="font-semibold">{fmt(listing.priceHour)}</span>/hr
+                    <span className="font-semibold">{fmt(listing.priceHour)}</span>{t('listingDetail.perHr')}
                   </div>
                 )}
                 {listing.priceDay != null && listing.priceDay > 0 && cardPrice?.suffix !== '/day' && (
                   <div className="text-gray-600 dark:text-gray-400 mb-1 text-sm">
-                    <span className="font-semibold">{fmt(listing.priceDay)}</span>/day
+                    <span className="font-semibold">{fmt(listing.priceDay)}</span>{t('listingDetail.perDay')}
                   </div>
                 )}
                 {listing.priceWeek != null && listing.priceWeek > 0 && cardPrice?.suffix !== '/wk' && (
                   <div className="text-gray-600 dark:text-gray-400 mb-1 text-sm">
-                    <span className="font-semibold">{fmt(listing.priceWeek)}</span>/week
+                    <span className="font-semibold">{fmt(listing.priceWeek)}</span>{t('listingDetail.perWeek')}
                   </div>
                 )}
                 {listing.priceMonth != null && listing.priceMonth > 0 && cardPrice?.suffix !== '/mo' && (
                   <div className="text-gray-600 dark:text-gray-400 text-sm">
-                    <span className="font-semibold">{fmt(listing.priceMonth)}</span>/month
+                    <span className="font-semibold">{fmt(listing.priceMonth)}</span>{t('listingDetail.perMonth')}
                   </div>
                 )}
               </div>
@@ -434,9 +438,9 @@ export default function ListingDetailPage() {
               {isOwner ? (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    This is your listing. Renters will request dates here — you manage it from the banner above or{' '}
+                    {t('listingDetail.ownerSidebar')}{' '}
                     <Link href="/listings/mine" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
-                      My listings
+                      {t('listingDetail.myListingsLink')}
                     </Link>
                     .
                   </p>
@@ -444,13 +448,13 @@ export default function ListingDetailPage() {
                     href={`/listings/${listing.id}/edit`}
                     className="block w-full btn-primary py-3 text-center font-semibold"
                   >
-                    Edit listing
+                    {t('listingDetail.editListing')}
                   </Link>
                   <Link
                     href="/bookings/my-listings"
                     className="block w-full py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
-                    View booking requests
+                    {t('listingDetail.viewBookingRequests')}
                   </Link>
                 </div>
               ) : (
@@ -460,7 +464,7 @@ export default function ListingDetailPage() {
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                     <CalendarIcon className="h-5 w-5 text-blue-500" />
-                    Start Date
+                    {t('listingDetail.startDate')}
                   </label>
                   <input
                     type="date"
@@ -472,7 +476,7 @@ export default function ListingDetailPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    End Date
+                    {t('listingDetail.endDate')}
                   </label>
                   <input
                     type="date"
@@ -487,9 +491,9 @@ export default function ListingDetailPage() {
               {/* Deposit Info */}
               {listing.deposit != null && listing.deposit > 0 && (
                 <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-700">
-                  <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Security Deposit</p>
+                  <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">{t('listingDetail.securityDeposit')}</p>
                   <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{fmt(listing.deposit)}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Fully refundable after return</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">{t('listingDetail.depositRefundable')}</p>
                 </div>
               )}
 
@@ -498,13 +502,13 @@ export default function ListingDetailPage() {
                 disabled={!selectedDates.start || !selectedDates.end}
                 className="w-full btn-primary py-4 text-lg font-bold mb-4"
               >
-                Request to Book
+                {t('listingDetail.requestToBook')}
               </button>
 
               <div className="text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-2">
                   <CheckBadgeIcon className="h-4 w-4 text-green-500" />
-                  Select dates, review pricing, and securely pay through chats
+                  {t('listingDetail.bookHint')}
                 </p>
               </div>
                 </>

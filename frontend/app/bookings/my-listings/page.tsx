@@ -11,7 +11,8 @@ import { CalendarIcon, CheckCircleIcon, XCircleIcon, ChatBubbleLeftRightIcon } f
 import Link from 'next/link'
 import { formatMoneyAmount, getListingCurrencyCode } from '@/lib/listingCurrency'
 import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
-import { formatBookingDateRange } from '@/lib/bookingUi'
+import { formatBookingDateRange, friendlyBookingStatus } from '@/lib/bookingUi'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface Booking {
   id: number
@@ -33,6 +34,7 @@ export default function MyListingBookingsPage() {
   const router = useRouter()
   const { isAuthenticated, loading: authLoading } = useAuth()
   const { presentation } = useCurrencyPresentation()
+  const { locale, t } = useLanguage()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -42,11 +44,11 @@ export default function MyListingBookingsPage() {
       setBookings(response.data.content || [])
     } catch (error) {
       console.error('Error fetching bookings:', error)
-      toast.error('Failed to load bookings')
+      toast.error(t('bookingMy.loadFailed'))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     if (authLoading) return
@@ -60,22 +62,22 @@ export default function MyListingBookingsPage() {
   const handleConfirm = async (bookingId: number) => {
     try {
       await api.post(`/bookings/${bookingId}/confirm`)
-      toast.success('Booking confirmed!')
+      toast.success(t('bookingMy.confirmSuccess'))
       fetchBookings()
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to confirm booking')
+      toast.error(error.response?.data?.message || t('bookingMy.confirmFailed'))
     }
   }
 
   const handleCancel = async (bookingId: number) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return
+    if (!confirm(t('bookingMy.cancelConfirm'))) return
     
     try {
       await api.post(`/bookings/${bookingId}/cancel`)
-      toast.success('Booking cancelled')
+      toast.success(t('bookingMy.cancelSuccess'))
       fetchBookings()
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to cancel booking')
+      toast.error(error.response?.data?.message || t('bookingMy.cancelFailed'))
     }
   }
 
@@ -105,17 +107,17 @@ export default function MyListingBookingsPage() {
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-8">
-          Bookings for My Listings
+          {t('bookingMy.title')}
         </h1>
 
         {bookings.length === 0 ? (
           <div className="card-glass text-center py-12">
             <CalendarIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              No bookings yet
+              {t('bookingMy.emptyTitle')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              When users book your listings, they&apos;ll appear here
+              {t('bookingMy.emptyBody')}
             </p>
           </div>
         ) : (
@@ -131,10 +133,10 @@ export default function MyListingBookingsPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-4">
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                        {booking.listing?.title || `Listing #${booking.listingId}`}
+                        {booking.listing?.title || t('bookingMy.listingFallback', { id: String(booking.listingId) })}
                       </h3>
                       <span className={`px-3 py-1 rounded-full text-sm font-bold ${statusColors[booking.status] || ''}`}>
-                        {booking.status}
+                        {friendlyBookingStatus(booking.status, locale)}
                       </span>
                     </div>
 
@@ -146,13 +148,13 @@ export default function MyListingBookingsPage() {
                         </span>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Renter</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('bookingMy.renter')}</p>
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {booking.renter.name}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Total Amount</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('bookingMy.totalAmount')}</p>
                         <p className="font-bold text-gray-900 dark:text-white">
                           {fmt(booking.totalAmount + booking.deposit)}
                         </p>
@@ -165,7 +167,7 @@ export default function MyListingBookingsPage() {
                         className="btn-outline flex items-center gap-2"
                       >
                         <ChatBubbleLeftRightIcon className="h-4 w-4" />
-                        View & Chat
+                        {t('bookingMy.viewChat')}
                       </Link>
                       {booking.status === 'PENDING' && (
                         <>
@@ -174,14 +176,14 @@ export default function MyListingBookingsPage() {
                             className="btn-primary flex items-center gap-2"
                           >
                             <CheckCircleIcon className="h-4 w-4" />
-                            Approve
+                            {t('bookingMy.approve')}
                           </button>
                           <button
                             onClick={() => handleCancel(booking.id)}
                             className="btn-outline text-red-600 border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                           >
                             <XCircleIcon className="h-4 w-4" />
-                            Reject
+                            {t('bookingMy.reject')}
                           </button>
                         </>
                       )}

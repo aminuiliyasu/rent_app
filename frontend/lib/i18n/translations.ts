@@ -1,5 +1,7 @@
 import { extendedEn, extendedHu } from '@/lib/i18n/extendedTranslations'
 import { listingFormEn, listingFormHu } from '@/lib/i18n/listingFormTranslations'
+import { listingDetailEn, listingDetailHu } from '@/lib/i18n/listingDetailTranslations'
+import { bookingPagesEn, bookingPagesHu } from '@/lib/i18n/bookingPagesTranslations'
 
 export type Locale = 'en' | 'hu'
 
@@ -285,7 +287,7 @@ const baseEn = {
   'resources.followRhentify': 'Follow Rhentify',
 } as const
 
-const en = { ...baseEn, ...extendedEn, ...listingFormEn } as const
+const en = { ...baseEn, ...extendedEn, ...listingFormEn, ...listingDetailEn, ...bookingPagesEn } as const
 
 export type TranslationKey = keyof typeof en
 
@@ -564,7 +566,13 @@ const baseHu: Record<keyof typeof baseEn, string> = {
   'resources.followRhentify': 'Kövess minket',
 }
 
-const hu: Record<TranslationKey, string> = { ...baseHu, ...extendedHu, ...listingFormHu }
+const hu: Record<TranslationKey, string> = {
+  ...baseHu,
+  ...extendedHu,
+  ...listingFormHu,
+  ...listingDetailHu,
+  ...bookingPagesHu,
+}
 
 export const translations = { en, hu } as const
 

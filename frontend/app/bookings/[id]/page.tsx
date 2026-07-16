@@ -33,6 +33,7 @@ import {
 } from '@/lib/bookingUi'
 import { formatMoneyAmount, getListingCurrencyCode } from '@/lib/listingCurrency'
 import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 function nameInitials(name: string | undefined) {
   if (!name?.trim()) return '?'
@@ -45,6 +46,7 @@ export default function BookingDetailPage() {
   const router = useRouter()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const { presentation } = useCurrencyPresentation()
+  const { locale, t } = useLanguage()
   const [booking, setBooking] = useState<BookingType | null>(null)
   const [loading, setLoading] = useState(true)
   const [reviewRating, setReviewRating] = useState(5)
@@ -108,7 +110,7 @@ export default function BookingDetailPage() {
       })
     } catch (error) {
       console.error('Error fetching booking:', error)
-      toast.error('Failed to load booking')
+      toast.error(t('bookingDetail.loadFailed'))
       router.push('/dashboard')
     } finally {
       setLoading(false)
@@ -139,7 +141,7 @@ export default function BookingDetailPage() {
       fetchMessages()
     } catch (error) {
       console.error('Error sending message:', error)
-      toast.error('Failed to send message')
+      toast.error(t('bookingDetail.sendMessageFailed'))
     } finally {
       setSendingMessage(false)
     }
@@ -162,7 +164,7 @@ export default function BookingDetailPage() {
       setActiveCall(response.data)
     } catch (error: any) {
       console.error('Error initiating call:', error)
-      toast.error(error.response?.data?.message || 'Failed to initiate call')
+      toast.error(error.response?.data?.message || t('bookingDetail.callFailed'))
     }
   }
 
@@ -170,23 +172,23 @@ export default function BookingDetailPage() {
     if (!booking) return
     try {
       await api.post(`/bookings/${booking.id}/confirm`)
-      toast.success('Booking confirmed!')
+      toast.success(t('bookingDetail.confirmSuccess'))
       fetchBooking()
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to confirm booking')
+      toast.error(error.response?.data?.message || t('bookingDetail.confirmFailed'))
     }
   }
 
   const handleCancel = async () => {
     if (!booking) return
-    if (!confirm('Are you sure you want to cancel this booking?')) return
+    if (!confirm(t('bookingDetail.cancelConfirm'))) return
     
     try {
       await api.post(`/bookings/${booking.id}/cancel`)
-      toast.success('Booking cancelled')
+      toast.success(t('bookingDetail.cancelSuccess'))
       fetchBooking()
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to cancel booking')
+      toast.error(error.response?.data?.message || t('bookingDetail.cancelFailed'))
     }
   }
 
@@ -194,22 +196,22 @@ export default function BookingDetailPage() {
     if (!booking) return
     try {
       await api.post(`/bookings/${booking.id}/start`)
-      toast.success('Rental marked as in progress')
+      toast.success(t('bookingDetail.startSuccess'))
       fetchBooking()
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Could not update rental')
+      toast.error(error.response?.data?.message || t('bookingDetail.startFailed'))
     }
   }
 
   const handleCompleteRental = async () => {
     if (!booking) return
-    if (!confirm('Mark this rental as complete? You can leave reviews after this.')) return
+    if (!confirm(t('bookingDetail.completeConfirm'))) return
     try {
       await api.post(`/bookings/${booking.id}/complete`)
-      toast.success('Rental completed — you can both leave reviews now')
+      toast.success(t('bookingDetail.completeSuccess'))
       fetchBooking()
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Could not complete rental')
+      toast.error(error.response?.data?.message || t('bookingDetail.completeFailed'))
     }
   }
 
@@ -222,11 +224,11 @@ export default function BookingDetailPage() {
         rating: reviewRating,
         comment: reviewComment.trim() || undefined,
       })
-      toast.success('Thank you for your feedback!')
+      toast.success(t('bookingDetail.reviewThankYou'))
       setReviewComment('')
       fetchBooking()
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Could not submit review')
+      toast.error(error.response?.data?.message || t('bookingDetail.reviewFailed'))
     } finally {
       setSubmittingReview(false)
     }
@@ -262,8 +264,8 @@ export default function BookingDetailPage() {
     isOwner && (booking.status === 'CONFIRMED' || booking.status === 'IN_PROGRESS')
 
   const partnerName = isOwner
-    ? booking.renter?.name ?? 'the renter'
-    : booking.owner?.name ?? 'the owner'
+    ? booking.renter?.name ?? t('bookingDetail.partnerRenter')
+    : booking.owner?.name ?? t('bookingDetail.partnerOwner')
 
   const statusColors: Record<string, string> = {
     PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
@@ -296,7 +298,7 @@ export default function BookingDetailPage() {
                 <span
                   className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold tracking-wide ${statusColors[booking.status] || ''}`}
                 >
-                  {friendlyBookingStatus(booking.status)}
+                  {friendlyBookingStatus(booking.status, locale)}
                 </span>
                 <span
                   className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
@@ -305,19 +307,19 @@ export default function BookingDetailPage() {
                       : 'bg-sky-100 text-sky-900 dark:bg-sky-950/50 dark:text-sky-300'
                   }`}
                 >
-                  {isOwner ? 'You are the host' : 'You are renting'}
+                  {isOwner ? t('bookingDetail.youAreHost') : t('bookingDetail.youAreRenting')}
                 </span>
               </div>
               <h1 className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
                 {bookedItemTitle}
               </h1>
               <p className="hidden sm:block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Booked item: <span className="text-gray-700 dark:text-gray-200">{bookedItemTitle}</span>
+                {t('bookingDetail.bookedItem')}: <span className="text-gray-700 dark:text-gray-200">{bookedItemTitle}</span>
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 sm:line-clamp-none">
                 {isOwner
-                  ? `${partnerDisplay} wants to rent your item for these dates. Keep everything in one thread below.`
-                  : `You’re booking from ${partnerDisplay}. Message them anytime about pickup or details.`}
+                  ? t('bookingDetail.hostIntro', { name: partnerDisplay })
+                  : t('bookingDetail.renterIntro', { name: partnerDisplay })}
               </p>
               {(booking.listing?.city || booking.listing?.address) && (
                 <p className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -334,7 +336,7 @@ export default function BookingDetailPage() {
                 <Image src={listingImage} alt="" fill className="object-cover" sizes="260px" unoptimized />
               ) : (
                 <div className="flex h-full items-center justify-center p-6 text-center text-sm text-gray-400">
-                  Listing photo
+                  {t('bookingDetail.listingPhoto')}
                 </div>
               )}
               {booking.listing?.id != null && (
@@ -342,7 +344,7 @@ export default function BookingDetailPage() {
                   href={`/listings/${booking.listing.id}`}
                   className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/50 to-transparent p-3 text-center text-sm font-semibold text-white opacity-0 transition hover:opacity-100"
                 >
-                  View listing
+                  {t('bookingDetail.viewListing')}
                 </Link>
               )}
             </div>
@@ -352,7 +354,7 @@ export default function BookingDetailPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
           <div className="flex flex-col gap-5 sm:gap-6 lg:col-span-2 order-2 lg:order-1">
             <div className="card-glass order-3 lg:order-none">
-              <h2 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">Dates &amp; price</h2>
+              <h2 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">{t('bookingDetail.datesAndPrice')}</h2>
               <div className="flex flex-wrap items-center gap-2 text-gray-700 dark:text-gray-300">
                 <CalendarIcon className="h-5 w-5 shrink-0 text-blue-500" />
                 <span className="font-medium">
@@ -366,18 +368,18 @@ export default function BookingDetailPage() {
 
               <div className="mt-6 grid gap-4 border-t border-gray-200 pt-6 dark:border-gray-700 sm:grid-cols-2">
                 <div className="rounded-2xl bg-gray-50/80 p-4 dark:bg-gray-900/50">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Rental total</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t('bookingDetail.rentalTotal')}</p>
                   <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{fmtBooking(booking.totalAmount)}</p>
                 </div>
                 <div className="rounded-2xl bg-gray-50/80 p-4 dark:bg-gray-900/50">
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                    {booking.deposit > 0 ? 'With security deposit' : 'Due now'}
+                    {booking.deposit > 0 ? t('bookingDetail.withDeposit') : t('bookingDetail.dueNow')}
                   </p>
                   <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
                     {fmtBooking(booking.totalAmount + booking.deposit)}
                   </p>
                   {booking.deposit > 0 && (
-                    <p className="mt-1 text-xs text-gray-500">Includes {fmtBooking(booking.deposit)} deposit</p>
+                    <p className="mt-1 text-xs text-gray-500">{t('bookingDetail.includesDeposit', { amount: fmtBooking(booking.deposit) })}</p>
                   )}
                 </div>
               </div>
@@ -390,7 +392,7 @@ export default function BookingDetailPage() {
                     className="btn-primary flex flex-1 items-center justify-center gap-2"
                   >
                     <CheckCircleIcon className="h-5 w-5" />
-                    Approve request
+                    {t('bookingDetail.approveRequest')}
                   </button>
                   <button
                     type="button"
@@ -398,7 +400,7 @@ export default function BookingDetailPage() {
                     className="btn-outline flex flex-1 items-center justify-center gap-2 border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                   >
                     <XCircleIcon className="h-5 w-5" />
-                    Decline
+                    {t('bookingDetail.decline')}
                   </button>
                 </div>
               )}
@@ -409,28 +411,28 @@ export default function BookingDetailPage() {
                   onClick={handleCancel}
                   className="btn-outline mt-6 w-full border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                 >
-                  Cancel this booking
+                  {t('bookingDetail.cancelBooking')}
                 </button>
               )}
             </div>
 
             {(canStartRental || canCompleteRental) && (
               <div className="card-glass border border-emerald-200/60 dark:border-emerald-900/40 order-4 lg:order-none">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Host checklist</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('bookingDetail.hostChecklist')}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
                   {booking.status === 'CONFIRMED'
-                    ? 'Optional: mark when handoff happens. When the rental is fully returned or finished, mark complete — then both of you can leave private reviews.'
-                    : 'When everything is wrapped up, mark complete to unlock reviews for you and the renter.'}
+                    ? t('bookingDetail.checklistConfirmed')
+                    : t('bookingDetail.checklistInProgress')}
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   {canStartRental && (
                     <button type="button" onClick={handleStartRental} className="btn-secondary text-sm">
-                      We started the rental
+                      {t('bookingDetail.startRental')}
                     </button>
                   )}
                   {canCompleteRental && (
                     <button type="button" onClick={handleCompleteRental} className="btn-primary text-sm">
-                      Mark rental complete
+                      {t('bookingDetail.markComplete')}
                     </button>
                   )}
                 </div>
@@ -440,7 +442,7 @@ export default function BookingDetailPage() {
             {isRenter && (booking.status === 'CONFIRMED' || booking.status === 'IN_PROGRESS') && (
               <div className="rounded-2xl border border-sky-200/80 bg-sky-50/50 px-5 py-4 dark:border-sky-900/50 dark:bg-sky-950/20 order-5 lg:order-none">
                 <p className="text-sm leading-relaxed text-sky-950 dark:text-sky-100">
-                  Your host updates progress here. Use <strong>Messages</strong> below to agree on pickup, return time, or ask questions — everything stays on the record.
+                  {t('bookingDetail.renterProgressHint')}
                 </p>
               </div>
             )}
@@ -452,7 +454,7 @@ export default function BookingDetailPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                    {isOwner ? 'Your guest' : 'Your host'}
+                    {isOwner ? t('bookingDetail.yourGuest') : t('bookingDetail.yourHost')}
                   </p>
                   <p className="truncate text-base font-bold text-gray-900 dark:text-white">{partnerDisplay}</p>
                 </div>
@@ -461,16 +463,16 @@ export default function BookingDetailPage() {
                     href={`/users/${partner.id}`}
                     className="shrink-0 text-xs font-semibold text-indigo-600 dark:text-indigo-400"
                   >
-                    Profile
+                    {t('bookingDetail.profile')}
                   </Link>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-2 border-t border-gray-200 px-3 py-2 dark:border-gray-700">
                 <Link href="#booking-messages" className="btn-primary py-2.5 text-center text-xs">
-                  Messages
+                  {t('bookingDetail.messages')}
                 </Link>
                 <Link href="#booking-reviews" className="btn-secondary py-2.5 text-center text-xs">
-                  Reviews
+                  {t('bookingDetail.reviews')}
                 </Link>
               </div>
             </div>
@@ -482,38 +484,45 @@ export default function BookingDetailPage() {
                   <div>
                     <h2 className="flex items-center gap-2 text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                       <ChatBubbleLeftRightIcon className="h-6 w-6 sm:h-7 sm:w-7 text-blue-500 shrink-0" />
-                      <span className="truncate">Messages with {partnerDisplay}</span>
+                      <span className="truncate">{t('bookingDetail.messagesWith', { name: partnerDisplay })}</span>
                     </h2>
                     <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                      One thread for this booking — coordinate pickup, returns, and questions.
+                      {t('bookingDetail.messagesHint')}
                     </p>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <Link href="/messages" className="btn-secondary px-2 py-2.5 text-center text-xs sm:text-sm">
-                      Inbox
+                      {t('bookingDetail.inbox')}
                     </Link>
                     <button
                       type="button"
                       onClick={() => initiateCall(CallType.VIDEO)}
                       className="rounded-xl bg-emerald-500 px-2 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:bg-emerald-600"
                     >
-                      Video
+                      {t('bookingDetail.video')}
                     </button>
                     <button
                       type="button"
                       onClick={() => initiateCall(CallType.AUDIO)}
                       className="rounded-xl bg-blue-500 px-2 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:bg-blue-600"
                     >
-                      Voice
+                      {t('bookingDetail.voice')}
                     </button>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3 px-4 py-4 sm:px-6 sm:py-5">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Quick replies</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{t('bookingDetail.quickReplies')}</p>
                 <div className="flex flex-wrap gap-2">
-                  {['Thanks!', 'On my way', 'Can we adjust pickup time?', 'Returned safely'].map((q) => (
+                  {(
+                    [
+                      t('bookingDetail.quickThanks'),
+                      t('bookingDetail.quickOnWay'),
+                      t('bookingDetail.quickPickup'),
+                      t('bookingDetail.quickReturned'),
+                    ] as const
+                  ).map((q) => (
                     <button
                       key={q}
                       type="button"
@@ -530,8 +539,8 @@ export default function BookingDetailPage() {
                 {messages.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 py-12 text-center dark:border-gray-700 dark:bg-gray-900/30">
                     <ChatBubbleLeftRightIcon className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
-                    <p className="mt-3 font-medium text-gray-700 dark:text-gray-300">Say hello</p>
-                    <p className="mt-1 text-sm text-gray-500">Introduce yourself and confirm details — it helps everyone feel confident.</p>
+                    <p className="mt-3 font-medium text-gray-700 dark:text-gray-300">{t('bookingDetail.sayHello')}</p>
+                    <p className="mt-1 text-sm text-gray-500">{t('bookingDetail.sayHelloHint')}</p>
                   </div>
                 ) : (
                   messages.map((msg) => {
@@ -541,7 +550,7 @@ export default function BookingDetailPage() {
                         <div className="max-w-[90%] sm:max-w-[75%]">
                           <div className={`mb-1 flex items-center gap-2 px-1 text-xs ${mine ? 'justify-end' : 'justify-start'}`}>
                             <span className={mine ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}>
-                              {mine ? 'You' : msg.sender?.name || 'User'}
+                              {mine ? t('bookingDetail.you') : msg.sender?.name || t('bookingDetail.userFallback')}
                             </span>
                           </div>
                           <div
@@ -569,7 +578,7 @@ export default function BookingDetailPage() {
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder={`Message ${partnerDisplay}…`}
+                    placeholder={t('bookingDetail.messagePlaceholder', { name: partnerDisplay })}
                     className="input-field flex-1 rounded-2xl border-0 bg-white text-base sm:text-sm dark:bg-gray-800 min-h-[44px]"
                     disabled={sendingMessage}
                   />
@@ -578,7 +587,7 @@ export default function BookingDetailPage() {
                     disabled={sendingMessage || !newMessage.trim()}
                     className="btn-primary rounded-2xl px-6 sm:px-8 min-h-[44px]"
                   >
-                    Send
+                    {t('bookingDetail.send')}
                   </button>
                 </div>
               </form>
@@ -592,54 +601,52 @@ export default function BookingDetailPage() {
               <div className="border-b border-amber-200/60 bg-amber-100/40 px-6 py-5 dark:border-amber-900/50 dark:bg-amber-950/30">
                 <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
                   <StarIcon className="h-8 w-8 text-amber-400" />
-                  Mutual reviews
+                  {t('bookingDetail.mutualReviews')}
                 </h2>
                 <p className="mt-1 text-sm text-amber-950/80 dark:text-amber-100/90">
-                  Fair for renters and hosts: ratings go live only after both sides share theirs.
+                  {t('bookingDetail.mutualReviewsHint')}
                 </p>
               </div>
               <div className="space-y-5 p-6 sm:p-8">
                 {booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED' && booking.status !== 'DISPUTED' && (
                   <div className="rounded-2xl border border-amber-200/80 bg-white/70 px-4 py-3 dark:border-amber-900/50 dark:bg-gray-900/60">
                     <p className="text-sm leading-relaxed text-gray-800 dark:text-gray-200">
-                      After the host marks the rental <span className="font-semibold text-amber-800 dark:text-amber-300">complete</span>, you
-                      and {partnerName} each rate the experience. Nothing shows on the listing until <strong>both</strong> reviews are in — then
-                      they appear together.
+                      {t('bookingDetail.reviewsAfterComplete', { name: partnerName })}
                     </p>
                   </div>
                 )}
 
                 {booking.status === 'PENDING' && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Reviews unlock after the host approves and later completes the rental.
+                    {t('bookingDetail.reviewsAfterApprove')}
                   </p>
                 )}
 
                 {(booking.status === 'CONFIRMED' || booking.status === 'IN_PROGRESS') && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    You’ll rate each other here once the host marks the rental complete.
+                    {t('bookingDetail.reviewsWhenComplete')}
                   </p>
                 )}
 
                 {booking.status === 'CANCELLED' && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Cancelled bookings can’t be reviewed.</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('bookingDetail.reviewsCancelled')}</p>
                 )}
 
                 {booking.status === 'DISPUTED' && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Reviews wait until this dispute is resolved.</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('bookingDetail.reviewsDisputed')}</p>
                 )}
 
                 {booking.status === 'COMPLETED' && !rs && (
                   <div className="rounded-2xl border border-amber-200/80 bg-amber-50/90 px-4 py-3 dark:border-amber-900/50 dark:bg-amber-950/30">
                     <p className="text-sm text-amber-950 dark:text-amber-100">
-                      Review status couldn&apos;t be loaded. Check your connection and try again.
+                      {t('bookingDetail.reviewsLoadFailed')}
                     </p>
                     <button
                       type="button"
                       onClick={() => void fetchBooking()}
                       className="btn-secondary mt-3 px-4 py-2 text-sm"
                     >
-                      Reload reviews
+                      {t('bookingDetail.reloadReviews')}
                     </button>
                   </div>
                 )}
@@ -650,14 +657,14 @@ export default function BookingDetailPage() {
                       <form onSubmit={handleSubmitReview} className="space-y-6">
                         <div>
                           <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                            How was it with {partnerName}?
+                            {t('bookingDetail.howWasIt', { name: partnerName })}
                           </p>
                           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            {isOwner ? 'Your feedback helps other hosts trust great renters.' : 'Honest ratings keep the community safe.'}
+                            {isOwner ? t('bookingDetail.reviewHintOwner') : t('bookingDetail.reviewHintRenter')}
                           </p>
                         </div>
                         <div className="rounded-2xl bg-white/80 p-6 shadow-inner dark:bg-gray-900/50">
-                          <p className="mb-3 text-center text-sm font-medium text-gray-600 dark:text-gray-400">Tap the stars</p>
+                          <p className="mb-3 text-center text-sm font-medium text-gray-600 dark:text-gray-400">{t('bookingDetail.tapStars')}</p>
                           <div className="flex justify-center gap-2">
                             {[1, 2, 3, 4, 5].map((n) => (
                               <button
@@ -676,18 +683,21 @@ export default function BookingDetailPage() {
                             ))}
                           </div>
                           <p className="mt-4 text-center text-lg font-semibold text-amber-800 dark:text-amber-200">
-                            {ratingWords(reviewRating)} · {reviewRating} of 5
+                            {t('bookingDetail.starsOf', {
+                              word: ratingWords(reviewRating, locale),
+                              rating: String(reviewRating),
+                            })}
                           </p>
                           <textarea
                             value={reviewComment}
                             onChange={(e) => setReviewComment(e.target.value)}
-                            placeholder="Optional — what should others know? (pickup, communication, condition…)"
+                            placeholder={t('bookingDetail.reviewPlaceholder')}
                             rows={4}
                             maxLength={2000}
                             className="input-field mt-5 w-full min-h-[110px] resize-y rounded-2xl"
                           />
                           <button type="submit" disabled={submittingReview} className="btn-primary mt-4 w-full sm:w-auto">
-                            {submittingReview ? 'Submitting…' : 'Submit private review'}
+                            {submittingReview ? t('bookingDetail.submittingReview') : t('bookingDetail.submitReview')}
                           </button>
                         </div>
                       </form>
@@ -695,7 +705,7 @@ export default function BookingDetailPage() {
 
                     {rs.awaitingPartnerReview && rs.myReview && (
                       <div className="rounded-2xl border border-amber-200 bg-amber-50/90 px-5 py-4 dark:border-amber-800 dark:bg-amber-950/40">
-                        <p className="font-semibold text-amber-950 dark:text-amber-100">Saved — thank you.</p>
+                        <p className="font-semibold text-amber-950 dark:text-amber-100">{t('bookingDetail.reviewSaved')}</p>
                         <div className="mt-2 flex gap-1">
                           {[1, 2, 3, 4, 5].map((n) => (
                             <StarIcon
@@ -705,7 +715,7 @@ export default function BookingDetailPage() {
                           ))}
                         </div>
                         <p className="mt-3 text-sm text-amber-900 dark:text-amber-200/90">
-                          When {partnerName} submits theirs, both reviews appear on the listing together.
+                          {t('bookingDetail.reviewWaiting', { name: partnerName })}
                         </p>
                       </div>
                     )}
@@ -713,7 +723,7 @@ export default function BookingDetailPage() {
                     {rs.bothReviewsVisible && rs.myReview && rs.partnerReview && (
                       <div className="grid gap-5 sm:grid-cols-2">
                         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900/70">
-                          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">What you shared</p>
+                          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{t('bookingDetail.whatYouShared')}</p>
                           <div className="mt-2 flex gap-1">
                             {[1, 2, 3, 4, 5].map((n) => (
                               <StarIcon
@@ -728,7 +738,7 @@ export default function BookingDetailPage() {
                         </div>
                         <div className="rounded-2xl border border-blue-200 bg-blue-50/80 p-5 shadow-sm dark:border-blue-900 dark:bg-blue-950/40">
                           <p className="text-xs font-bold uppercase tracking-wide text-blue-700 dark:text-blue-300">
-                            {partnerName}&apos;s notes about you
+                            {t('bookingDetail.partnerNotes', { name: partnerName })}
                           </p>
                           <div className="mt-2 flex gap-1">
                             {[1, 2, 3, 4, 5].map((n) => (
@@ -750,7 +760,7 @@ export default function BookingDetailPage() {
                       !rs.bothReviewsVisible &&
                       !rs.myReview && (
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          If you already submitted, try refreshing. Otherwise reviews open when the booking is completed.
+                          {t('bookingDetail.reviewRefreshHint')}
                         </p>
                       )}
                   </>
@@ -763,7 +773,7 @@ export default function BookingDetailPage() {
             <div className="card-glass sticky top-24 space-y-5">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  {isOwner ? 'Your guest' : 'Your host'}
+                  {isOwner ? t('bookingDetail.yourGuest') : t('bookingDetail.yourHost')}
                 </p>
                 <div className="mt-3 flex items-center gap-4">
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-xl font-bold text-white shadow-lg">
@@ -781,17 +791,17 @@ export default function BookingDetailPage() {
                         href={`/users/${partner.id}`}
                         className="mt-2 inline-flex text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
                       >
-                        Profile &amp; reviews →
+                        {t('bookingDetail.profileReviews')}
                       </Link>
                     )}
                   </div>
                 </div>
               </div>
               <Link href="#booking-messages" className="btn-primary block w-full py-3 text-center text-sm">
-                Jump to messages
+                {t('bookingDetail.jumpMessages')}
               </Link>
               <Link href="#booking-reviews" className="btn-secondary block w-full py-3 text-center text-sm">
-                Jump to reviews
+                {t('bookingDetail.jumpReviews')}
               </Link>
             </div>
           </aside>
