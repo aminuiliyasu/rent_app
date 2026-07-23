@@ -1,6 +1,8 @@
 package com.rentify.service;
 
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,8 @@ import java.util.UUID;
 
 @Service
 public class FileUploadService {
+
+    private static final Logger log = LoggerFactory.getLogger(FileUploadService.class);
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -39,6 +43,11 @@ public class FileUploadService {
 
     @PostConstruct
     void initUploadDirectories() {
+        if (useS3()) {
+            log.info("File uploads: S3 enabled (bucket={})", s3Bucket);
+        } else {
+            log.info("File uploads: S3 disabled — using local disk (dir={})", uploadDir);
+        }
         try {
             Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath)) {
@@ -48,7 +57,7 @@ public class FileUploadService {
             Files.createDirectories(uploadPath.resolve("listings"));
             Files.createDirectories(uploadPath.resolve("general"));
         } catch (Exception e) {
-            System.err.println("Warning: Could not create upload directories: " + e.getMessage());
+            log.warn("Could not create upload directories: {}", e.getMessage());
         }
     }
 
