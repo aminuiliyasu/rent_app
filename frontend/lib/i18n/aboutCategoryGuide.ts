@@ -15,14 +15,14 @@ const en: Record<string, Omit<AboutCategoryEntry, 'slug'>> = {
     examples: ['Drills and drivers', 'Ladders and scaffolding', 'Pressure washers', 'Tile cutters', 'Tool kits'],
   },
   electronics: {
-    title: 'Electronics',
-    summary: 'Gadgets and gear for work, travel, events, or short-term use.',
+    title: 'Camera & electronics',
+    summary: 'Cameras, gadgets, and gear for work, travel, events, or short-term use.',
     examples: ['Cameras and lenses', 'Laptops and tablets', 'Projectors and screens', 'Speakers and mics', 'Gaming consoles'],
   },
   'home-living': {
-    title: 'Home & Living',
-    summary: 'Furniture, baby items, appliances, and everyday items for your home.',
-    examples: ['Sofas, tables, and beds', 'Baby strollers and cribs', 'Vacuum cleaners and air purifiers', 'Kitchen appliances', 'Garage and storage items'],
+    title: 'Baby equipment',
+    summary: 'Strollers, cribs, carriers, and gear for babies and toddlers.',
+    examples: ['Baby strollers and buggies', 'Cribs and travel cots', 'Car seats and carriers', 'High chairs and playpens', 'Breast pumps and baby monitors'],
   },
   apartment: {
     title: 'Spaces',
@@ -45,9 +45,9 @@ const en: Record<string, Omit<AboutCategoryEntry, 'slug'>> = {
     examples: ['Dog carriers and leashes', 'Cat carriers and travel crates', 'Pet strollers', 'Grooming tools', 'Beds, bowls, and outdoor gear'],
   },
   socials: {
-    title: 'Socials',
-    summary: 'Everything for gatherings, celebrations, and social events.',
-    examples: ['Party speakers and lighting', 'Costumes and props', 'Tables, chairs, and decor', 'Photo booth gear', 'Event games and extras'],
+    title: 'Fashion & Costumes',
+    summary: 'Clothes, shoes, and costumes for events, parties, and short-term wear.',
+    examples: ['Suits and formal dresses', 'Shoes and accessories', 'Halloween and party costumes', 'Theme-event outfits', 'Props and fashion extras'],
   },
   other: {
     title: 'Other',
@@ -63,14 +63,14 @@ const hu: Record<string, Omit<AboutCategoryEntry, 'slug'>> = {
     examples: ['Fúrók és csavarbehajtók', 'Létrák', 'Magasnyomású mosók', 'Csempevágók', 'Szerszámkészletek'],
   },
   electronics: {
-    title: 'Elektronika',
-    summary: 'Eszerűk munkához, utazáshoz, eseményekhez vagy rövid távú használatra.',
+    title: 'Kamera és elektronika',
+    summary: 'Kamerák, eszközök munkához, utazáshoz, eseményekhez vagy rövid távú használatra.',
     examples: ['Kamerák és objektívek', 'Laptopok és tabletek', 'Projektorok', 'Hangszórók és mikrofonok', 'Játékkonzolok'],
   },
   'home-living': {
-    title: 'Otthon és lakás',
-    summary: 'Bútor, baba holmi, háztartási gépek és mindennapi otthoni cikkek.',
-    examples: ['Kanapék, asztalok, ágyak', 'Babakocsik és bölcsők', 'Porszívók és légtisztítók', 'Konyhai gépek', 'Garázs- és tárolócikkek'],
+    title: 'Baba felszerelés',
+    summary: 'Babakocsik, bölcsők, hordozók és felszerelés babáknak, kisgyerekeknek.',
+    examples: ['Babakocsik', 'Bölcsők és utazóágyak', 'Autósülés és hordozók', 'Etetőszékek és járókák', 'Mellszívók és babamonitorok'],
   },
   apartment: {
     title: 'Helyiségek',
@@ -93,9 +93,9 @@ const hu: Record<string, Omit<AboutCategoryEntry, 'slug'>> = {
     examples: ['Kutya hordozók és pórázok', 'Macska hordozók és ketrecek', 'Kutyabuggik', 'Ápoló eszközök', 'Fekhelyek, tálak, kinti felszerelés'],
   },
   socials: {
-    title: 'Socialok',
-    summary: 'Bulik, ünnepségek és közösségi események felszerelése.',
-    examples: ['Hangosítás és fények', 'Jelmezek és kellékek', 'Asztalok, székek, dekor', 'Fotóbox', 'Játékok és extrák'],
+    title: 'Divat és jelmezek',
+    summary: 'Ruhák, cipők és jelmezek eseményekre, bulikra, rövid távú használatra.',
+    examples: ['Öltönyök és alkalmi ruhák', 'Cipők és kiegészítők', 'Halloween- és bulijelmezek', 'Tematikus outfitok', 'Kellékek és divat-extrák'],
   },
   other: {
     title: 'Egyéb',

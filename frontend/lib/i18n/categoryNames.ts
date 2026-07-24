@@ -3,28 +3,39 @@ import type { Locale } from '@/lib/i18n/translations'
 
 const CATEGORY_NAMES_EN: Record<string, string> = {
   'tools-equipment': 'Tools & DIY',
-  electronics: 'Electronics',
-  'home-living': 'Home & Living',
+  electronics: 'Camera & electronics',
+  'home-living': 'Baby equipment',
   apartment: 'Spaces',
   services: 'Services',
   vehicles: 'Scooter & Bikes',
   'pet-lovers': 'Pet Lovers',
-  socials: 'Socials',
-  'parties-events': 'Socials',
+  socials: 'Fashion & Costumes',
+  'parties-events': 'Fashion & Costumes',
   other: 'Other',
 }
 
 const CATEGORY_NAMES_HU: Record<string, string> = {
   'tools-equipment': 'Szerszámok és barkács',
-  electronics: 'Elektronika',
-  'home-living': 'Otthon és lakás',
+  electronics: 'Kamera és elektronika',
+  'home-living': 'Baba felszerelés',
   apartment: 'Helyiségek',
   services: 'Szolgáltatások',
   vehicles: 'Rollerek és biciklik',
   'pet-lovers': 'Állatbarát',
-  socials: 'Socialok',
-  'parties-events': 'Socialok',
+  socials: 'Divat és jelmezek',
+  'parties-events': 'Divat és jelmezek',
   other: 'Egyéb',
+}
+
+/** Pre-rename English/HU labels still seen on older API payloads or caches. */
+const LEGACY_CATEGORY_NAMES: Record<string, string> = {
+  'Home & Living': 'home-living',
+  'Otthon és lakás': 'home-living',
+  Socials: 'socials',
+  Socialok: 'socials',
+  'Parties&Events': 'socials',
+  Electronics: 'electronics',
+  Elektronika: 'electronics',
 }
 
 function slugKey(slug: string | undefined): string {
@@ -57,8 +68,14 @@ export function localizeCategoryName(name: string | undefined, locale: Locale): 
       return getCategoryDisplayName(slug, locale, name)
     }
   }
-  if (normalized === 'Parties&Events') {
-    return getCategoryDisplayName('socials', locale, name)
+  for (const [slug, huName] of Object.entries(CATEGORY_NAMES_HU)) {
+    if (huName === normalized) {
+      return getCategoryDisplayName(slug, locale, name)
+    }
+  }
+  const legacySlug = LEGACY_CATEGORY_NAMES[normalized]
+  if (legacySlug) {
+    return getCategoryDisplayName(legacySlug, locale, name)
   }
   if (normalized === 'Professional Services') {
     return getCategoryDisplayName('services', locale, name)

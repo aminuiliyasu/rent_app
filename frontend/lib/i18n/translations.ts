@@ -122,7 +122,7 @@ const baseEn = {
   'category.browsePrefix': 'Browse by',
   'category.browseHighlight': 'Category',
   'category.subtitle':
-    'Focused categories for renting in Budapest — tools, tech, home, pets, socials, and more.',
+    'Focused categories for renting in Budapest — tools, tech, baby gear, fashion, pets, and more.',
   'category.label': 'Category',
   'category.all': 'All categories',
 
@@ -402,7 +402,7 @@ const baseHu: Record<keyof typeof baseEn, string> = {
   'category.browsePrefix': 'Böngészés',
   'category.browseHighlight': 'kategória szerint',
   'category.subtitle':
-    'Budapesti bérléshez — szerszámok, tech, otthon, állatok, socialok és még sok más.',
+    'Budapesti bérléshez — szerszámok, tech, baba cuccok, divat, állatok és még sok más.',
   'category.label': 'Kategória',
   'category.all': 'Minden kategória',
 

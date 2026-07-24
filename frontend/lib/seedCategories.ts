@@ -5,11 +5,11 @@ export const SEED_CATEGORY_DEFINITIONS: ReadonlyArray<{ name: string; slug: stri
   { name: 'Services', slug: 'services' },
   { name: 'Scooter & Bikes', slug: 'vehicles' },
   { name: 'Tools & DIY', slug: 'tools-equipment' },
-  { name: 'Electronics', slug: 'electronics' },
+  { name: 'Camera & electronics', slug: 'electronics' },
   { name: 'Spaces', slug: 'apartment' },
-  { name: 'Home & Living', slug: 'home-living' },
+  { name: 'Baby equipment', slug: 'home-living' },
   { name: 'Pet Lovers', slug: 'pet-lovers' },
-  { name: 'Socials', slug: 'socials' },
+  { name: 'Fashion & Costumes', slug: 'socials' },
   { name: 'Other', slug: 'other' },
 ]
 

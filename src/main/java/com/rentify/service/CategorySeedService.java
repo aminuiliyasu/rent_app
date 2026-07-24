@@ -57,11 +57,11 @@ public class CategorySeedService {
         ensureCategory("Services", "services");
         ensureCategory("Scooter & Bikes", "vehicles");
         ensureCategory("Tools & DIY", "tools-equipment");
-        ensureCategory("Electronics", "electronics");
+        ensureCategory("Camera & electronics", "electronics");
         ensureCategory("Spaces", "apartment");
-        ensureCategory("Home & Living", "home-living");
+        ensureCategory("Baby equipment", "home-living");
         ensureCategory("Pet Lovers", "pet-lovers");
-        ensureCategory("Socials", "socials");
+        ensureCategory("Fashion & Costumes", "socials");
         ensureCategory("Other", "other");
 
         migrateLegacyCategories();

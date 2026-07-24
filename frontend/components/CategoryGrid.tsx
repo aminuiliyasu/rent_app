@@ -10,7 +10,6 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { localizeCategories } from '@/lib/i18n/categoryNames'
 import {
   CubeIcon,
-  DevicePhoneMobileIcon,
   TruckIcon,
   WrenchScrewdriverIcon,
   HomeModernIcon,
@@ -19,10 +18,9 @@ import {
   BuildingOffice2Icon,
   BeakerIcon,
   CalendarDaysIcon,
-  ShoppingBagIcon,
-  UserIcon,
   MusicalNoteIcon,
   PhotoIcon,
+  CameraIcon,
   BookOpenIcon,
   SwatchIcon,
   FireIcon,
@@ -34,15 +32,15 @@ import {
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
 
 const SLUG_ICONS: Record<string, IconComponent> = {
-  electronics: DevicePhoneMobileIcon,
+  electronics: CameraIcon,
   vehicles: TruckIcon,
   'tools-equipment': WrenchScrewdriverIcon,
-  'home-living': HomeModernIcon,
+  'home-living': GiftTopIcon,
   apartment: HomeIcon,
   services: BuildingOffice2Icon,
   'pet-lovers': HeartIcon,
-  socials: ShoppingBagIcon,
-  'parties-events': ShoppingBagIcon,
+  socials: SwatchIcon,
+  'parties-events': SwatchIcon,
   housing: HomeIcon,
   furniture: HomeModernIcon,
   'professional-services': BuildingOffice2Icon,
@@ -59,8 +57,15 @@ function categoryIcon(slug: string, name: string): IconComponent {
   if (SLUG_ICONS[s]) return SLUG_ICONS[s]
 
   const n = (name || '').toLowerCase()
-  if (n.includes('electronic') || n.includes('phone') || n.includes('computer') || n.includes('laptop')) {
-    return DevicePhoneMobileIcon
+  if (
+    n.includes('electronic') ||
+    n.includes('camera') ||
+    n.includes('kamera') ||
+    n.includes('phone') ||
+    n.includes('computer') ||
+    n.includes('laptop')
+  ) {
+    return CameraIcon
   }
   if (n.includes('vehicle') || n.includes('car') || n.includes('bike') || n.includes('motorcycle')) {
     return TruckIcon
@@ -86,11 +91,8 @@ function categoryIcon(slug: string, name: string): IconComponent {
   if (n.includes('event') || n.includes('party') || n.includes('celebration')) {
     return CalendarDaysIcon
   }
-  if (n.includes('infant')) {
+  if (n.includes('infant') || n.includes('baby') || n.includes('kid') || n.includes('child')) {
     return GiftTopIcon
-  }
-  if (n.includes('baby') || n.includes('kid') || n.includes('child')) {
-    return UserIcon
   }
   if (n.includes('music') || n.includes('instrument')) {
     return MusicalNoteIcon
@@ -108,7 +110,7 @@ function categoryIcon(slug: string, name: string): IconComponent {
     n.includes('costume') ||
     n.includes('social')
   ) {
-    return ShoppingBagIcon
+    return SwatchIcon
   }
   if (n.includes('kitchen') || n.includes('cooking') || n.includes('appliance')) {
     return FireIcon
