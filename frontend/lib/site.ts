@@ -16,4 +16,5 @@ export const SOCIAL_LINKS = {
   x: 'https://x.com/rhentify',
   facebook: 'https://www.facebook.com/share/1b7FaQSp7j/',
   instagram: 'https://www.instagram.com/rhentify',
+  tiktok: 'https://www.tiktok.com/@rhentify',
 } as const

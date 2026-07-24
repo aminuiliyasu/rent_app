@@ -31,10 +31,19 @@ function InstagramIcon({ className }: { className?: string }) {
   )
 }
 
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.52a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.66a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.77a8.2 8.2 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.2z" />
+    </svg>
+  )
+}
+
 const ITEMS = [
   { key: 'x', href: SOCIAL_LINKS.x, label: 'Rhentify on X', Icon: XIcon },
   { key: 'facebook', href: SOCIAL_LINKS.facebook, label: 'Rhentify on Facebook', Icon: FacebookIcon },
   { key: 'instagram', href: SOCIAL_LINKS.instagram, label: 'Rhentify on Instagram', Icon: InstagramIcon },
+  { key: 'tiktok', href: SOCIAL_LINKS.tiktok, label: 'Rhentify on TikTok', Icon: TikTokIcon },
 ] as const
 
 export default function SocialLinks({
