@@ -31,7 +31,7 @@ public class Transaction extends BaseEntity {
     private BigDecimal amount;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 10)
     private Currency currency = Currency.USD;
     
     @Enumerated(EnumType.STRING)
