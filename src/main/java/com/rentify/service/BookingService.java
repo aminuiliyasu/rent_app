@@ -123,7 +123,7 @@ public class BookingService {
         booking.setTotalAmount(totalAmount);
         booking.setDeposit(deposit);
         booking.setPlatformFee(platformFee);
-        booking.setCurrency(Currency.fromPricingCurrency(listing.getPricingCurrency()));
+        booking.setCurrency(Currency.forDatabaseStorage(listing.getPricingCurrency()));
         
         booking = bookingRepository.save(booking);
 
@@ -214,7 +214,7 @@ public class BookingService {
         booking.setTotalAmount(totalAmount);
         booking.setDeposit(deposit);
         booking.setPlatformFee(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
-        booking.setCurrency(Currency.fromPricingCurrency(listing.getPricingCurrency()));
+        booking.setCurrency(Currency.forDatabaseStorage(listing.getPricingCurrency()));
 
         booking = bookingRepository.save(booking);
         messageService.createLiveRequestOpeningMessage(booking);
@@ -385,6 +385,7 @@ public class BookingService {
     
     private BookingResponse mapToResponse(Booking booking) {
         BookingResponse response = new BookingResponse();
+        Listing listing = booking.getListing();
         response.setId(booking.getId());
         response.setListingId(booking.getListing().getId());
         response.setRenterId(booking.getRenter().getId());
@@ -395,7 +396,9 @@ public class BookingService {
         response.setTotalAmount(booking.getTotalAmount());
         response.setDeposit(booking.getDeposit());
         response.setPlatformFee(booking.getPlatformFee());
-        response.setCurrency(booking.getCurrency());
+        response.setCurrency(Currency.forApiDisplay(
+                listing != null ? listing.getPricingCurrency() : null,
+                booking.getCurrency()));
         response.setPaymentId(null);
         response.setConfirmedAt(booking.getConfirmedAt());
         response.setCompletedAt(booking.getCompletedAt());
@@ -408,7 +411,6 @@ public class BookingService {
         }
 
         // Minimal listing payload so booking/message lists always show who/what was booked.
-        Listing listing = booking.getListing();
         if (listing != null) {
             ListingResponse listingResponse = new ListingResponse();
             listingResponse.setId(listing.getId());
