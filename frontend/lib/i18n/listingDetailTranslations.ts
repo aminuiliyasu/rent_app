@@ -31,7 +31,7 @@ export const listingDetailEn = {
   'listingDetail.ownerSidebar':
     'This is your listing. Renters will request dates here — you manage it from the banner above or',
   'listingDetail.myListingsLink': 'My listings',
-  'listingDetail.viewBookingRequests': 'View booking requests',
+  'listingDetail.viewBookingRequests': 'View hosting requests',
   'listingDetail.startDate': 'Start Date',
   'listingDetail.endDate': 'End Date',
   'listingDetail.securityDeposit': 'Security Deposit',
@@ -76,7 +76,7 @@ export const listingDetailHu = {
   'listingDetail.ownerSidebar':
     'Ez a te hirdetésed. A bérlők itt kérnek időpontot — a fenti sávból vagy a',
   'listingDetail.myListingsLink': 'Hirdetéseim',
-  'listingDetail.viewBookingRequests': 'Foglalási kérések megtekintése',
+  'listingDetail.viewBookingRequests': 'Foglalások nálam',
   'listingDetail.startDate': 'Kezdő dátum',
   'listingDetail.endDate': 'Befejező dátum',
   'listingDetail.securityDeposit': 'Kaució',

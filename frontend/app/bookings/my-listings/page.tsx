@@ -106,9 +106,10 @@ export default function MyListingBookingsPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-8">
+        <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-2">
           {t('bookingMy.title')}
         </h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-8">{t('bookingMy.subtitle')}</p>
 
         {bookings.length === 0 ? (
           <div className="card-glass text-center py-12">

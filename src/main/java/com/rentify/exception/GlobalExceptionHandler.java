@@ -82,11 +82,41 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        log.warn("Data integrity violation: {}", ex.getMessage());
-        return buildBody(
-                HttpStatus.CONFLICT,
-                "This listing cannot be deleted because it is still linked to other records. "
-                        + "Try again after any active bookings are finished.");
+        String root = rootCauseMessage(ex);
+        log.warn("Data integrity violation: {}", root, ex);
+        return buildBody(HttpStatus.CONFLICT, mapIntegrityMessage(root));
+    }
+
+    private static String rootCauseMessage(Throwable ex) {
+        Throwable cur = ex;
+        while (cur.getCause() != null && cur.getCause() != cur) {
+            cur = cur.getCause();
+        }
+        return cur.getMessage() != null ? cur.getMessage() : ex.getMessage();
+    }
+
+    private static String mapIntegrityMessage(String root) {
+        if (root == null || root.isBlank()) {
+            return "This action could not be completed because of linked records. Please try again or contact support.";
+        }
+        String lower = root.toLowerCase();
+        if (lower.contains("currency") || lower.contains("enum") || lower.contains("huf")
+                || lower.contains("eur") || lower.contains("gbp")) {
+            return "Could not save this booking — the listing currency is not supported by the database yet. "
+                    + "Please contact support or try again after a platform update.";
+        }
+        if (lower.contains("booking")) {
+            return "Could not complete this booking — the dates may conflict with an existing request, "
+                    + "or a related record blocked the save. Try different dates or contact support.";
+        }
+        if (lower.contains("listing") && (lower.contains("delete") || lower.contains("foreign key"))) {
+            return "This listing cannot be deleted because it is still linked to other records. "
+                    + "Try again after any active bookings are finished.";
+        }
+        if (lower.contains("foreign key") || lower.contains("constraint")) {
+            return "This action could not be completed because related records exist. Please try again or contact support.";
+        }
+        return "This action could not be completed because of linked records. Please try again or contact support.";
     }
 
     @ExceptionHandler(RuntimeException.class)

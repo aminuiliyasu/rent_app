@@ -38,7 +38,15 @@ export const bookingPagesEn = {
   'bookingNew.success': 'Booking request sent successfully!',
   'bookingNew.failed': 'Failed to create booking',
 
-  'bookingMy.title': 'Bookings for My Listings',
+  'bookingRent.title': 'Renting',
+  'bookingRent.subtitle': 'Bookings you made as a renter',
+  'bookingRent.emptyTitle': 'No bookings yet',
+  'bookingRent.emptyBody': 'Browse listings and send your first booking request.',
+  'bookingRent.loadFailed': 'Failed to load your bookings',
+  'bookingRent.viewBooking': 'View booking',
+
+  'bookingMy.title': 'Hosting',
+  'bookingMy.subtitle': 'Requests on your listings',
   'bookingMy.emptyTitle': 'No bookings yet',
   'bookingMy.emptyBody': "When users book your listings, they'll appear here",
   'bookingMy.renter': 'Renter',
@@ -238,7 +246,15 @@ export const bookingPagesHu = {
   'bookingNew.success': 'Foglalási kérés sikeresen elküldve!',
   'bookingNew.failed': 'Nem sikerült létrehozni a foglalást',
 
-  'bookingMy.title': 'Foglalások a hirdetéseimhez',
+  'bookingRent.title': 'Bérléseim',
+  'bookingRent.subtitle': 'Amit te foglaltál bérlőként',
+  'bookingRent.emptyTitle': 'Még nincs foglalás',
+  'bookingRent.emptyBody': 'Böngéssz a hirdetések között, és küldd el az első foglalási kérésedet.',
+  'bookingRent.loadFailed': 'Nem sikerült betölteni a foglalásaidat',
+  'bookingRent.viewBooking': 'Foglalás megtekintése',
+
+  'bookingMy.title': 'Foglalások nálam',
+  'bookingMy.subtitle': 'Kérések a hirdetéseimre',
   'bookingMy.emptyTitle': 'Még nincs foglalás',
   'bookingMy.emptyBody': 'Amikor valaki lefoglalja a hirdetésedet, itt jelenik meg',
   'bookingMy.renter': 'Bérlő',

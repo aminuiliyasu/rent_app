@@ -19,6 +19,7 @@ import {
   ArrowRightIcon,
   SparklesIcon,
   RectangleStackIcon,
+  HomeModernIcon,
 } from '@heroicons/react/24/outline'
 
 interface DashboardStats {
@@ -29,12 +30,52 @@ interface DashboardStats {
   unreadMessages: number
 }
 
+type HostBooking = Booking & {
+  renter?: { name?: string }
+}
+
+function bookingStatusClass(status: string): string {
+  if (status === 'CONFIRMED') return 'bg-gradient-to-r from-green-400 to-green-500 text-white'
+  if (status === 'PENDING') return 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white'
+  return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
+}
+
+async function hydrateListingTitles(bookings: Booking[]): Promise<Record<number, string>> {
+  const idsToFetch = Array.from(
+    new Set(
+      bookings
+        .filter((b) => {
+          const title = b.listing?.title
+          return b.listingId != null && !(title && String(title).trim())
+        })
+        .map((b) => Number(b.listingId)),
+    ),
+  )
+  const titleMap: Record<number, string> = {}
+  if (idsToFetch.length === 0) return titleMap
+
+  await Promise.all(
+    idsToFetch.map(async (id) => {
+      try {
+        const res = await api.get(`/listings/${id}`)
+        const title = String(res.data?.title ?? '').trim()
+        if (title) titleMap[id] = title
+      } catch {
+        /* ignore per listing */
+      }
+    }),
+  )
+  return titleMap
+}
+
 export default function DashboardPage() {
   const { isAuthenticated, user, loading: authLoading } = useAuth()
   const { locale, t } = useLanguage()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [recentBookings, setRecentBookings] = useState<Booking[]>([])
+  const [rentingBookings, setRentingBookings] = useState<Booking[]>([])
+  const [hostingBookings, setHostingBookings] = useState<HostBooking[]>([])
+  const [pendingHostingCount, setPendingHostingCount] = useState(0)
   const [listingTitlesById, setListingTitlesById] = useState<Record<number, string>>({})
   const [loading, setLoading] = useState(true)
   const [showWelcome, setShowWelcome] = useState(false)
@@ -62,40 +103,25 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      
-      const statsResponse = await api.get('/users/dashboard/stats')
+
+      const [statsResponse, rentingResponse, hostingResponse] = await Promise.all([
+        api.get('/users/dashboard/stats'),
+        api.get('/bookings/my?page=0&size=5'),
+        api.get('/bookings/my-listings?page=0&size=100'),
+      ])
+
       setStats(statsResponse.data)
-      
-      const bookingsResponse = await api.get('/bookings/my?page=0&size=5')
-      const recent: Booking[] = bookingsResponse.data.content || []
-      const idsToFetch = Array.from(
-        new Set(
-          recent
-            .filter((b) => {
-              const t = b.listing?.title
-              return b.listingId != null && !(t && String(t).trim())
-            })
-            .map((b) => Number(b.listingId)),
-        ),
-      )
-      const titleMap: Record<number, string> = {}
-      if (idsToFetch.length > 0) {
-        await Promise.all(
-          idsToFetch.map(async (id) => {
-            try {
-              const res = await api.get(`/listings/${id}`)
-              const title = String(res.data?.title ?? '').trim()
-              if (title) titleMap[id] = title
-            } catch {
-              /* ignore per listing */
-            }
-          }),
-        )
-      }
+
+      const renting: Booking[] = rentingResponse.data.content || []
+      const allHosting: HostBooking[] = hostingResponse.data.content || []
+      const titleMap = await hydrateListingTitles([...renting, ...allHosting.slice(0, 5)])
+
       if (Object.keys(titleMap).length > 0) {
-        setListingTitlesById((prev) => ({ ...prev, ...titleMap }))
+        setListingTitlesById(titleMap)
       }
-      setRecentBookings(recent)
+      setRentingBookings(renting)
+      setHostingBookings(allHosting.slice(0, 5))
+      setPendingHostingCount(allHosting.filter((b) => b.status === 'PENDING').length)
     } catch (error: any) {
       console.error('Error fetching dashboard data:', error)
       toast.error(t('dashboard.loadFailed'))
@@ -216,49 +242,46 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Bookings */}
+        {/* Renting + Hosting */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div className="card-glass animate-slide-up" style={{ animationDelay: '0.4s' }}>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-1 gap-3">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <CalendarDaysIcon className="h-6 w-6 text-blue-500" />
-                {t('dashboard.recentBookings')}
+                {t('dashboard.renting')}
               </h2>
-              <div className="flex gap-3">
-                <Link 
-                  href="/bookings/my-listings" 
-                  className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 group"
-                >
-                  {t('dashboard.myListingBookings')}
-                  <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
+              <Link
+                href="/bookings/my"
+                className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 group shrink-0"
+              >
+                {t('dashboard.viewAll')}
+                <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              {t('dashboard.rentingSubtitle')}
+            </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
               {t('dashboard.reviewsHint')}
             </p>
-            {recentBookings.length > 0 ? (
+            {rentingBookings.length > 0 ? (
               <div className="space-y-4">
-                {recentBookings.map((booking) => (
+                {rentingBookings.map((booking) => (
                   <Link
                     href={`/bookings/${booking.id}#booking-reviews`}
-                    key={booking.id} 
+                    key={booking.id}
                     className="block p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 hover:shadow-lg transition-all duration-300 cursor-pointer"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="font-bold text-gray-900 dark:text-white mb-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-900 dark:text-white mb-1 truncate">
                           {bookedListingTitle(booking, listingTitlesById)}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           {formatBookingDateRange(booking.startDate, booking.endDate)}
                         </p>
                       </div>
-                      <span className={`px-4 py-2 rounded-full text-xs font-bold ${
-                        booking.status === 'CONFIRMED' ? 'bg-gradient-to-r from-green-400 to-green-500 text-white' :
-                        booking.status === 'PENDING' ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white' :
-                        'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
-                      }`}>
+                      <span className={`px-4 py-2 rounded-full text-xs font-bold shrink-0 ${bookingStatusClass(booking.status)}`}>
                         {friendlyBookingStatus(booking.status, locale)}
                       </span>
                     </div>
@@ -274,8 +297,67 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <DashboardMyListings />
+          <div className="card-glass animate-slide-up" style={{ animationDelay: '0.45s' }}>
+            <div className="flex items-center justify-between mb-1 gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <HomeModernIcon className="h-6 w-6 text-indigo-500" />
+                  {t('dashboard.hosting')}
+                </h2>
+                {pendingHostingCount > 0 && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-400 text-white shrink-0">
+                    {t('dashboard.pendingRequests', { count: String(pendingHostingCount) })}
+                  </span>
+                )}
+              </div>
+              <Link
+                href="/bookings/my-listings"
+                className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 group shrink-0"
+              >
+                {t('dashboard.viewAll')}
+                <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
+              {t('dashboard.hostingSubtitle')}
+            </p>
+            {hostingBookings.length > 0 ? (
+              <div className="space-y-4">
+                {hostingBookings.map((booking) => (
+                  <Link
+                    href={`/bookings/${booking.id}`}
+                    key={booking.id}
+                    className="block p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-900 dark:text-white mb-1 truncate">
+                          {bookedListingTitle(booking, listingTitlesById)}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {booking.renter?.name
+                            ? `${booking.renter.name} · ${formatBookingDateRange(booking.startDate, booking.endDate)}`
+                            : formatBookingDateRange(booking.startDate, booking.endDate)}
+                        </p>
+                      </div>
+                      <span className={`px-4 py-2 rounded-full text-xs font-bold shrink-0 ${bookingStatusClass(booking.status)}`}>
+                        {friendlyBookingStatus(booking.status, locale)}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <HomeModernIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400 font-medium">{t('dashboard.noHosting')}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">{t('dashboard.noHostingHint')}</p>
+              </div>
+            )}
+          </div>
         </div>
+
+        <DashboardMyListings />
       </div>
       <Footer />
     </div>

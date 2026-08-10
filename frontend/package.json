@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
+    "dev:preview": "powershell -NoProfile -ExecutionPolicy Bypass -File ./dev-preview.ps1",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

@@ -58,7 +58,7 @@ public class Booking extends BaseEntity {
     private BigDecimal platformFee;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 10)
     private Currency currency = Currency.HUF;
     
     @Column(name = "payment_id", length = 255)

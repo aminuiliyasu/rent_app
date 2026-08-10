@@ -13,7 +13,6 @@ export const SITE_TAGLINE = 'Rent what you need. Hire who you trust.'
 export const ONBOARDING_DISMISSED_KEY = 'rhentify_onboarding_dismissed'
 
 export const SOCIAL_LINKS = {
-  x: 'https://x.com/rhentify',
   facebook: 'https://www.facebook.com/share/1b7FaQSp7j/',
   instagram: 'https://www.instagram.com/rhentify',
   tiktok: 'https://www.tiktok.com/@rhentify',
