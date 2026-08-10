@@ -1,6 +1,7 @@
 import { addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import { requireDb } from '@/lib/firebase'
 import { BookingStatus } from '@/lib/types'
+import { DEFAULT_LISTING_CURRENCY } from '@/lib/listingCurrency'
 import { getListingFromFirestore } from '@/lib/firestoreListings'
 
 export async function createBookingInFirestore(input: {
@@ -14,6 +15,7 @@ export async function createBookingInFirestore(input: {
   startDate: string
   endDate: string
   totalAmount: number
+  currency?: string
 }): Promise<string> {
   const nowIso = new Date().toISOString()
   const created = await addDoc(collection(requireDb(), 'bookings'), {
@@ -21,7 +23,7 @@ export async function createBookingInFirestore(input: {
     status: 'PENDING',
     deposit: 0,
     platformFee: 0,
-    currency: 'USD',
+    currency: (input.currency || DEFAULT_LISTING_CURRENCY).toUpperCase(),
     createdAtIso: nowIso,
     updatedAtIso: nowIso,
     createdAt: serverTimestamp(),
@@ -110,7 +112,7 @@ function mapBookingDoc(id: string, data: Record<string, unknown>): FirestoreOwne
     renterEmail: String(data.renterEmail || ''),
     ownerName: String(data.ownerName || ''),
     listingTitle: String(data.listingTitle || ''),
-    currency: String(data.currency || 'USD'),
+    currency: String(data.currency || DEFAULT_LISTING_CURRENCY),
     createdAt: String(data.createdAtIso || data.startDate || ''),
   }
 }

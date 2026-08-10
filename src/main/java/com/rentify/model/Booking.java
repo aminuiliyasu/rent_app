@@ -59,7 +59,7 @@ public class Booking extends BaseEntity {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Currency currency = Currency.USD;
+    private Currency currency = Currency.HUF;
     
     @Column(name = "payment_id", length = 255)
     private String paymentId; // Stripe or Paystack payment intent ID

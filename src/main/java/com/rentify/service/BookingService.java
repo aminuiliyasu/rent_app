@@ -123,7 +123,7 @@ public class BookingService {
         booking.setTotalAmount(totalAmount);
         booking.setDeposit(deposit);
         booking.setPlatformFee(platformFee);
-        booking.setCurrency(Currency.USD);
+        booking.setCurrency(Currency.fromPricingCurrency(listing.getPricingCurrency()));
         
         booking = bookingRepository.save(booking);
 
@@ -214,7 +214,7 @@ public class BookingService {
         booking.setTotalAmount(totalAmount);
         booking.setDeposit(deposit);
         booking.setPlatformFee(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
-        booking.setCurrency(Currency.USD);
+        booking.setCurrency(Currency.fromPricingCurrency(listing.getPricingCurrency()));
 
         booking = bookingRepository.save(booking);
         messageService.createLiveRequestOpeningMessage(booking);
@@ -419,7 +419,7 @@ public class BookingService {
             listingResponse.setPricingCurrency(
                     listing.getPricingCurrency() != null && !listing.getPricingCurrency().isBlank()
                             ? listing.getPricingCurrency()
-                            : "USD");
+                            : "HUF");
             listingResponse.setStatus(listing.getStatus());
             listingResponse.setOwnerId(listing.getOwner() != null ? listing.getOwner().getId() : null);
             listingResponse.setOwnerName(listing.getOwner() != null ? listing.getOwner().getName() : null);

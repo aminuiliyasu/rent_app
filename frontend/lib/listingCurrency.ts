@@ -19,6 +19,16 @@ export function getListingCurrencyCode(listing: { pricingCurrency?: string | nul
   return c && c.length === 3 ? c : DEFAULT_LISTING_CURRENCY
 }
 
+/** Booking amounts match the listing currency; prefer listing over legacy stored booking currency. */
+export function getBookingCurrencyCode(booking: {
+  currency?: string | null
+  listing?: { pricingCurrency?: string | null } | null
+}): string {
+  return getListingCurrencyCode({
+    pricingCurrency: booking.listing?.pricingCurrency ?? booking.currency,
+  })
+}
+
 /**
  * @param presentation `iso` = show ISO 4217 in the string (e.g. "HUF 3,000.00", "USD 25.00");
  *   `symbol` = locale symbol (e.g. Ft, $).

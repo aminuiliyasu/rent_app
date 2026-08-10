@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
 import { CalendarIcon, CheckCircleIcon, XCircleIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid'
 import Link from 'next/link'
-import { formatMoneyAmount, getListingCurrencyCode } from '@/lib/listingCurrency'
+import { formatMoneyAmount, getBookingCurrencyCode } from '@/lib/listingCurrency'
 import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
 import { formatBookingDateRange, friendlyBookingStatus } from '@/lib/bookingUi'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -123,9 +123,7 @@ export default function MyListingBookingsPage() {
         ) : (
           <div className="space-y-4">
             {bookings.map((booking) => {
-              const cur = getListingCurrencyCode({
-                pricingCurrency: booking.currency ?? booking.listing?.pricingCurrency,
-              })
+              const cur = getBookingCurrencyCode(booking)
               const fmt = (n: number) => formatMoneyAmount(n, cur, presentation)
               return (
               <div key={booking.id} className="card-glass">

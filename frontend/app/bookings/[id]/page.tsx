@@ -31,7 +31,7 @@ import {
   ratingWords,
   timelineStepFromStatus,
 } from '@/lib/bookingUi'
-import { formatMoneyAmount, getListingCurrencyCode } from '@/lib/listingCurrency'
+import { formatMoneyAmount, getBookingCurrencyCode } from '@/lib/listingCurrency'
 import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 
@@ -250,9 +250,7 @@ export default function BookingDetailPage() {
 
   if (!booking) return null
 
-  const bookingCur = getListingCurrencyCode({
-    pricingCurrency: booking.currency ?? booking.listing?.pricingCurrency,
-  })
+  const bookingCur = getBookingCurrencyCode(booking)
   const fmtBooking = (n: number) => formatMoneyAmount(n, bookingCur, presentation)
 
   const isOwner = user?.id === booking.ownerId
