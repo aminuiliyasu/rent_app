@@ -39,6 +39,7 @@ function ProfileButton({
       className="flex items-center space-x-2 p-2 md:px-4 md:py-2.5 rounded-xl text-gray-700 dark:text-gray-300 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
     >
       {user?.avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- avatar URLs may be external or /uploads
         <img
           src={user.avatarUrl}
           alt=""

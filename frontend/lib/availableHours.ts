@@ -131,7 +131,7 @@ export function parseAvailableHours(raw: string | null | undefined): TimeRange[]
 }
 
 export function serializeAvailableHours(ranges: Iterable<TimeRange>): string {
-  const merged = mergeRanges([...ranges])
+  const merged = mergeRanges(Array.from(ranges))
   if (merged.length === 0) return ''
 
   if (rangesEqual(merged, [ALL_DAY_RANGE])) return PRESET_ALL_DAY

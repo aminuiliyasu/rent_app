@@ -174,11 +174,7 @@ function WorkerListingCard({ listing }: ListingCardProps) {
   )
 }
 
-export default function ListingCard({ listing }: ListingCardProps) {
-  if (listing.type === ListingType.WORKER) {
-    return <WorkerListingCard listing={listing} />
-  }
-
+function ItemListingCard({ listing }: ListingCardProps) {
   const { presentation } = useCurrencyPresentation()
   const { locale, t } = useLanguage()
   const cardImageSrc = firstListingImageUrl(listing)
@@ -290,4 +286,11 @@ export default function ListingCard({ listing }: ListingCardProps) {
       <div className="absolute inset-0 rounded-2xl border border-transparent group-hover:border-accent/40 transition-colors duration-300 pointer-events-none"></div>
     </Link>
   )
+}
+
+export default function ListingCard({ listing }: ListingCardProps) {
+  if (listing.type === ListingType.WORKER) {
+    return <WorkerListingCard listing={listing} />
+  }
+  return <ItemListingCard listing={listing} />
 }
