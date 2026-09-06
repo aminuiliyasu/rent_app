@@ -86,6 +86,14 @@ function resolveDisplayEndDate(start: Date, end: Date): Date {
   return isExclusiveMidnight ? new Date(end.getTime() - 1) : end
 }
 
+function hasWallClock(date: Date): boolean {
+  return date.getHours() !== 0 || date.getMinutes() !== 0 || date.getSeconds() !== 0
+}
+
+function formatClock(date: Date): string {
+  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+}
+
 export function formatBookingDateRange(
   startIso: string,
   endIso: string,
@@ -96,7 +104,14 @@ export function formatBookingDateRange(
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
     return `${startIso} - ${endIso}`
   }
+  const isExclusiveMidnight =
+    end.getHours() === 0 &&
+    end.getMinutes() === 0 &&
+    end.getSeconds() === 0 &&
+    end.getMilliseconds() === 0 &&
+    end.getTime() > start.getTime()
   const displayEnd = resolveDisplayEndDate(start, end)
+  const showTimes = hasWallClock(start) || !isExclusiveMidnight
   const baseOpts: Intl.DateTimeFormatOptions = dateOptions ?? {
     month: 'short',
     day: 'numeric',
@@ -104,7 +119,15 @@ export function formatBookingDateRange(
   }
   const left = start.toLocaleDateString(undefined, baseOpts)
   const right = displayEnd.toLocaleDateString(undefined, baseOpts)
-  return `${left} - ${right}`
+  if (!showTimes) {
+    return `${left} - ${right}`
+  }
+  const startClock = formatClock(start)
+  const endClock = formatClock(displayEnd)
+  if (left === right) {
+    return `${left} · ${startClock} – ${endClock}`
+  }
+  return `${left} ${startClock} – ${right} ${endClock}`
 }
 
 function titleFromEmbeddedListing(listing: unknown): string | undefined {

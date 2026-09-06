@@ -31,12 +31,12 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center py-12 px-4">
+    <div className="auth-shell">
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
           <BrandLogo className="justify-center mb-4 mx-auto" />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('auth.forgotTitle')}</h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <h1 className="text-3xl font-semibold text-gray-950 dark:text-white mb-2">{t('auth.forgotTitle')}</h1>
+          <p className="text-gray-600 dark:text-gray-300">
             {t('auth.forgotSubtitle')}
           </p>
         </div>

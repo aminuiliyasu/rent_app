@@ -14,7 +14,7 @@ import {
   formatMessageTime,
   parseApiDateTime,
 } from '@/lib/dateTime'
-import { normalizeReviewSummary, reviewAttentionForInbox } from '@/lib/bookingUi'
+import { formatBookingDateRange, normalizeReviewSummary, reviewAttentionForInbox } from '@/lib/bookingUi'
 import { useLanguage } from '@/contexts/LanguageContext'
 import type { TranslationKey } from '@/lib/i18n/translations'
 import toast from 'react-hot-toast'
@@ -67,10 +67,7 @@ function avatarColor(seed: string | number): string {
 
 function formatBookingRange(start?: string, end?: string): string {
   if (!start || !end) return ''
-  const s = new Date(start)
-  const e = new Date(end)
-  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
-  return `${s.toLocaleDateString(undefined, opts)} – ${e.toLocaleDateString(undefined, opts)}`
+  return formatBookingDateRange(start, end, { month: 'short', day: 'numeric' })
 }
 
 function inboxStatusLabel(
@@ -321,7 +318,7 @@ export default function MessagesPage() {
 
   if (authLoading || bookingsLoading || !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="page-shell">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-20 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-600">
@@ -336,10 +333,14 @@ export default function MessagesPage() {
   const selectedPartner = partnerOf(selectedBooking)
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="page-shell">
       <Navbar />
       <div className="pt-20 pb-6">
-        <div className="max-w-lg md:max-w-xl lg:max-w-2xl mx-auto w-full px-4 sm:px-6">
+        <div
+          className={`max-w-lg md:max-w-xl lg:max-w-2xl mx-auto w-full ${
+            showChat ? 'px-2 sm:px-6' : 'px-4 sm:px-6'
+          }`}
+        >
           {/* Page header — inbox view only */}
           {!showChat && (
             <div className="mb-4">
@@ -458,8 +459,8 @@ export default function MessagesPage() {
             {showChat && selectedBooking && (
               <section className="flex flex-col h-full min-h-0 flex-1">
                   {/* Conversation header */}
-                  <header className="border-b border-gray-200 dark:border-gray-800 shrink-0 bg-white dark:bg-gray-900">
-                    <div className="flex items-center gap-2 px-2 py-2.5 sm:px-4">
+                  <header className="relative z-10 overflow-visible border-b border-gray-200 dark:border-gray-800 shrink-0 bg-white dark:bg-gray-900">
+                    <div className="flex items-center gap-2 px-2 py-2.5 sm:px-4 min-w-0">
                       <button
                         type="button"
                         onClick={backToInbox}
@@ -473,7 +474,7 @@ export default function MessagesPage() {
                       >
                         {initialsOf(selectedPartner.name)}
                       </div>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 overflow-hidden">
                         <p className="text-base font-semibold text-gray-900 dark:text-white truncate leading-tight">
                           {selectedPartner.name}
                         </p>
@@ -483,17 +484,26 @@ export default function MessagesPage() {
                       </div>
                       <Link
                         href={`/bookings/${selectedBooking.id}`}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-semibold px-3 py-2.5 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors min-h-[44px]"
+                        className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-semibold px-3 py-2.5 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors min-h-[44px]"
                       >
                         <CalendarDaysIcon className="h-5 w-5 shrink-0" />
-                        <span className="hidden sm:inline">Booking</span>
+                        <span>{t('messages.openBooking')}</span>
                       </Link>
                     </div>
-                    <div className="px-3 pb-2 md:px-4 flex flex-wrap items-center gap-2">
-                      {inboxStatusLabel(selectedBooking.status, t)}
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatBookingRange(selectedBooking.startDate, selectedBooking.endDate)}
-                      </span>
+                    <div className="px-3 pb-2.5 sm:px-4 flex flex-col gap-2 min-[400px]:flex-row min-[400px]:items-center">
+                      <div className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
+                        {inboxStatusLabel(selectedBooking.status, t)}
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatBookingRange(selectedBooking.startDate, selectedBooking.endDate)}
+                        </span>
+                      </div>
+                      <Link
+                        href={`/bookings/${selectedBooking.id}`}
+                        className="sm:hidden inline-flex w-full min-[400px]:w-auto shrink-0 items-center justify-center gap-1.5 rounded-lg border-2 border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200 text-sm font-semibold px-3 min-h-[44px] hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors touch-manipulation"
+                      >
+                        <CalendarDaysIcon className="h-5 w-5 shrink-0" />
+                        <span>{t('messages.openBooking')}</span>
+                      </Link>
                     </div>
                     {(() => {
                       const { needsMyReview, waitingOnPartnerReview } = reviewAttentionForInbox(

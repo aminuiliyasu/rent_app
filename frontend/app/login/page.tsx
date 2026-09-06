@@ -52,21 +52,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      {/* Background Decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
-      </div>
-
+    <div className="auth-shell">
       <div className="relative w-full max-w-md">
-        {/* Logo/Header */}
         <div className="text-center mb-8 animate-slide-down">
           <BrandLogo className="justify-center mb-4 mx-auto" />
-          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-4xl font-semibold text-gray-950 dark:text-white mb-2">
             {t('auth.loginTitle')}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
+          <p className="text-gray-600 dark:text-gray-300 text-lg">
             {t('auth.loginSubtitle')}
           </p>
         </div>

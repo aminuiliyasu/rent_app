@@ -36,10 +36,10 @@ export default function Hero() {
   ]
 
   return (
-    <div className="relative min-h-[88vh] flex items-center overflow-hidden bg-slate-950">
+    <div className="relative min-h-[88vh] flex items-center overflow-hidden bg-primary-950">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(148,163,184,0.08),_transparent_55%)]" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[min(100%,48rem)] h-px bg-gradient-to-r from-transparent via-stone-600/40 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(54,165,250,0.18),_transparent_55%)]" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[min(100%,48rem)] h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
@@ -52,8 +52,20 @@ export default function Hero() {
           <p className="text-sm md:text-base uppercase tracking-[0.22em] text-stone-400 mb-5 font-medium">{t('hero.eyebrow')}</p>
 
           <h1 className="font-serif font-semibold text-5xl sm:text-6xl md:text-7xl lg:text-[5rem] text-white mb-6 leading-[1.08]">
-            {t('hero.titleLine1')}
-            <span className="block mt-2 text-accent-light font-semibold">{t('hero.titleLine2')}</span>
+            <Link
+              href="/search?type=ITEM"
+              className="rounded-sm underline-offset-[0.18em] decoration-white/35 transition-[text-decoration-color] hover:underline hover:decoration-white/75 focus-visible:underline focus-visible:decoration-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              aria-label={t('hero.titleLine1Aria')}
+            >
+              {t('hero.titleLine1')}
+            </Link>
+            <Link
+              href="/search?type=WORKER"
+              className="mt-2 block rounded-sm text-amber-300 font-semibold underline-offset-[0.18em] decoration-amber-300/50 transition-[text-decoration-color] hover:underline hover:decoration-amber-200 focus-visible:underline focus-visible:decoration-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-primary-950"
+              aria-label={t('hero.titleLine2Aria')}
+            >
+              {t('hero.titleLine2')}
+            </Link>
           </h1>
 
           <p className="text-xl md:text-2xl text-stone-300 mb-10 max-w-2xl mx-auto leading-relaxed text-balance">
@@ -61,7 +73,7 @@ export default function Hero() {
           </p>
 
           <form onSubmit={handleSearch} className="max-w-3xl mx-auto mb-8">
-            <div className="flex flex-col sm:flex-row gap-3 bg-white rounded-xl p-2 shadow-lg shadow-black/20 border border-stone-200/10">
+            <div className="flex flex-col sm:flex-row gap-3 bg-white rounded-2xl p-2 shadow-[0_20px_50px_rgba(0,0,0,0.35)] ring-1 ring-white/15">
               <div className="flex-1 relative min-w-0">
                 <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-stone-400" />
                 <input
@@ -85,7 +97,7 @@ export default function Hero() {
               </div>
               <button
                 type="submit"
-                className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-lg font-semibold px-8 py-4 rounded-lg transition-colors shrink-0"
+                className="inline-flex items-center justify-center gap-2 bg-primary-800 hover:bg-primary-900 text-white text-lg font-semibold px-8 py-4 rounded-xl transition-colors shrink-0"
               >
                 {t('search.submit')}
                 <ArrowRightIcon className="h-5 w-5" />
@@ -105,7 +117,7 @@ export default function Hero() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/listings/new"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg border border-stone-600/50 text-stone-200 text-lg font-medium hover:bg-stone-900/60 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border-2 border-white text-white text-lg font-semibold hover:bg-white hover:text-primary-900 transition-colors"
             >
               {t('hero.listCta')}
               <ArrowRightIcon className="h-5 w-5" />

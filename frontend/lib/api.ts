@@ -1,9 +1,20 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    skipRetry?: boolean
+  }
+}
+
 const NETWORK_RETRY_MAX = 10
 const NETWORK_RETRY_BASE_MS = 1500
 
+function isCanceledRequest(error: AxiosError): boolean {
+  return error.code === 'ERR_CANCELED' || error.name === 'CanceledError' || axios.isCancel(error)
+}
+
 function isTransientApiError(error: AxiosError): boolean {
+  if (isCanceledRequest(error)) return false
   if (!error.response) return true
   const status = error.response.status
   return status === 500 || status === 502 || status === 503 || status === 504
@@ -132,9 +143,10 @@ api.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean
       __networkRetryCount?: number
+      skipRetry?: boolean
     }
 
-    if (originalRequest && isTransientApiError(error)) {
+    if (originalRequest && !originalRequest.skipRetry && isTransientApiError(error)) {
       const retryCount = originalRequest.__networkRetryCount ?? 0
       if (retryCount < NETWORK_RETRY_MAX) {
         originalRequest.__networkRetryCount = retryCount + 1

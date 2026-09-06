@@ -52,7 +52,7 @@ export default function SearchFilters({ filters, setFilters }: SearchFiltersProp
     <div className="card-glass overflow-visible mb-8">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="p-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 shrink-0">
+          <div className="p-2.5 rounded-xl bg-primary-800 shrink-0">
             <FunnelIcon className="h-5 w-5 text-white" />
           </div>
           <div className="min-w-0">

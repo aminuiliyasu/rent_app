@@ -63,9 +63,6 @@ public class BookingService {
     @Autowired
     private MessageService messageService;
 
-    @Autowired
-    private NotificationService notificationService;
-
     @Transactional
     public BookingResponse createBooking(CreateBookingRequest request) {
         Long userId = CurrentUser.getCurrentUserId();
@@ -126,8 +123,6 @@ public class BookingService {
         booking.setCurrency(Currency.forDatabaseStorage(listing.getPricingCurrency()));
         
         booking = bookingRepository.save(booking);
-
-        notificationService.notifyNewBooking(booking);
 
         return mapToResponse(booking);
     }
@@ -218,7 +213,6 @@ public class BookingService {
 
         booking = bookingRepository.save(booking);
         messageService.createLiveRequestOpeningMessage(booking);
-        notificationService.notifyRentRequestReply(booking);
 
         return mapToResponse(booking);
     }
@@ -281,8 +275,6 @@ public class BookingService {
         booking.setConfirmedAt(LocalDateTime.now());
         booking = bookingRepository.save(booking);
 
-        notificationService.notifyBookingConfirmed(booking);
-
         return mapToResponse(booking);
     }
     
@@ -306,8 +298,6 @@ public class BookingService {
         booking.setCancelledAt(LocalDateTime.now());
         booking.setCancellationReason(reason);
         booking = bookingRepository.save(booking);
-
-        notificationService.notifyBookingCancelled(booking, userId);
 
         return mapToResponse(booking);
     }
@@ -362,7 +352,10 @@ public class BookingService {
         long billableDays = Math.max(1L, (long) Math.ceil(duration.toMinutes() / (24.0 * 60.0)));
         long billableHours = Math.max(1L, (long) Math.ceil(duration.toMinutes() / 60.0));
 
-        if (listing.getType() == com.rentify.model.enums.ListingType.WORKER && listing.getPriceHour() != null) {
+        boolean hourlyWorker = listing.getType() == com.rentify.model.enums.ListingType.WORKER
+                && listing.getPriceHour() != null;
+        boolean shortHourlyItem = listing.getPriceHour() != null && billableHours < 24;
+        if (hourlyWorker || shortHourlyItem) {
             return listing.getPriceHour().multiply(BigDecimal.valueOf(billableHours))
                     .setScale(2, RoundingMode.HALF_UP);
         }

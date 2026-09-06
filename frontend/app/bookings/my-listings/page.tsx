@@ -83,10 +83,10 @@ export default function MyListingBookingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="page-shell">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-800">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
           </div>
         </div>
@@ -103,7 +103,7 @@ export default function MyListingBookingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
+    <div className="page-shell pt-20">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-2">

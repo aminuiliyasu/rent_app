@@ -10,6 +10,7 @@ import { uploadMultipleImages } from '@/lib/upload'
 import { buildListingPayload, listingToFormData } from '@/lib/listingFormShared'
 import { DEFAULT_LISTING_CURRENCY, LISTING_CURRENCY_OPTIONS } from '@/lib/listingCurrency'
 import AvailableDaysPicker from '@/components/AvailableDaysPicker'
+import AvailableHoursPicker from '@/components/AvailableHoursPicker'
 import WorkerListingSection from '@/components/WorkerListingSection'
 import {
   applyListingTypeDefaults,
@@ -70,6 +71,7 @@ export default function CreateListingPage() {
     workerProfession: '',
     serviceArea: '',
     availableDays: '',
+    availableHours: '',
     pricingCurrency: DEFAULT_LISTING_CURRENCY,
   })
 
@@ -200,7 +202,7 @@ export default function CreateListingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
+    <div className="page-shell pt-20">
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
@@ -322,15 +324,26 @@ export default function CreateListingPage() {
               </div>
 
               {!isWorker && (
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    {t('listingForm.availableDays')}
-                  </label>
-                  <AvailableDaysPicker
-                    value={formData.availableDays}
-                    onChange={(availableDays) => setFormData({ ...formData, availableDays })}
-                  />
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      {t('listingForm.availableDays')}
+                    </label>
+                    <AvailableDaysPicker
+                      value={formData.availableDays}
+                      onChange={(availableDays) => setFormData({ ...formData, availableDays })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      {t('listingForm.availableHours')}
+                    </label>
+                    <AvailableHoursPicker
+                      value={formData.availableHours}
+                      onChange={(availableHours) => setFormData({ ...formData, availableHours })}
+                    />
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -619,6 +632,7 @@ export default function CreateListingPage() {
                 workerBio: formData.workerBio,
                 serviceArea: formData.serviceArea,
                 availableDays: formData.availableDays,
+                availableHours: formData.availableHours,
               }}
               onChange={(patch) => setFormData((prev) => ({ ...prev, ...patch }))}
             />

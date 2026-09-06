@@ -41,6 +41,7 @@ public class ListingResponse {
     private String workerProfession;
     private String serviceArea;
     private String availableDays;
+    private String availableHours;
     private Boolean isFeatured;
     private Long ownerId;
     private String ownerName;

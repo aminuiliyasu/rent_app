@@ -13,7 +13,7 @@ export default function AboutPage() {
   const categories = getAboutCategoryGuide(locale)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+    <div className="page-shell">
       <Navbar />
       <div className="pt-20 section-container pb-16">
         <div className="max-w-4xl mx-auto">

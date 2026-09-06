@@ -145,7 +145,8 @@ public class ListingService {
         listing.setWorkerBio(request.getWorkerBio());
         listing.setWorkerProfession(request.getWorkerProfession());
         listing.setServiceArea(request.getServiceArea());
-        listing.setAvailableDays(request.getAvailableDays());
+        listing.setAvailableDays(blankToNull(request.getAvailableDays()));
+        listing.setAvailableHours(blankToNull(request.getAvailableHours()));
         listing.setStatus(ListingStatus.ACTIVE); // Auto-activate listings so they're visible
         
         listing = listingRepository.save(listing);
@@ -208,7 +209,8 @@ public class ListingService {
         if (request.getWorkerBio() != null) listing.setWorkerBio(request.getWorkerBio());
         if (request.getWorkerProfession() != null) listing.setWorkerProfession(request.getWorkerProfession());
         if (request.getServiceArea() != null) listing.setServiceArea(request.getServiceArea());
-        if (request.getAvailableDays() != null) listing.setAvailableDays(request.getAvailableDays());
+        if (request.getAvailableDays() != null) listing.setAvailableDays(blankToNull(request.getAvailableDays()));
+        if (request.getAvailableHours() != null) listing.setAvailableHours(blankToNull(request.getAvailableHours()));
         
         listing = listingRepository.save(listing);
         
@@ -337,6 +339,7 @@ public class ListingService {
         response.setWorkerProfession(listing.getWorkerProfession());
         response.setServiceArea(listing.getServiceArea());
         response.setAvailableDays(listing.getAvailableDays());
+        response.setAvailableHours(listing.getAvailableHours());
         response.setIsFeatured(listing.getIsFeatured());
         response.setOwnerId(listing.getOwner().getId());
         response.setOwnerName(listing.getOwner().getName());
@@ -364,6 +367,13 @@ public class ListingService {
         response.setReviewCount(reviewCount);
         
         return response;
+    }
+
+    private static String blankToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 
     private static String normalizePricingCurrency(String raw) {

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import api from '@/lib/api'
-import { Listing, Review } from '@/lib/types'
+import { Listing, ListingType, Review } from '@/lib/types'
 import {
   StarIcon,
   MapPinIcon,
@@ -14,6 +14,7 @@ import {
   SparklesIcon,
   CheckBadgeIcon,
   CubeIcon,
+  ClockIcon,
 } from '@heroicons/react/24/solid'
 import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/contexts/AuthContext'
@@ -29,6 +30,13 @@ import {
 import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
 import { formatListingLocationLine } from '@/lib/listingLocation'
 import { formatAvailableDaysLabel } from '@/lib/availableDays'
+import { formatAvailableHoursLabel, formatAvailabilitySummary } from '@/lib/availableHours'
+import {
+  buildBookingDateRange,
+  defaultBookingTimes,
+  estimateBookingRental,
+  nextHourAfter,
+} from '@/lib/bookingDates'
 import { galleryImageUrls } from '@/lib/listingImageUrl'
 import { isListingOwner } from '@/lib/listingOwner'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline'
@@ -43,6 +51,7 @@ export default function ListingDetailPage() {
   const [listingReviews, setListingReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedDates, setSelectedDates] = useState({ start: '', end: '' })
+  const [selectedTimes, setSelectedTimes] = useState({ start: '09:00', end: '10:00' })
   const [selectedImage, setSelectedImage] = useState(0)
   const [deleting, setDeleting] = useState(false)
 
@@ -62,6 +71,7 @@ export default function ListingDetailPage() {
         if (cancelled) return
         setListing(listingRes.data)
         setListingReviews(reviewsRes.data?.content || [])
+        setSelectedTimes(defaultBookingTimes(listingRes.data?.availableHours))
         const d = listingRes.data
         if (
           (d.imageUrls && d.imageUrls.length > 0) ||
@@ -87,11 +97,29 @@ export default function ListingDetailPage() {
       router.push('/login')
       return
     }
-    if (!selectedDates.start || !selectedDates.end) {
+    if (!selectedDates.start || !selectedDates.end || !selectedTimes.start || !selectedTimes.end) {
       toast.error(t('listingDetail.selectDates'))
       return
     }
-    router.push(`/bookings/new?listingId=${params.id}&start=${selectedDates.start}&end=${selectedDates.end}`)
+    try {
+      buildBookingDateRange(selectedDates.start, selectedDates.end, {
+        type: listing?.type ?? ListingType.ITEM,
+        priceHour: listing?.priceHour,
+        startTime: selectedTimes.start,
+        endTime: selectedTimes.end,
+      })
+    } catch {
+      toast.error(t('listingDetail.selectDates'))
+      return
+    }
+    const paramsOut = new URLSearchParams({
+      listingId: String(params.id),
+      start: selectedDates.start,
+      end: selectedDates.end,
+      startTime: selectedTimes.start,
+      endTime: selectedTimes.end,
+    })
+    router.push(`/bookings/new?${paramsOut.toString()}`)
   }
 
   const handleDeleteListing = async () => {
@@ -112,10 +140,10 @@ export default function ListingDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="page-shell">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-800">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
           </div>
         </div>
@@ -126,7 +154,7 @@ export default function ListingDetailPage() {
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="page-shell">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-20 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
@@ -148,10 +176,31 @@ export default function ListingDetailPage() {
   const descriptionDisplay = stripLegacyPricingAppendix(listing.description)
   const locationLine = formatListingLocationLine(listing)
   const availableDaysLabel = formatAvailableDaysLabel(listing.availableDays, locale)
+  const availableHoursLabel = formatAvailableHoursLabel(listing.availableHours, locale)
+  const availabilitySummary = formatAvailabilitySummary(listing.availableDays, listing.availableHours, locale)
   const isOwner = isListingOwner(user, listing)
+  let bookingEstimate: { hours: number; amount: number } | null = null
+  if (selectedDates.start && selectedDates.end && selectedTimes.start && selectedTimes.end) {
+    try {
+      const range = buildBookingDateRange(selectedDates.start, selectedDates.end, {
+        type: listing.type,
+        priceHour: listing.priceHour,
+        startTime: selectedTimes.start,
+        endTime: selectedTimes.end,
+      })
+      const estimate = estimateBookingRental(
+        { type: listing.type, priceHour: listing.priceHour, priceDay: listing.priceDay },
+        range.start,
+        range.end,
+      )
+      bookingEstimate = estimate.hourly ? estimate : null
+    } catch {
+      bookingEstimate = null
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
+    <div className="page-shell pt-20">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {isOwner && (
@@ -304,12 +353,17 @@ export default function ListingDetailPage() {
                       {t('listingDetail.available')}: <span className="font-bold">{availableDaysLabel}</span>
                     </p>
                   )}
+                  {availableHoursLabel && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      {t('listingDetail.availableHours')}: <span className="font-bold">{availableHoursLabel}</span>
+                    </p>
+                  )}
                 </div>
               )}
 
-              {listing.type !== 'WORKER' && availableDaysLabel && (
+              {listing.type !== 'WORKER' && availabilitySummary && (
                 <p className="text-sm text-gray-600 dark:text-gray-400 font-medium mb-6">
-                  {t('listingDetail.available')}: <span className="font-bold text-gray-800 dark:text-gray-200">{availableDaysLabel}</span>
+                  {t('listingDetail.available')}: <span className="font-bold text-gray-800 dark:text-gray-200">{availabilitySummary}</span>
                 </p>
               )}
 
@@ -459,33 +513,88 @@ export default function ListingDetailPage() {
                 </div>
               ) : (
                 <>
-              {/* Date Selection */}
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                     <CalendarIcon className="h-5 w-5 text-blue-500" />
                     {t('listingDetail.startDate')}
                   </label>
-                  <input
-                    type="date"
-                    value={selectedDates.start}
-                    onChange={(e) => setSelectedDates({ ...selectedDates, start: e.target.value })}
-                    className="input-field"
-                    min={new Date().toISOString().split('T')[0]}
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="date"
+                      value={selectedDates.start}
+                      onChange={(e) => {
+                        const start = e.target.value
+                        const end = !selectedDates.end || selectedDates.end < start ? start : selectedDates.end
+                        setSelectedDates({ start, end })
+                      }}
+                      className="input-field"
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                    <input
+                      type="time"
+                      value={selectedTimes.start}
+                      onChange={(e) => {
+                        const startTime = e.target.value
+                        const startYmd = selectedDates.start || new Date().toISOString().split('T')[0]
+                        let endTime = selectedTimes.end
+                        let endYmd = selectedDates.end || startYmd
+                        try {
+                          const startAt = buildBookingDateRange(startYmd, endYmd, {
+                            type: listing.type,
+                            startTime,
+                            endTime,
+                          })
+                          if (startAt.end.getTime() <= startAt.start.getTime()) {
+                            const next = nextHourAfter(startYmd, startTime)
+                            endYmd = next.endYmd
+                            endTime = next.endTime
+                            setSelectedDates({ start: selectedDates.start || startYmd, end: endYmd })
+                          }
+                        } catch {
+                          const next = nextHourAfter(startYmd, startTime)
+                          endYmd = next.endYmd
+                          endTime = next.endTime
+                          setSelectedDates({ start: selectedDates.start || startYmd, end: endYmd })
+                        }
+                        setSelectedTimes({ start: startTime, end: endTime })
+                      }}
+                      className="input-field"
+                      aria-label={t('listingDetail.startTime')}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                    <ClockIcon className="h-5 w-5 text-blue-500" />
                     {t('listingDetail.endDate')}
                   </label>
-                  <input
-                    type="date"
-                    value={selectedDates.end}
-                    onChange={(e) => setSelectedDates({ ...selectedDates, end: e.target.value })}
-                    className="input-field"
-                    min={selectedDates.start || new Date().toISOString().split('T')[0]}
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="date"
+                      value={selectedDates.end}
+                      onChange={(e) => setSelectedDates({ ...selectedDates, end: e.target.value })}
+                      className="input-field"
+                      min={selectedDates.start || new Date().toISOString().split('T')[0]}
+                    />
+                    <input
+                      type="time"
+                      value={selectedTimes.end}
+                      onChange={(e) => setSelectedTimes({ ...selectedTimes, end: e.target.value })}
+                      className="input-field"
+                      aria-label={t('listingDetail.endTime')}
+                    />
+                  </div>
                 </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('listingDetail.timeHint')}</p>
+                {bookingEstimate && (
+                  <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                    {t(bookingEstimate.hours === 1 ? 'listingDetail.hourEstimate' : 'listingDetail.hoursEstimate', {
+                      hours: String(bookingEstimate.hours),
+                      amount: fmt(bookingEstimate.amount),
+                    })}
+                  </p>
+                )}
               </div>
 
               {/* Deposit Info */}

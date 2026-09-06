@@ -11,6 +11,7 @@ import { buildListingPayload, listingToFormData } from '@/lib/listingFormShared'
 import { isListingOwner } from '@/lib/listingOwner'
 import { DEFAULT_LISTING_CURRENCY, LISTING_CURRENCY_OPTIONS } from '@/lib/listingCurrency'
 import AvailableDaysPicker from '@/components/AvailableDaysPicker'
+import AvailableHoursPicker from '@/components/AvailableHoursPicker'
 import WorkerListingSection from '@/components/WorkerListingSection'
 import {
   servicesCategoryValue,
@@ -72,6 +73,7 @@ export default function EditListingPage() {
     workerProfession: '',
     serviceArea: '',
     availableDays: '',
+    availableHours: '',
     pricingCurrency: DEFAULT_LISTING_CURRENCY,
   })
 
@@ -227,10 +229,10 @@ export default function EditListingPage() {
 
   if (!isAuthenticated || authLoading || pageLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="page-shell">
         <Navbar />
         <div className="max-w-5xl mx-auto px-4 py-20 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-800">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
           </div>
         </div>
@@ -240,7 +242,7 @@ export default function EditListingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
+    <div className="page-shell pt-20">
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
@@ -364,15 +366,26 @@ export default function EditListingPage() {
               </div>
 
               {!isWorker && (
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    {t('listingForm.availableDays')}
-                  </label>
-                  <AvailableDaysPicker
-                    value={formData.availableDays}
-                    onChange={(availableDays) => setFormData({ ...formData, availableDays })}
-                  />
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      {t('listingForm.availableDays')}
+                    </label>
+                    <AvailableDaysPicker
+                      value={formData.availableDays}
+                      onChange={(availableDays) => setFormData({ ...formData, availableDays })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      {t('listingForm.availableHours')}
+                    </label>
+                    <AvailableHoursPicker
+                      value={formData.availableHours}
+                      onChange={(availableHours) => setFormData({ ...formData, availableHours })}
+                    />
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -662,6 +675,7 @@ export default function EditListingPage() {
                 workerBio: formData.workerBio,
                 serviceArea: formData.serviceArea,
                 availableDays: formData.availableDays,
+                availableHours: formData.availableHours,
               }}
               onChange={(patch) => setFormData((prev) => ({ ...prev, ...patch }))}
             />

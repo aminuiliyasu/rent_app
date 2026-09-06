@@ -74,7 +74,21 @@ export type ListingCardPrice = {
   currencyCode: string
 }
 
-/** Primary rate shown on cards: prefers daily, then hourly, week, month. */
+function listingRateFromSuffix(
+  amount: number,
+  suffix: string,
+  currencyCode: string,
+  presentation: CurrencyPresentation
+): ListingCardPrice {
+  return {
+    formatted: formatMoneyAmount(amount, currencyCode, presentation),
+    suffix,
+    periodLabel: suffixToPeriodLabel(suffix),
+    currencyCode,
+  }
+}
+
+/** Primary rate shown on cards: prefers daily, then hourly, week, month. Workers pass preferHourly. */
 export function formatListingCardPrice(
   listing: {
     pricingCurrency?: string | null
@@ -83,46 +97,29 @@ export function formatListingCardPrice(
     priceWeek?: number | null
     priceMonth?: number | null
   },
-  presentation: CurrencyPresentation = 'iso'
+  presentation: CurrencyPresentation = 'iso',
+  options?: { preferHourly?: boolean }
 ): ListingCardPrice | null {
   const c = getListingCurrencyCode(listing)
-  if (listing.priceDay != null && listing.priceDay > 0) {
-    const suffix = '/day'
-    return {
-      formatted: formatMoneyAmount(listing.priceDay, c, presentation),
-      suffix,
-      periodLabel: suffixToPeriodLabel(suffix),
-      currencyCode: c,
-    }
-  }
-  if (listing.priceHour != null && listing.priceHour > 0) {
-    const suffix = '/hr'
-    return {
-      formatted: formatMoneyAmount(listing.priceHour, c, presentation),
-      suffix,
-      periodLabel: suffixToPeriodLabel(suffix),
-      currencyCode: c,
-    }
-  }
-  if (listing.priceWeek != null && listing.priceWeek > 0) {
-    const suffix = '/wk'
-    return {
-      formatted: formatMoneyAmount(listing.priceWeek, c, presentation),
-      suffix,
-      periodLabel: suffixToPeriodLabel(suffix),
-      currencyCode: c,
-    }
-  }
-  if (listing.priceMonth != null && listing.priceMonth > 0) {
-    const suffix = '/mo'
-    return {
-      formatted: formatMoneyAmount(listing.priceMonth, c, presentation),
-      suffix,
-      periodLabel: suffixToPeriodLabel(suffix),
-      currencyCode: c,
-    }
-  }
-  return null
+  const day =
+    listing.priceDay != null && listing.priceDay > 0
+      ? listingRateFromSuffix(listing.priceDay, '/day', c, presentation)
+      : null
+  const hour =
+    listing.priceHour != null && listing.priceHour > 0
+      ? listingRateFromSuffix(listing.priceHour, '/hr', c, presentation)
+      : null
+  const week =
+    listing.priceWeek != null && listing.priceWeek > 0
+      ? listingRateFromSuffix(listing.priceWeek, '/wk', c, presentation)
+      : null
+  const month =
+    listing.priceMonth != null && listing.priceMonth > 0
+      ? listingRateFromSuffix(listing.priceMonth, '/mo', c, presentation)
+      : null
+
+  const order = options?.preferHourly ? [hour, day, week, month] : [day, hour, week, month]
+  return order.find((rate) => rate != null) ?? null
 }
 
 /** Removes legacy appended pricing appendix from listing descriptions (display-only). */

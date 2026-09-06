@@ -26,6 +26,7 @@ export interface ListingFormData {
   workerProfession: string
   serviceArea: string
   availableDays: string
+  availableHours: string
   pricingCurrency: string
 }
 
@@ -52,6 +53,7 @@ export function emptyListingFormData(): ListingFormData {
     workerProfession: '',
     serviceArea: '',
     availableDays: '',
+    availableHours: '',
     pricingCurrency: DEFAULT_LISTING_CURRENCY,
   }
 }
@@ -79,6 +81,7 @@ export function listingToFormData(listing: Listing): ListingFormData {
     workerProfession: listing.workerProfession ?? '',
     serviceArea: listing.serviceArea ?? '',
     availableDays: listing.availableDays ?? '',
+    availableHours: listing.availableHours ?? '',
     pricingCurrency: getListingCurrencyCode(listing),
   }
 }
@@ -189,7 +192,8 @@ export async function buildListingPayload(
     deposit: hasNumericCashDeposit ? parsedCashDeposit : null,
     pricingCurrency: selectedCur,
     deliveryRadius: formData.deliveryRadius ? Number(formData.deliveryRadius) : null,
-    availableDays: formData.availableDays || null,
+    availableDays: formData.availableDays || '',
+    availableHours: formData.availableHours || '',
     imageUrls: selectedImages,
   }
 }

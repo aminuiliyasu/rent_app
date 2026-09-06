@@ -113,6 +113,9 @@ public class Listing extends BaseEntity {
 
     @Column(name = "available_days", length = 50)
     private String availableDays;
+
+    @Column(name = "available_hours", length = 120)
+    private String availableHours;
     
     // Features
     @Column(name = "is_featured", nullable = false)

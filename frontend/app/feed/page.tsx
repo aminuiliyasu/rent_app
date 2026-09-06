@@ -348,7 +348,7 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
+    <div className="page-shell pt-20">
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-10 animate-slide-down">
@@ -788,7 +788,7 @@ export default function FeedPage() {
 
           {loading ? (
             <div className="text-center py-16">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 mb-4">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary-800 mb-4">
                 <div className="animate-spin rounded-full h-7 w-7 border-4 border-white border-t-transparent" />
               </div>
               <p className="text-gray-600 dark:text-gray-400 font-medium">{t('feed.loading')}</p>

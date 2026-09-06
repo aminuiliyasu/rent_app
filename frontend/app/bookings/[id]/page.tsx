@@ -236,10 +236,10 @@ export default function BookingDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="page-shell">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-800">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
           </div>
         </div>
@@ -285,7 +285,7 @@ export default function BookingDetailPage() {
   const bookedItemTitle = bookedListingTitle(booking)
 
   return (
-    <div className="min-h-[100dvh] bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 pt-16 sm:pt-20">
+    <div className="page-shell min-h-[100dvh] pt-16 sm:pt-20">
       <Navbar />
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-12">
         {/* Hero: role + listing + progress */}

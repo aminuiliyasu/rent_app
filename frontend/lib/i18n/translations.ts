@@ -11,18 +11,14 @@ const baseEn = {
   'nav.rentRequests': 'Request',
   'nav.postListing': 'Post Listing',
   'nav.dashboard': 'Dashboard',
+  'nav.bookings': 'Bookings',
   'nav.messages': 'Messages',
-  'nav.notifications': 'Notifications',
   'nav.profile': 'Profile',
   'nav.login': 'Login',
   'nav.signUp': 'Sign Up',
   'nav.logout': 'Logout',
   'nav.toggleTheme': 'Toggle theme',
   'nav.language': 'Language',
-
-  'notifications.markAllRead': 'Mark all read',
-  'notifications.loading': 'Loading…',
-  'notifications.empty': 'No notifications yet',
 
   // Footer
   'footer.tagline': 'Rent what you need. Hire who you trust.',
@@ -52,6 +48,8 @@ const baseEn = {
   'hero.eyebrow': 'Access over ownership',
   'hero.titleLine1': 'Rent what you need.',
   'hero.titleLine2': 'Hire who you trust.',
+  'hero.titleLine1Aria': 'Browse items to rent',
+  'hero.titleLine2Aria': 'Browse people and services to hire',
   'hero.subtitle':
     'Why buy when you can borrow? Earn from what you already own. Items, spaces, and skills from your community — booked in minutes.',
   'hero.searchPlaceholder': 'Try: camera, drill, van, photographer…',
@@ -296,18 +294,14 @@ const baseHu: Record<keyof typeof baseEn, string> = {
   'nav.rentRequests': 'Kérés',
   'nav.postListing': 'Hirdetés feladása',
   'nav.dashboard': 'Irányítópult',
+  'nav.bookings': 'Foglalások',
   'nav.messages': 'Üzenetek',
-  'nav.notifications': 'Értesítések',
   'nav.profile': 'Profil',
   'nav.login': 'Bejelentkezés',
   'nav.signUp': 'Regisztráció',
   'nav.logout': 'Kijelentkezés',
   'nav.toggleTheme': 'Téma váltása',
   'nav.language': 'Nyelv',
-
-  'notifications.markAllRead': 'Összes olvasott',
-  'notifications.loading': 'Betöltés…',
-  'notifications.empty': 'Még nincs értesítés',
 
   'footer.tagline': 'Bérelj, amire szükséged van. Bízz abban, kit felveszel.',
   'footer.subtitle':
@@ -336,6 +330,8 @@ const baseHu: Record<keyof typeof baseEn, string> = {
   'hero.eyebrow': 'Hozzáférés a tulajdonlás helyett',
   'hero.titleLine1': 'Bérelj, amire szükséged van.',
   'hero.titleLine2': 'Bízz abban, kit felveszel.',
+  'hero.titleLine1Aria': 'Tárgyak böngészése',
+  'hero.titleLine2Aria': 'Szolgáltatások böngészése',
   'hero.subtitle':
     'Miért vennéd meg, ha bérelhetsz? Keress azzal, amid már megvan. Tárgyak, helyek és szolgáltatások a közösségedtől — percek alatt foglalható.',
   'hero.searchPlaceholder': 'Pl.: kamera, fúró, furgon, fotós…',

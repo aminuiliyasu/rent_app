@@ -4,7 +4,7 @@ import HowItWorks from '@/components/HowItWorks'
 
 export default function HowItWorksPage() {
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-slate-950">
+    <div className="page-shell">
       <Navbar />
       <div className="pt-20">
         <HowItWorks />

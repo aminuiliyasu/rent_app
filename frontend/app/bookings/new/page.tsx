@@ -7,7 +7,12 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import api from '@/lib/api'
 import { Listing, ListingType } from '@/lib/types'
-import { buildBookingDateRange } from '@/lib/bookingDates'
+import {
+  buildBookingDateRange,
+  defaultBookingTimes,
+  estimateBookingRental,
+  nextHourAfter,
+} from '@/lib/bookingDates'
 import { formatMoneyAmount, getListingCurrencyCode } from '@/lib/listingCurrency'
 import { toAppListingImageUrl } from '@/lib/listingImageUrl'
 import { useCurrencyPresentation } from '@/contexts/CurrencyPresentationContext'
@@ -29,6 +34,10 @@ export default function NewBookingPage() {
     start: searchParams.get('start') || '',
     end: searchParams.get('end') || '',
   })
+  const [times, setTimes] = useState({
+    start: searchParams.get('startTime') || '09:00',
+    end: searchParams.get('endTime') || '10:00',
+  })
 
   const listingId = searchParams.get('listingId')
 
@@ -36,6 +45,9 @@ export default function NewBookingPage() {
     try {
       const response = await api.get(`/listings/${listingId}`)
       setListing(response.data)
+      if (!searchParams.get('startTime') || !searchParams.get('endTime')) {
+        setTimes(defaultBookingTimes(response.data?.availableHours))
+      }
     } catch (error) {
       console.error('Error fetching listing:', error)
       toast.error(t('bookingNew.loadFailed'))
@@ -43,7 +55,7 @@ export default function NewBookingPage() {
     } finally {
       setLoading(false)
     }
-  }, [listingId, router])
+  }, [listingId, router, searchParams, t])
 
   useEffect(() => {
     if (authLoading) return
@@ -63,7 +75,7 @@ export default function NewBookingPage() {
     e.preventDefault()
     if (!listing) return
 
-    if (!dates.start || !dates.end) {
+    if (!dates.start || !dates.end || !times.start || !times.end) {
       toast.error(t('bookingNew.selectBothDates'))
       return
     }
@@ -74,6 +86,8 @@ export default function NewBookingPage() {
       const range = buildBookingDateRange(dates.start, dates.end, {
         type: listing.type,
         priceHour: listing.priceHour,
+        startTime: times.start,
+        endTime: times.end,
       })
       startDate = range.start
       endDate = range.end
@@ -102,10 +116,10 @@ export default function NewBookingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="page-shell">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-800">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
           </div>
         </div>
@@ -116,7 +130,7 @@ export default function NewBookingPage() {
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="page-shell">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-20 text-center">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('bookingNew.notFound')}</h3>
@@ -127,20 +141,19 @@ export default function NewBookingPage() {
   }
 
   const calculateTotal = () => {
-    if (!dates.start || !dates.end || !listing) return 0
+    if (!dates.start || !dates.end || !times.start || !times.end || !listing) return 0
     try {
       const { start, end } = buildBookingDateRange(dates.start, dates.end, {
         type: listing.type,
         priceHour: listing.priceHour,
+        startTime: times.start,
+        endTime: times.end,
       })
-      const ms = end.getTime() - start.getTime()
-      if (listing.type === ListingType.WORKER && listing.priceHour != null && listing.priceHour > 0) {
-        const hours = Math.max(1, Math.ceil(ms / (1000 * 60 * 60)))
-        return hours * listing.priceHour
-      }
-      if (!listing.priceDay) return 0
-      const days = Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24)))
-      return days * listing.priceDay
+      return estimateBookingRental(
+        { type: listing.type, priceHour: listing.priceHour, priceDay: listing.priceDay },
+        start,
+        end,
+      ).amount
     } catch {
       return 0
     }
@@ -154,7 +167,7 @@ export default function NewBookingPage() {
   const fmtMoney = (n: number) => formatMoneyAmount(n, listingCur, presentation)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 pt-20">
+    <div className="page-shell pt-20">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">{t('bookingNew.badge')}</p>
@@ -213,27 +226,76 @@ export default function NewBookingPage() {
                         <CalendarIcon className="h-5 w-5 text-blue-500" />
                         {t('bookingNew.start')}
                       </label>
-                      <input
-                        type="date"
-                        value={dates.start}
-                        onChange={(e) => setDates({ ...dates, start: e.target.value })}
-                        className="input-field"
-                        min={new Date().toISOString().split('T')[0]}
-                        required
-                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="date"
+                          value={dates.start}
+                          onChange={(e) => {
+                            const start = e.target.value
+                            const end = !dates.end || dates.end < start ? start : dates.end
+                            setDates({ start, end })
+                          }}
+                          className="input-field"
+                          min={new Date().toISOString().split('T')[0]}
+                          required
+                        />
+                        <input
+                          type="time"
+                          value={times.start}
+                          onChange={(e) => {
+                            const startTime = e.target.value
+                            const startYmd = dates.start || new Date().toISOString().split('T')[0]
+                            let endTime = times.end
+                            let endYmd = dates.end || startYmd
+                            try {
+                              const range = buildBookingDateRange(startYmd, endYmd, {
+                                type: listing.type,
+                                startTime,
+                                endTime,
+                              })
+                              if (range.end.getTime() <= range.start.getTime()) {
+                                const next = nextHourAfter(startYmd, startTime)
+                                endYmd = next.endYmd
+                                endTime = next.endTime
+                                setDates({ start: dates.start || startYmd, end: endYmd })
+                              }
+                            } catch {
+                              const next = nextHourAfter(startYmd, startTime)
+                              endYmd = next.endYmd
+                              endTime = next.endTime
+                              setDates({ start: dates.start || startYmd, end: endYmd })
+                            }
+                            setTimes({ start: startTime, end: endTime })
+                          }}
+                          className="input-field"
+                          aria-label={t('bookingNew.startTime')}
+                          required
+                        />
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t('bookingNew.end')}</label>
-                      <input
-                        type="date"
-                        value={dates.end}
-                        onChange={(e) => setDates({ ...dates, end: e.target.value })}
-                        className="input-field"
-                        min={dates.start || new Date().toISOString().split('T')[0]}
-                        required
-                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="date"
+                          value={dates.end}
+                          onChange={(e) => setDates({ ...dates, end: e.target.value })}
+                          className="input-field"
+                          min={dates.start || new Date().toISOString().split('T')[0]}
+                          required
+                        />
+                        <input
+                          type="time"
+                          value={times.end}
+                          onChange={(e) => setTimes({ ...times, end: e.target.value })}
+                          className="input-field"
+                          aria-label={t('bookingNew.endTime')}
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{t('bookingNew.timeHint')}</p>
                   {dates.start && dates.end && dates.start === dates.end && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                       {listing.type === ListingType.WORKER && listing.priceHour
@@ -263,7 +325,7 @@ export default function NewBookingPage() {
 
                 <button
                   type="submit"
-                  disabled={submitting || !dates.start || !dates.end}
+                  disabled={submitting || !dates.start || !dates.end || !times.start || !times.end}
                   className="w-full btn-primary py-4 text-lg font-bold"
                 >
                   {submitting ? t('bookingNew.submitting') : t('bookingNew.submit')}

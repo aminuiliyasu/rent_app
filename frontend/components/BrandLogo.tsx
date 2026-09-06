@@ -21,8 +21,7 @@ export default function BrandLogo({ className = '', onDark = false }: BrandLogoP
       aria-label="Rhentify home"
     >
       <div className="relative">
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 opacity-75 blur transition-opacity group-hover:opacity-100" />
-        <div className="relative rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 p-2">
+        <div className="relative rounded-xl bg-primary-800 p-2">
           <SparklesIcon className="h-6 w-6 text-white" />
         </div>
       </div>

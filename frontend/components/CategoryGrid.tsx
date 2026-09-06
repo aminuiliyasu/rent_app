@@ -169,10 +169,10 @@ export default function CategoryGrid() {
                   style={{ animationDelay: `${idx * 0.05}s` }}
                 >
                   <div className="relative mb-6">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-gray-200 dark:border-gray-700 group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-all duration-300 shadow-lg">
+                    <div className="absolute inset-0 bg-accent/15 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-[#f7f3ec] dark:bg-[#1a1612] border border-stone-200 dark:border-stone-700 group-hover:border-accent/60 transition-all duration-300 shadow-sm">
                       <Icon
-                        className="h-12 w-12 text-blue-600 dark:text-blue-300 group-hover:scale-110 transition-transform duration-300"
+                        className="h-12 w-12 text-[#2a241c] dark:text-accent-light group-hover:scale-110 transition-transform duration-300"
                         style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
                         aria-hidden
                       />
@@ -185,7 +185,7 @@ export default function CategoryGrid() {
 
                   <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <svg
-                      className="w-5 h-5 mx-auto text-blue-600 dark:text-blue-400"
+                      className="w-5 h-5 mx-auto text-accent-muted dark:text-accent-light"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

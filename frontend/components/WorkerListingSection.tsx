@@ -1,6 +1,7 @@
 'use client'
 
 import AvailableDaysPicker from '@/components/AvailableDaysPicker'
+import AvailableHoursPicker from '@/components/AvailableHoursPicker'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { UserIcon } from '@heroicons/react/24/outline'
 
@@ -10,6 +11,7 @@ export type WorkerListingFields = {
   workerBio: string
   serviceArea: string
   availableDays: string
+  availableHours: string
 }
 
 type WorkerListingSectionProps = {
@@ -88,9 +90,22 @@ export default function WorkerListingSection({ values, onChange }: WorkerListing
           <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
             {t('listingForm.whenAvailable')}
           </label>
+          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+            {t('listingForm.availableDays')}
+          </p>
           <AvailableDaysPicker
             value={values.availableDays}
             onChange={(availableDays) => onChange({ availableDays })}
+          />
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+            {t('listingForm.availableHours')}
+          </p>
+          <AvailableHoursPicker
+            value={values.availableHours}
+            onChange={(availableHours) => onChange({ availableHours })}
           />
         </div>
       </div>

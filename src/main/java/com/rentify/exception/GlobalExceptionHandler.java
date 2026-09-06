@@ -13,6 +13,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.apache.catalina.connector.ClientAbortException;
 
 import java.util.HashMap;
@@ -117,6 +118,11 @@ public class GlobalExceptionHandler {
             return "This action could not be completed because related records exist. Please try again or contact support.";
         }
         return "This action could not be completed because of linked records. Please try again or contact support.";
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNoResourceFound(NoResourceFoundException ex) {
+        return buildBody(HttpStatus.NOT_FOUND, "Not found");
     }
 
     @ExceptionHandler(RuntimeException.class)

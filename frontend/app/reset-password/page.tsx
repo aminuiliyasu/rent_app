@@ -114,11 +114,11 @@ export default function ResetPasswordPage() {
   const { t } = useLanguage()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center py-12 px-4">
+    <div className="auth-shell">
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
           <BrandLogo className="justify-center mb-4 mx-auto" />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('auth.resetTitle')}</h1>
+          <h1 className="text-3xl font-semibold text-gray-950 dark:text-white mb-2">{t('auth.resetTitle')}</h1>
         </div>
         <div className="card-glass">
           <Suspense fallback={<p className="text-center text-gray-500">{t('common.loading')}</p>}>

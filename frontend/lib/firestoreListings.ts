@@ -33,6 +33,8 @@ type ListingInput = {
   workerBio?: string
   workerProfession?: string
   serviceArea?: string
+  availableDays?: string
+  availableHours?: string
   imageUrls?: string[]
   ownerId?: number
   ownerName?: string
@@ -127,6 +129,8 @@ function mapListingDoc(id: string, data: any): Listing {
     workerBio: data.workerBio || '',
     workerProfession: data.workerProfession || '',
     serviceArea: data.serviceArea || '',
+    availableDays: data.availableDays || '',
+    availableHours: data.availableHours || '',
     isFeatured: Boolean(data.isFeatured),
     ownerId: Number(data.ownerId || 0),
     ownerName: data.ownerName || 'Anonymous',

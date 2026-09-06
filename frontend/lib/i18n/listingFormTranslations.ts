@@ -17,6 +17,7 @@ export const listingFormEn = {
   'listingForm.selectCategory': 'Select a category',
   'listingForm.serviceCategoryHint': 'Service listings are posted under Services.',
   'listingForm.availableDays': 'Available Days',
+  'listingForm.availableHours': 'Available Times',
   'listingForm.titlePlaceholderItem': 'e.g., Professional camera kit',
   'listingForm.titlePlaceholderService': 'e.g., Wedding photographer — Budapest',
   'listingForm.descPlaceholderItem': 'Describe your item, condition, and what is included...',
@@ -109,6 +110,15 @@ export const listingFormEn = {
   'listingForm.dayFri': 'Fri',
   'listingForm.daySat': 'Sat',
   'listingForm.daySun': 'Sun',
+
+  'listingForm.hoursMorning': 'Morning',
+  'listingForm.hoursAfternoon': 'Afternoon',
+  'listingForm.hoursEvening': 'Evening',
+  'listingForm.hoursAllDay': 'All day',
+  'listingForm.hoursFrom': 'From',
+  'listingForm.hoursTo': 'To',
+  'listingForm.hoursHint':
+    'Pick a preset, tap time slots, or set a custom from–to — e.g. 9:00–17:00.',
 } as const
 
 export const listingFormHu = {
@@ -128,6 +138,7 @@ export const listingFormHu = {
   'listingForm.selectCategory': 'Válassz kategóriát',
   'listingForm.serviceCategoryHint': 'A szolgáltatás hirdetések a Szolgáltatások kategóriában jelennek meg.',
   'listingForm.availableDays': 'Elérhető napok',
+  'listingForm.availableHours': 'Elérhető időszak',
   'listingForm.titlePlaceholderItem': 'pl. Professzionális kamerakészlet',
   'listingForm.titlePlaceholderService': 'pl. Esküvői fotós — Budapest',
   'listingForm.descPlaceholderItem': 'Írd le a tárgyat, állapotát és mit tartalmaz...',
@@ -221,4 +232,13 @@ export const listingFormHu = {
   'listingForm.dayFri': 'P',
   'listingForm.daySat': 'Szo',
   'listingForm.daySun': 'V',
+
+  'listingForm.hoursMorning': 'Délelőtt',
+  'listingForm.hoursAfternoon': 'Délután',
+  'listingForm.hoursEvening': 'Este',
+  'listingForm.hoursAllDay': 'Egész nap',
+  'listingForm.hoursFrom': 'Ettől',
+  'listingForm.hoursTo': 'Eddig',
+  'listingForm.hoursHint':
+    'Válassz gyorsbeállítást, koppints az idősávokra, vagy adj meg egyedi intervallumot — pl. 9:00–17:00.',
 } as const

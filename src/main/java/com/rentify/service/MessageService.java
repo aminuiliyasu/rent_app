@@ -33,9 +33,6 @@ public class MessageService {
     
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private NotificationService notificationService;
     
     @Transactional
     public MessageResponse sendMessage(SendMessageRequest request) {
@@ -68,8 +65,6 @@ public class MessageService {
         message.setCreatedAt(UtcDateTimes.nowUtc());
 
         message = messageRepository.save(message);
-
-        notificationService.notifyNewMessage(message);
         
         return mapToResponse(message);
     }

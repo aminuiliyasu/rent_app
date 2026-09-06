@@ -55,7 +55,7 @@ export default function SearchPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
+        <div className="page-shell pt-20">
           <Navbar />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent mx-auto" />
@@ -163,7 +163,7 @@ function SearchPageContent() {
     (filters.categorySlug != null && category.slug === filters.categorySlug)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-20">
+    <div className="page-shell pt-20">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Search + categories */}
@@ -271,15 +271,15 @@ function SearchPageContent() {
         <main>
           {loading ? (
             <div className="text-center py-20">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-800 mb-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent" />
               </div>
               <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">{t('search.loading')}</p>
             </div>
           ) : listings.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
               {listings.map((listing, idx) => (
-                <div key={listing.id} className="animate-slide-up" style={{ animationDelay: `${idx * 0.05}s` }}>
+                <div key={listing.id} className="animate-slide-up h-full" style={{ animationDelay: `${idx * 0.05}s` }}>
                   <ListingCard listing={listing} />
                 </div>
               ))}

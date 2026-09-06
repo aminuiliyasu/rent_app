@@ -100,3 +100,17 @@ export function formatAvailableDaysLabel(
 
   return `${labels.slice(0, -1).join(', ')}, ${translate(locale, 'daysLabel.and')} ${labels[labels.length - 1]}`
 }
+
+const DAY_SHORT_KEYS: Record<DayCode, TranslationKey> = {
+  MON: 'daysLabel.monShort',
+  TUE: 'daysLabel.tueShort',
+  WED: 'daysLabel.wedShort',
+  THU: 'daysLabel.thuShort',
+  FRI: 'daysLabel.friShort',
+  SAT: 'daysLabel.satShort',
+  SUN: 'daysLabel.sunShort',
+}
+
+export function formatDayChipLabel(day: DayCode, locale: Locale = 'hu'): string {
+  return translate(locale, DAY_SHORT_KEYS[day])
+}

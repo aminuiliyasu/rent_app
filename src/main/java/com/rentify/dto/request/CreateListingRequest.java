@@ -50,6 +50,7 @@ public class CreateListingRequest {
     private String workerProfession;
     private String serviceArea;
     private String availableDays;
+    private String availableHours;
     
     // Images
     private java.util.List<String> imageUrls;

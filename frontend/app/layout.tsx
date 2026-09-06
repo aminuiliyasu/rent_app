@@ -62,7 +62,13 @@ export default function RootLayout({
       <body className={`${dmSans.className} font-sans antialiased`}>
         <Providers>
           {children}
-          <Toaster position="top-right" />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              className: '!bg-white !text-gray-900 !rounded-xl !border !border-gray-200 !shadow-lg dark:!bg-gray-800 dark:!text-white dark:!border-gray-700',
+              duration: 3500,
+            }}
+          />
         </Providers>
       </body>
     </html>

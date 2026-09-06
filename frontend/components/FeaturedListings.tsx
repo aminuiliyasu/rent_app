@@ -52,10 +52,10 @@ export default function FeaturedListings() {
   }, [])
 
   return (
-    <section className="section-container bg-gradient-to-b from-white via-gray-50 to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
+    <section className="section-container">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 animate-slide-up">
-          <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mb-4">
+          <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-800 dark:text-primary-200 mb-4">
             <SparklesIcon className="h-5 w-5 mr-2" />
             <span className="text-base md:text-lg font-semibold">{t('featured.badge')}</span>
           </div>
@@ -70,7 +70,7 @@ export default function FeaturedListings() {
 
         {loading ? (
           <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-800 mb-4">
               <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent" />
             </div>
             <p className="text-xl md:text-2xl font-semibold text-gray-600 dark:text-gray-400">{t('featured.loading')}</p>
@@ -78,9 +78,9 @@ export default function FeaturedListings() {
           </div>
         ) : listings.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 items-stretch">
               {listings.map((listing, idx) => (
-                <div key={listing.id} className="animate-slide-up" style={{ animationDelay: `${idx * 0.05}s` }}>
+                <div key={listing.id} className="animate-slide-up h-full" style={{ animationDelay: `${idx * 0.05}s` }}>
                   <ListingCard listing={listing} />
                 </div>
               ))}

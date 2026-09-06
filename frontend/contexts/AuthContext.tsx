@@ -38,6 +38,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profileAbortRef.current = controller
     const epoch = sessionEpochRef.current
     const tokenAtStart = token
+    const settleLoading = () => {
+      if (epoch !== sessionEpochRef.current) return
+      setLoading(false)
+    }
+    const safety = window.setTimeout(settleLoading, 8_000)
 
     api
       .get('/auth/me', { signal: controller.signal })
@@ -53,13 +58,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null)
       })
       .finally(() => {
+        window.clearTimeout(safety)
         if (!controller.signal.aborted) {
-          setLoading(false)
+          settleLoading()
         }
       })
 
     return () => {
       controller.abort()
+      window.clearTimeout(safety)
     }
   }, [])
 
